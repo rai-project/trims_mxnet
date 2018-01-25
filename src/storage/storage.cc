@@ -20,106 +20,129 @@
 /*!
  * Copyright (c) 2015 by Contributors
  */
-#include <mxnet/storage.h>
-#include <mshadow/tensor.h>
-#include <dmlc/logging.h>
-#include <array>
-#include "./storage_manager.h"
-#include "./naive_storage_manager.h"
-#include "./pooled_storage_manager.h"
-#include "./cpu_shared_storage_manager.h"
-#include "./cpu_device_storage.h"
-#include "./pinned_memory_storage.h"
 #include "../common/cuda_utils.h"
 #include "../common/lazy_alloc_array.h"
+#include "./cpu_device_storage.h"
+#include "./cpu_shared_storage_manager.h"
+#include "./naive_storage_manager.h"
+#include "./pinned_memory_storage.h"
+#include "./pooled_storage_manager.h"
+#include "./storage_manager.h"
+#include <array>
+#include <dmlc/logging.h>
+#include <mshadow/tensor.h>
+#include <mxnet/storage.h>
 
 namespace mxnet {
 
 // consider change storage as a pure abstract class
 class StorageImpl : public Storage {
- public:
-  void Alloc(Handle* handle) override;
+public:
+  void Alloc(Handle *handle) override;
   void Free(Handle handle) override;
   void DirectFree(Handle handle) override;
   void SharedIncrementRefCount(Handle handle) override;
   StorageImpl() {}
   virtual ~StorageImpl() = default;
 
- private:
+private:
   static constexpr size_t kMaxNumberOfDevices = Context::kMaxDevType + 1;
   static constexpr size_t kMaxNumberOfDeviceIDs = Context::kMaxDevID + 1;
 #if MXNET_USE_CUDA
   static int num_gpu_device;
-#endif  // MXNET_USE_CUDA
+#endif // MXNET_USE_CUDA
 
   static void ActivateDevice(Context ctx) {
     switch (ctx.dev_type) {
-      case Context::kCPU:
-      case Context::kCPUShared: break;
-      case Context::kGPU:
-      case Context::kCPUPinned: {
+    case Context::kCPU:
+    case Context::kCPUShared:
+      break;
+    case Context::kGPU:
+    case Context::kCPUPinned:
+    case Context::kGPUShared: {
 #if MXNET_USE_CUDA
-          if (num_gpu_device > 0) {
-            CUDA_CALL(cudaSetDevice(ctx.real_dev_id()));
-          }
-#endif  // MXNET_USE_CUDA
-          break;
-        }
-      default:
-        LOG(FATAL) << "Unimplemented device";
+      if (num_gpu_device > 0) {
+        CUDA_CALL(cudaSetDevice(ctx.real_dev_id()));
+      }
+#endif // MXNET_USE_CUDA
+      break;
+    }
+    default:
+      LOG(FATAL) << "Unimplemented device";
     }
   }
   // internal storage managers
   std::array<common::LazyAllocArray<storage::StorageManager>,
-             kMaxNumberOfDevices> storage_managers_;
-};  // struct Storage::Impl
+             kMaxNumberOfDevices>
+      storage_managers_;
+}; // struct Storage::Impl
 #if MXNET_USE_CUDA
 int StorageImpl::num_gpu_device = 0;
-#endif  // MXNET_USE_CUDA
+#endif // MXNET_USE_CUDA
 
-void StorageImpl::Alloc(Storage::Handle* handle) {
+void StorageImpl::Alloc(Storage::Handle *handle) {
   // space already recycled, ignore request
-  auto&& device = storage_managers_.at(handle->ctx.dev_type);
-  std::shared_ptr<storage::StorageManager> manager = device.Get(
-      handle->ctx.real_dev_id(), [handle]() {
+  auto &&device = storage_managers_.at(handle->ctx.dev_type);
+  std::shared_ptr<storage::StorageManager> manager =
+      device.Get(handle->ctx.real_dev_id(), [handle]() {
         storage::StorageManager *ptr = nullptr;
         switch (handle->ctx.dev_type) {
-          case Context::kCPU: {
-            ptr = new storage::NaiveStorageManager<storage::CPUDeviceStorage>();
-            break;
-          }
-          case Context::kCPUShared: {
-            ptr = new storage::CPUSharedStorageManager();
-            break;
-          }
-          case Context::kCPUPinned: {
+        case Context::kCPU: {
+          ptr = new storage::NaiveStorageManager<storage::CPUDeviceStorage>();
+          break;
+        }
+        case Context::kCPUShared: {
+          ptr = new storage::CPUSharedStorageManager();
+          break;
+        }
+        case Context::kCPUPinned: {
 #if MXNET_USE_CUDA
+          num_gpu_device = 0;
+          cudaError_t e = cudaGetDeviceCount(&num_gpu_device);
+          if (e != cudaSuccess) {
             num_gpu_device = 0;
-            cudaError_t e = cudaGetDeviceCount(&num_gpu_device);
-            if (e != cudaSuccess) {
-              num_gpu_device = 0;
-            }
-            if (num_gpu_device > 0) {
-              ptr = new storage::NaiveStorageManager<storage::PinnedMemoryStorage>();
-            } else {
-              ptr = new storage::NaiveStorageManager<storage::CPUDeviceStorage>();
-            }
+          }
+          if (num_gpu_device > 0) {
+            ptr = new storage::NaiveStorageManager<
+                storage::PinnedMemoryStorage>();
+          } else {
+            ptr = new storage::NaiveStorageManager<storage::CPUDeviceStorage>();
+          }
 #else
             ptr = new storage::NaiveStorageManager<storage::CPUDeviceStorage>();
-#endif  // MXNET_USE_CUDA
-            break;
-          }
-          case Context::kGPU: {
+#endif // MXNET_USE_CUDA
+          break;
+        }
+        case Context::kGPU: {
 #if MXNET_USE_CUDA
-            CUDA_CALL(cudaGetDeviceCount(&num_gpu_device));
-            CHECK_GT(num_gpu_device, 0) << "GPU usage requires at least 1 GPU";
-            ptr = new storage::GPUPooledStorageManager();
+          CUDA_CALL(cudaGetDeviceCount(&num_gpu_device));
+          CHECK_GT(num_gpu_device, 0) << "GPU usage requires at least 1 GPU";
+          ptr = new storage::GPUPooledStorageManager();
 #else
             LOG(FATAL) << "Compile with USE_CUDA=1 to enable GPU usage";
-#endif  // MXNET_USE_CUDA
-            break;
+#endif // MXNET_USE_CUDA
+          break;
+        }
+        case Context::kGPUShared: {
+#if MXNET_USE_CUDA
+          num_gpu_device = 0;
+          cudaError_t e = cudaGetDeviceCount(&num_gpu_device);
+          if (e != cudaSuccess) {
+            num_gpu_device = 0;
           }
-          default: LOG(FATAL) <<  "Unimplemented device " << handle->ctx.dev_type;
+          if (num_gpu_device > 0) {
+            ptr = new storage::NaiveStorageManager<
+                storage::GPUSharedMemoryStorage>();
+          } else {
+            assert(false && "no cuda devices found");
+          }
+#else
+#error "invalid context. Please compile with MXNET_USE_CUDA=1"
+#endif // MXNET_USE_CUDA
+          break;
+        }
+        default:
+          LOG(FATAL) << "Unimplemented device " << handle->ctx.dev_type;
         }
         return ptr;
       });
@@ -130,10 +153,10 @@ void StorageImpl::Alloc(Storage::Handle* handle) {
 
 void StorageImpl::Free(Storage::Handle handle) {
   const Context &ctx = handle.ctx;
-  auto&& device = storage_managers_.at(ctx.dev_type);
-  std::shared_ptr<storage::StorageManager> manager = device.Get(
-      ctx.real_dev_id(), []() {
-        LOG(FATAL) <<  "Cannot Free space to a device you have not allocated";
+  auto &&device = storage_managers_.at(ctx.dev_type);
+  std::shared_ptr<storage::StorageManager> manager =
+      device.Get(ctx.real_dev_id(), []() {
+        LOG(FATAL) << "Cannot Free space to a device you have not allocated";
         return nullptr;
       });
   this->ActivateDevice(ctx);
@@ -142,10 +165,10 @@ void StorageImpl::Free(Storage::Handle handle) {
 
 void StorageImpl::DirectFree(Storage::Handle handle) {
   const Context &ctx = handle.ctx;
-  auto&& device = storage_managers_.at(ctx.dev_type);
-  std::shared_ptr<storage::StorageManager> manager = device.Get(
-      ctx.real_dev_id(), []() {
-        LOG(FATAL) <<  "Cannot Free space to a device you have not allocated";
+  auto &&device = storage_managers_.at(ctx.dev_type);
+  std::shared_ptr<storage::StorageManager> manager =
+      device.Get(ctx.real_dev_id(), []() {
+        LOG(FATAL) << "Cannot Free space to a device you have not allocated";
         return nullptr;
       });
   this->ActivateDevice(ctx);
@@ -154,12 +177,14 @@ void StorageImpl::DirectFree(Storage::Handle handle) {
 
 void StorageImpl::SharedIncrementRefCount(Storage::Handle handle) {
   CHECK_EQ(handle.ctx.dev_type, Context::kCPUShared);
-  auto&& device = storage_managers_.at(Context::kCPUShared);
+  auto &&device = storage_managers_.at(Context::kCPUShared);
   auto manager = device.Get(0, []() {
-      LOG(FATAL) << "Cannot increment ref count before allocating any shared memory.";
-      return nullptr;
-    });
-  dynamic_cast<storage::CPUSharedStorageManager*>(manager.get())->IncrementRefCount(handle);
+    LOG(FATAL)
+        << "Cannot increment ref count before allocating any shared memory.";
+    return nullptr;
+  });
+  dynamic_cast<storage::CPUSharedStorageManager *>(manager.get())
+      ->IncrementRefCount(handle);
 }
 
 std::shared_ptr<Storage> Storage::_GetSharedRef() {
@@ -172,8 +197,8 @@ std::shared_ptr<Storage> Storage::_GetSharedRef() {
   return inst;
 }
 
-Storage* Storage::Get() {
+Storage *Storage::Get() {
   static Storage *ptr = _GetSharedRef().get();
   return ptr;
 }
-}  // namespace mxnet
+} // namespace mxnet
