@@ -24,6 +24,7 @@
 #include "../common/lazy_alloc_array.h"
 #include "./cpu_device_storage.h"
 #include "./cpu_shared_storage_manager.h"
+#include "./gpu_shared_storage_manager.h"
 #include "./naive_storage_manager.h"
 #include "./pinned_memory_storage.h"
 #include "./pooled_storage_manager.h"
