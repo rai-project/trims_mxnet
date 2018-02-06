@@ -7,29 +7,44 @@ option go_package = "upr";
 // option cc_enable_arenas = true;
 
 message Layer {
+  // a unique id
+  string id = 1;
   // name of the layer
-  string name = 1;
+  string name = 2;
   // byte count for the layer
-  int64 byte_count = 2;
+  int64 byte_count = 3;
   // the cuda ipc handle fifo
-  string handle_path = 3;
+  string ipc_handle_path = 4;
   // the raw cuda device ptr (as void *)
-  int64 raw_ptr = 4;
+  int64 device_raw_ptr = 5;
   // the ref count for the layer (this is equal to the model ref_count)
-  int64 ref_count = 5;
+  int64 ref_count = 6;
+}
+
+// a model that's shared
+// each model has a unique id
+message ModelHandle {
+  // a unique id
+  string id = 1;
+  // model_id mapping
+  string model_id = 2;
+  // the total number of bytes for the model
+  int64 byte_count = 3;
+  // the sequence of layers
+  repeated Layer layers = 4;
 }
 
 message Model {
+  // a unique id
+  string id = 1;
   // name of the model
-  string name = 1;
+  string name = 2;
   // path to the params file
-  string file_path = 2;
+  string file_path = 3;
   // the refcount for the entire model
-  int64 ref_count = 3;
-  // the total number of bytes for the model
-  int64 byte_count = 4;
-  // the sequence of layers
-  repeated Layer layers = 5;
+  int64 ref_count = 4;
+  // the set of shared models
+  repeated ModelHandle models = 5;
 }
 
 message ModelRequest {
@@ -46,7 +61,7 @@ message ModelRequest {
 message Void {}
 
 service Registry {
+  rpc Open(ModelRequest) returns (ModelHandle) {}
+  rpc Close(ModelHandle) returns (Void) {}
   rpc Info(ModelRequest) returns (Model) {}
-  rpc Open(ModelRequest) returns (Model) {}
-  rpc Close(ModelRequest) returns (Void) {}
 }

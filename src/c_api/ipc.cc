@@ -5,6 +5,7 @@
 namespace upr {
 
 struct server {
+  // NDArray::Load();
   static const std::string host_name = "localhost";
   static const int port = dmlc::GetEnv("PORT", 50051);
   static const std::string address = fmt::format("{}:{}", host_name, port);
