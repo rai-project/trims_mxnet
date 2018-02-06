@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package upr;
+
+option go_package = "upr";
+
+// option cc_enable_arenas = true;
+
+message Layer {
+  // name of the layer
+  string name = 1;
+  // byte count for the layer
+  int64 byte_count = 2;
+  // the cuda ipc handle fifo
+  string handle_path = 3;
+  // the raw cuda device ptr (as void *)
+  int64 raw_ptr = 4;
+  // the ref count for the layer (this is equal to the model ref_count)
+  int64 ref_count = 5;
+}
+
+message Model {
+  // name of the model
+  string name = 1;
+  // path to the params file
+  string file_path = 2;
+  // the refcount for the entire model
+  int64 ref_count = 3;
+  // the total number of bytes for the model
+  int64 byte_count = 4;
+  // the sequence of layers
+  repeated Layer layers = 5;
+}
+
+message ModelRequest {
+  // name of the model . the model is either read from
+  // cache, but if does not exist (and file_path is
+  // valid) then read from file
+  string model_name = 1;
+  // file path used to read model if does not exist in registry
+  string file_path = 2;
+  // if true then the model is never read from cache
+  bool no_cache = 3;
+}
+
+message Void {}
+
+service Registry {
+  rpc Info(ModelRequest) returns (Model) {}
+  rpc Open(ModelRequest) returns (Model) {}
+  rpc Close(ModelRequest) returns (Void) {}
+}
