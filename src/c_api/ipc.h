@@ -17,6 +17,6 @@
 
 namespace upr {
 
-void UPRLoad(dmlc::Stream *fi, std::vector<NDArray> *data,
+void UPRLoad(std::string symbol_json_str, dmlc::Stream *fi, std::vector<NDArray> *data,
              std::vector<std::string> *keys);
 }

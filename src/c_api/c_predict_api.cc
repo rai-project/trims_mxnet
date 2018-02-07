@@ -137,7 +137,7 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
                                    param_size); // NOLINT(*)
     LOG(INFO) << "UPR:: loading model...";
 
-    upr::Load(&fi, &data, &names);
+    upr::Load(std::string(symbol_json_str), &fi, &data, &names);
     CHECK_EQ(names.size(), data.size()) << "Invalid param file format";
     for (size_t i = 0; i < names.size(); ++i) {
       if (!strncmp(names[i].c_str(), "aux:", 4)) {

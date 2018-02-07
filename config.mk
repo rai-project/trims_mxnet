@@ -215,8 +215,15 @@ USE_CPP_PACKAGE = 0
 USE_BLAS=openblas
 USE_OPENCV=0
 USE_CPP_PACKAGE=1
-ADD_CFLAGS=-I/usr/include/openblas -fpermissive -Wno-strict-aliasing -Wno-sign-compare -ftrack-macro-expansion=0 -Wno-misleading-indentation -I/usr/local/cuda/include
+ADD_CFLAGS=-I/usr/include/openblas -I/usr/local/cuda/include -fpermissive # -Wno-strict-aliasing -Wno-sign-compare -ftrack-macro-expansion=0 -Wno-misleading-indentation 
 USE_CUDA=1
 USE_CUDNN=1
 ADD_LDFLAGS=-L/usr/local/cuda/lib64
 USE_PROFILER=1
+
+
+# whether compile with options for MXNet developer
+DEV = 1
+
+# whether compile with debug
+DEBUG = 1
