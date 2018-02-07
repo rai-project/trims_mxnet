@@ -73,6 +73,8 @@ include $(DMLC_CORE)/make/dmlc.mk
 WARNFLAGS= -Wall -Wsign-compare
 CFLAGS = -DMSHADOW_FORCE_STREAM $(WARNFLAGS)
 
+CFLAGS += -DFMT_HEADER_ONLY=1
+
 ifeq ($(DEV), 1)
 	CFLAGS += -g -Werror
 	NVCCFLAGS += -Werror cross-execution-space-call
@@ -88,9 +90,9 @@ CGRPCFLAGS = `pkg-config --cflags protobuf grpc`
 CFLAGS += $(CGRPCFLAGS) -I$(ROOTDIR)/3rdparty -I$(ROOTDIR)/mshadow/ -I$(ROOTDIR)/dmlc-core/include -fPIC -I$(NNVM_PATH)/include -I$(DLPACK_PATH)/include -Iinclude $(MSHADOW_CFLAGS)
 LDFLAGS = -pthread $(MSHADOW_LDFLAGS) $(DMLC_LDFLAGS) `pkg-config --libs protobuf grpc++ grpc`
 ifeq ($(DEBUG), 1)
-	NVCCFLAGS += -std=c++14 -Xcompiler -D_FORCE_INLINES -g -G -O0 -ccbin $(CXX) $(MSHADOW_NVCCFLAGS)
+	NVCCFLAGS += -DFMT_HEADER_ONLY=1 -std=c++14 -Xcompiler -D_FORCE_INLINES -g -G -O0 -ccbin $(CXX) $(MSHADOW_NVCCFLAGS)
 else
-	NVCCFLAGS += -std=c++14 -Xcompiler -D_FORCE_INLINES -O3 -ccbin $(CXX) $(MSHADOW_NVCCFLAGS)
+	NVCCFLAGS += -DFMT_HEADER_ONLY=1 -std=c++14 -Xcompiler -D_FORCE_INLINES -O3 -ccbin $(CXX) $(MSHADOW_NVCCFLAGS)
 endif
 
 # CFLAGS for profiler
