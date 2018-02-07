@@ -19,7 +19,6 @@ struct server {
   static std::string host_name;
   static int port;
   static std::string address;
-  static void initialize();
 
   static void Load(std::string symbol_json_str, dmlc::Stream *fi,
                    std::vector<NDArray> *data, std::vector<std::string> *keys) {
@@ -27,11 +26,15 @@ struct server {
   }
 };
 
+
+std::string server::host_name = "localhost"s;
+int server::port = dmlc::GetEnv("PORT", 50051);
+std::string server::address = fmt::format("{}:{}", host_name, port);
+
 struct client {
   static std::string server_host_name;
   static int server_port;
   static std::string server_address;
-  static void initialize();
   class RegistryClient {
   public:
     explicit RegistryClient(std::shared_ptr<Channel> channel)
@@ -104,11 +107,14 @@ struct client {
   }
 };
 
+
+std::string client::server_host_name = server::host_name;
+int client::server_port = server::port;
+std::string client::server_address = server::address;
+
 void Load(std::string symbol_json_str, dmlc::Stream *fi,
           std::vector<NDArray> *data, std::vector<std::string> *keys) {
 
-  server::initialize();
-  client::initialize();
 
   const bool is_server = dmlc::GetEnv("UPR_SERVER", true);
   LOG(INFO) << "UPR:: loading in " << (is_server ? "Server" : "Client")
@@ -123,25 +129,3 @@ void Load(std::string symbol_json_str, dmlc::Stream *fi,
 }
 } // namespace upr
 
-void upr::server::initialize() {
-  static bool is_initialized = false;
-  if (is_initialized) {
-    return;
-  }
-  is_initialized = true;
-  server::host_name = "localhost"s;
-  server::port = dmlc::GetEnv("PORT", 50051);
-  server::address = fmt::format("{}:{}", host_name, port);
-}
-
-void upr::client::initialize() {
-  static bool is_initialized = false;
-  if (is_initialized) {
-    return;
-  }
-  is_initialized = true;
-  upr::server::initialize();
-  client::server_host_name = server::host_name;
-  client::server_port = server::port;
-  client::server_address = server::address;
-}

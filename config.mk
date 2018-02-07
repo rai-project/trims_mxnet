@@ -213,7 +213,7 @@ USE_CPP_PACKAGE = 0
 # SFRAME_PATH = $(HOME)/SFrame
 # MXNET_PLUGINS += plugin/sframe/plugin.mk
 USE_BLAS=openblas
-USE_OPENCV=0
+USE_OPENCV=1
 USE_CPP_PACKAGE=0
 ADD_CFLAGS=-I/usr/include/openblas -I/usr/local/cuda/include -fpermissive # -Wno-strict-aliasing -Wno-sign-compare -ftrack-macro-expansion=0 -Wno-misleading-indentation 
 USE_CUDA=1
