@@ -22,13 +22,9 @@
  * \file c_api_error.cc
  * \brief C error handling
  */
-#include <nnvm/c_api.h>
 #include "./c_api_common.h"
+#include <nnvm/c_api.h>
 
-const char *MXGetLastError() {
-  return NNGetLastError();
-}
+const char *MXGetLastError() { return NNGetLastError(); }
 
-void MXAPISetLastError(const char* msg) {
-  NNAPISetLastError(msg);
-}
+void MXAPISetLastError(const char *msg) { NNAPISetLastError(msg); }

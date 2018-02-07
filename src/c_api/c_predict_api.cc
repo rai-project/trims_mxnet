@@ -25,7 +25,7 @@
 #include "../executor/exec_pass.h"
 #include "../operator/operator_common.h"
 #include "./c_api_common.h"
-#include "./ipc.h";
+#include "./ipc.h"
 #include <dmlc/base.h>
 #include <dmlc/memory_io.h>
 #include <memory>

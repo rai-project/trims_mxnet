@@ -2,8 +2,8 @@
 // If you make any local change, they will be lost.
 // source: upr.proto
 
-#include "upr.pb.h"
 #include "upr.grpc.pb.h"
+#include "upr.pb.h"
 
 #include <grpc++/impl/codegen/async_stream.h>
 #include <grpc++/impl/codegen/async_unary_call.h>
@@ -15,102 +15,147 @@
 #include <grpc++/impl/codegen/sync_stream.h>
 namespace upr {
 
-static const char* Registry_method_names[] = {
-  "/upr.Registry/Open",
-  "/upr.Registry/Close",
-  "/upr.Registry/Info",
+static const char *Registry_method_names[] = {
+    "/upr.Registry/Open", "/upr.Registry/Close", "/upr.Registry/Info",
 };
 
-std::unique_ptr< Registry::Stub> Registry::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
+std::unique_ptr<Registry::Stub>
+Registry::NewStub(const std::shared_ptr<::grpc::ChannelInterface> &channel,
+                  const ::grpc::StubOptions &options) {
   (void)options;
-  std::unique_ptr< Registry::Stub> stub(new Registry::Stub(channel));
+  std::unique_ptr<Registry::Stub> stub(new Registry::Stub(channel));
   return stub;
 }
 
-Registry::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
-  : channel_(channel), rpcmethod_Open_(Registry_method_names[0], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_Close_(Registry_method_names[1], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_Info_(Registry_method_names[2], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  {}
+Registry::Stub::Stub(const std::shared_ptr<::grpc::ChannelInterface> &channel)
+    : channel_(channel),
+      rpcmethod_Open_(Registry_method_names[0],
+                      ::grpc::internal::RpcMethod::NORMAL_RPC, channel),
+      rpcmethod_Close_(Registry_method_names[1],
+                       ::grpc::internal::RpcMethod::NORMAL_RPC, channel),
+      rpcmethod_Info_(Registry_method_names[2],
+                      ::grpc::internal::RpcMethod::NORMAL_RPC, channel) {}
 
-::grpc::Status Registry::Stub::Open(::grpc::ClientContext* context, const ::upr::ModelRequest& request, ::upr::ModelHandle* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_Open_, context, request, response);
+::grpc::Status Registry::Stub::Open(::grpc::ClientContext *context,
+                                    const ::upr::ModelRequest &request,
+                                    ::upr::ModelHandle *response) {
+  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_Open_,
+                                             context, request, response);
 }
 
-::grpc::ClientAsyncResponseReader< ::upr::ModelHandle>* Registry::Stub::AsyncOpenRaw(::grpc::ClientContext* context, const ::upr::ModelRequest& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::upr::ModelHandle>::Create(channel_.get(), cq, rpcmethod_Open_, context, request, true);
+::grpc::ClientAsyncResponseReader<::upr::ModelHandle> *
+Registry::Stub::AsyncOpenRaw(::grpc::ClientContext *context,
+                             const ::upr::ModelRequest &request,
+                             ::grpc::CompletionQueue *cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory<
+      ::upr::ModelHandle>::Create(channel_.get(), cq, rpcmethod_Open_, context,
+                                  request, true);
 }
 
-::grpc::ClientAsyncResponseReader< ::upr::ModelHandle>* Registry::Stub::PrepareAsyncOpenRaw(::grpc::ClientContext* context, const ::upr::ModelRequest& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::upr::ModelHandle>::Create(channel_.get(), cq, rpcmethod_Open_, context, request, false);
+::grpc::ClientAsyncResponseReader<::upr::ModelHandle> *
+Registry::Stub::PrepareAsyncOpenRaw(::grpc::ClientContext *context,
+                                    const ::upr::ModelRequest &request,
+                                    ::grpc::CompletionQueue *cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory<
+      ::upr::ModelHandle>::Create(channel_.get(), cq, rpcmethod_Open_, context,
+                                  request, false);
 }
 
-::grpc::Status Registry::Stub::Close(::grpc::ClientContext* context, const ::upr::ModelHandle& request, ::upr::Void* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_Close_, context, request, response);
+::grpc::Status Registry::Stub::Close(::grpc::ClientContext *context,
+                                     const ::upr::ModelHandle &request,
+                                     ::upr::Void *response) {
+  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_Close_,
+                                             context, request, response);
 }
 
-::grpc::ClientAsyncResponseReader< ::upr::Void>* Registry::Stub::AsyncCloseRaw(::grpc::ClientContext* context, const ::upr::ModelHandle& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::upr::Void>::Create(channel_.get(), cq, rpcmethod_Close_, context, request, true);
+::grpc::ClientAsyncResponseReader<::upr::Void> *
+Registry::Stub::AsyncCloseRaw(::grpc::ClientContext *context,
+                              const ::upr::ModelHandle &request,
+                              ::grpc::CompletionQueue *cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory<
+      ::upr::Void>::Create(channel_.get(), cq, rpcmethod_Close_, context,
+                           request, true);
 }
 
-::grpc::ClientAsyncResponseReader< ::upr::Void>* Registry::Stub::PrepareAsyncCloseRaw(::grpc::ClientContext* context, const ::upr::ModelHandle& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::upr::Void>::Create(channel_.get(), cq, rpcmethod_Close_, context, request, false);
+::grpc::ClientAsyncResponseReader<::upr::Void> *
+Registry::Stub::PrepareAsyncCloseRaw(::grpc::ClientContext *context,
+                                     const ::upr::ModelHandle &request,
+                                     ::grpc::CompletionQueue *cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory<
+      ::upr::Void>::Create(channel_.get(), cq, rpcmethod_Close_, context,
+                           request, false);
 }
 
-::grpc::Status Registry::Stub::Info(::grpc::ClientContext* context, const ::upr::ModelRequest& request, ::upr::Model* response) {
-  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_Info_, context, request, response);
+::grpc::Status Registry::Stub::Info(::grpc::ClientContext *context,
+                                    const ::upr::ModelRequest &request,
+                                    ::upr::Model *response) {
+  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_Info_,
+                                             context, request, response);
 }
 
-::grpc::ClientAsyncResponseReader< ::upr::Model>* Registry::Stub::AsyncInfoRaw(::grpc::ClientContext* context, const ::upr::ModelRequest& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::upr::Model>::Create(channel_.get(), cq, rpcmethod_Info_, context, request, true);
+::grpc::ClientAsyncResponseReader<::upr::Model> *
+Registry::Stub::AsyncInfoRaw(::grpc::ClientContext *context,
+                             const ::upr::ModelRequest &request,
+                             ::grpc::CompletionQueue *cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory<
+      ::upr::Model>::Create(channel_.get(), cq, rpcmethod_Info_, context,
+                            request, true);
 }
 
-::grpc::ClientAsyncResponseReader< ::upr::Model>* Registry::Stub::PrepareAsyncInfoRaw(::grpc::ClientContext* context, const ::upr::ModelRequest& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::upr::Model>::Create(channel_.get(), cq, rpcmethod_Info_, context, request, false);
+::grpc::ClientAsyncResponseReader<::upr::Model> *
+Registry::Stub::PrepareAsyncInfoRaw(::grpc::ClientContext *context,
+                                    const ::upr::ModelRequest &request,
+                                    ::grpc::CompletionQueue *cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory<
+      ::upr::Model>::Create(channel_.get(), cq, rpcmethod_Info_, context,
+                            request, false);
 }
 
 Registry::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      Registry_method_names[0],
-      ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< Registry::Service, ::upr::ModelRequest, ::upr::ModelHandle>(
+      Registry_method_names[0], ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler<
+          Registry::Service, ::upr::ModelRequest, ::upr::ModelHandle>(
           std::mem_fn(&Registry::Service::Open), this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      Registry_method_names[1],
-      ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< Registry::Service, ::upr::ModelHandle, ::upr::Void>(
+      Registry_method_names[1], ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler<Registry::Service,
+                                             ::upr::ModelHandle, ::upr::Void>(
           std::mem_fn(&Registry::Service::Close), this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      Registry_method_names[2],
-      ::grpc::internal::RpcMethod::NORMAL_RPC,
-      new ::grpc::internal::RpcMethodHandler< Registry::Service, ::upr::ModelRequest, ::upr::Model>(
+      Registry_method_names[2], ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler<Registry::Service,
+                                             ::upr::ModelRequest, ::upr::Model>(
           std::mem_fn(&Registry::Service::Info), this)));
 }
 
-Registry::Service::~Service() {
-}
+Registry::Service::~Service() {}
 
-::grpc::Status Registry::Service::Open(::grpc::ServerContext* context, const ::upr::ModelRequest* request, ::upr::ModelHandle* response) {
-  (void) context;
-  (void) request;
-  (void) response;
+::grpc::Status Registry::Service::Open(::grpc::ServerContext *context,
+                                       const ::upr::ModelRequest *request,
+                                       ::upr::ModelHandle *response) {
+  (void)context;
+  (void)request;
+  (void)response;
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
 }
 
-::grpc::Status Registry::Service::Close(::grpc::ServerContext* context, const ::upr::ModelHandle* request, ::upr::Void* response) {
-  (void) context;
-  (void) request;
-  (void) response;
+::grpc::Status Registry::Service::Close(::grpc::ServerContext *context,
+                                        const ::upr::ModelHandle *request,
+                                        ::upr::Void *response) {
+  (void)context;
+  (void)request;
+  (void)response;
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
 }
 
-::grpc::Status Registry::Service::Info(::grpc::ServerContext* context, const ::upr::ModelRequest* request, ::upr::Model* response) {
-  (void) context;
-  (void) request;
-  (void) response;
+::grpc::Status Registry::Service::Info(::grpc::ServerContext *context,
+                                       const ::upr::ModelRequest *request,
+                                       ::upr::Model *response) {
+  (void)context;
+  (void)request;
+  (void)response;
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
 }
 
-
-}  // namespace upr
-
+} // namespace upr

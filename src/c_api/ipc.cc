@@ -8,136 +8,140 @@
 
 #include "fmt/format.h"
 
+using namespace mxnet;
+using namespace std::string_literals;
+using namespace grpc;
+
 namespace upr {
 
 struct server {
   // NDArray::Load();
-  static const std::string host_name = "localhost";
-  static const int port = dmlc::GetEnv("PORT", 50051);
-  static const std::string address = fmt::format("{}:{}", host_name, port);
+  static std::string host_name;
+  static int port;
+  static std::string address;
+  static void initialize();
+
+  static void Load(std::string symbol_json_str, dmlc::Stream *fi,
+                   std::vector<NDArray> *data, std::vector<std::string> *keys) {
+    return;
+  }
 };
 
 struct client {
-  using grpc;
-  static const auto server_host_name = server::host_name;
-  static const auto server_port = server::port;
-  static const auto server_address = server::address;
-class RegistryClient {
-public:
-  explicit RegistryClient(std::shared_ptr<Channel> channel) : stub_(Registry::NewStub(channel)) {
-  }
+  static std::string server_host_name;
+  static int server_port;
+  static std::string server_address;
+  static void initialize();
+  class RegistryClient {
+  public:
+    explicit RegistryClient(std::shared_ptr<Channel> channel)
+        : stub_(Registry::NewStub(channel)) {}
 
-  Model Info(const ModelRequest & request) {
+    Model Info(const ModelRequest &request) {
+      Model reply;
+      ClientContext context;
+      const auto status = stub_->Info(&context, request, &reply);
 
-    // Container for the data we expect from the server.
-    Model reply;
-
-    // Context for the client. It could be used to convey extra information to
-    // the server and/or tweak certain RPC behaviors.
-    ClientContext context;
-
-    // Storage for the status of the RPC upon completion.
-    Status status = stub_->Info(&context, request, &reply);
-
-    // Act upon the status of the actual RPC.
-    if (!status.ok()) {
-      throw std::runtime_error(
-        fmt::format(
-          "Error: [{}] {}. Info failed on client.", 
-        status.error_message(),
-         status.error_details()
-        )
-        );
+      if (!status.ok()) {
+        throw std::runtime_error(
+            fmt::format("Error: [{}] {}. Info failed on client.",
+                        status.error_message(), status.error_details()));
+      }
+      return reply;
     }
-    return reply;
-  }
 
-  Model Info(const std::string & file_path) {
-    ModelRequest request;
-    request.set_file_path(file_path);
-    return this->Info(request);
-  }
-  
-  ModelHandle Open(const ModelRequest & request) {
-
-    // Container for the data we expect from the server.
-    ModelHandle reply;
-
-    // Context for the client. It could be used to convey extra information to
-    // the server and/or tweak certain RPC behaviors.
-    ClientContext context;
-
-    // Storage for the status of the RPC upon completion.
-    Status status = stub_->Open(&context, request, &reply);
-
-    // Act upon the status of the actual RPC.
-    if (!status.ok()) {
-      throw std::runtime_error(
-        fmt::format(
-          "Error: [{}] {}. Open failed on client.", 
-        status.error_message(),
-         status.error_details()
-        )
-        );
+    Model Info(const std::string &file_path) {
+      ModelRequest request;
+      request.set_file_path(file_path);
+      return this->Info(request);
     }
-    return reply;
-  }
 
-  ModelHandle Open(const std::string & file_path) {
-    ModelRequest request;
-    request.set_file_path(file_path);
-    return this->Open(request);
-  }
+    ModelHandle Open(const ModelRequest &request) {
+      ModelHandle reply;
+      ClientContext context;
+      const auto status = stub_->Open(&context, request, &reply);
 
-  void Close(const ModelHandle & handle)  {
-    // Container for the data we expect from the server.
-    Void reply;
-
-    // Context for the client. It could be used to convey extra information to
-    // the server and/or tweak certain RPC behaviors.
-    ClientContext context;
-
-    // Storage for the status of the RPC upon completion.
-    Status status = stub_->Close(&context, request, &reply);
-
-    // Act upon the status of the actual RPC.
-    if (!status.ok()) {
-      throw std::runtime_error(
-        fmt::format(
-          "Error: [{}] {}. Close failed on client.", 
-        status.error_message(),
-         status.error_details()
-        )
-        );
+      if (!status.ok()) {
+        throw std::runtime_error(
+            fmt::format("Error: [{}] {}. Open failed on client.",
+                        status.error_message(), status.error_details()));
+      }
+      return reply;
     }
-    return ;
-  }
 
-private:
-  // Out of the passed in Channel comes the stub, stored here, our view of the
-  // server's exposed services.
-  std::unique_ptr<Registry::Stub> stub_;
+    ModelHandle Open(const std::string &file_path) {
+      ModelRequest request;
+      request.set_file_path(file_path);
+      return this->Open(request);
+    }
+
+    void Close(const ModelHandle &request) {
+      Void reply;
+      ClientContext context;
+
+      const auto status = stub_->Close(&context, request, &reply);
+
+      if (!status.ok()) {
+        throw std::runtime_error(
+            fmt::format("Error: [{}] {}. Close failed on client.",
+                        status.error_message(), status.error_details()));
+      }
+      return;
+    }
+
+  private:
+    std::unique_ptr<Registry::Stub> stub_;
+  };
+
+  static void Load(std::string symbol_json_str, dmlc::Stream *fi,
+                   std::vector<NDArray> *data, std::vector<std::string> *keys) {
+
+    RegistryClient Registry(grpc::CreateChannel(
+        server_address, grpc::InsecureChannelCredentials()));
+    auto open_reply = Registry.Open(symbol_json_str); // The actual RPC call!
+
+    std::cout << "Client received open reply: " << open_reply.id() << "\n";
+  }
 };
 
-static void Load(std::string symbol_json_str, dmlc::Stream *fi, std::vector<NDArray> *data,
-          std::vector<std::string> *keys) {
+void Load(std::string symbol_json_str, dmlc::Stream *fi,
+          std::vector<NDArray> *data, std::vector<std::string> *keys) {
 
-  RegistryClient Registry(grpc::CreateChannel(server_address, grpc::InsecureChannelCredentials()));
- auto open_reply = Registry.Open(symbol_json_str); // The actual RPC call!
+  server::initialize();
+  client::initialize();
 
-  std::cout << "Client received open reply: " << open_reply.id() << "\n";
-          }
-};
-
-void Load(std::string symbol_json_str, dmlc::Stream *fi, std::vector<NDArray> *data,
-          std::vector<std::string> *keys) {
   const bool is_server = dmlc::GetEnv("UPR_SERVER", true);
   LOG(INFO) << "UPR:: loading in " << (is_server ? "Server" : "Client")
             << " mode";
 
   if (is_server) {
-    return server::Load(symbol_json_str, fi, data, keys);
+    server::Load(symbol_json_str, fi, data, keys);
+    return;
   }
-  return client::Load(symbol_json_str, fi, data, keys);
+  client::Load(symbol_json_str, fi, data, keys);
+  return;
 }
 } // namespace upr
+
+void upr::server::initialize() {
+  static bool is_initialized = false;
+  if (is_initialized) {
+    return;
+  }
+  is_initialized = true;
+  server::host_name = "localhost"s;
+  server::port = dmlc::GetEnv("PORT", 50051);
+  server::address = fmt::format("{}:{}", host_name, port);
+}
+
+void upr::client::initialize() {
+  static bool is_initialized = false;
+  if (is_initialized) {
+    return;
+  }
+  is_initialized = true;
+  upr::server::initialize();
+  client::server_host_name = server::host_name;
+  client::server_port = server::port;
+  client::server_address = server::address;
+}
