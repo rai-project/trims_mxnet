@@ -87,8 +87,11 @@ else
 	CFLAGS += -O3 -DNDEBUG=1
 endif
 CGRPCFLAGS = `pkg-config --cflags protobuf grpc`
+LDGRPCFLAGS = `pkg-config --libs protobuf grpc++ grpc`
+# CGRPCFLAGS = -pthread -I/home/linuxbrew/.linuxbrew/Cellar/protobuf/3.5.1/include -I/home/linuxbrew/.linuxbrew/Cellar/grpc/1.9.0/include
+# LDGRPCFLAGS = -L/home/linuxbrew/.linuxbrew/Cellar/protobuf/3.5.1/lib -L/home/linuxbrew/.linuxbrew/Cellar/grpc/1.9.0/lib -lprotobuf -pthread -lpthread -lgrpc++ -lgrpc
 CFLAGS += $(CGRPCFLAGS) -I$(ROOTDIR)/3rdparty -I$(ROOTDIR)/mshadow/ -I$(ROOTDIR)/dmlc-core/include -fPIC -I$(NNVM_PATH)/include -I$(DLPACK_PATH)/include -Iinclude $(MSHADOW_CFLAGS)
-LDFLAGS = -pthread $(MSHADOW_LDFLAGS) $(DMLC_LDFLAGS) `pkg-config --libs protobuf grpc++ grpc`
+LDFLAGS = -pthread $(MSHADOW_LDFLAGS) $(DMLC_LDFLAGS) $(LDGRPCFLAGS)
 ifeq ($(DEBUG), 1)
 	NVCCFLAGS += -DFMT_HEADER_ONLY=1 -std=c++14 -Xcompiler -D_FORCE_INLINES -g -G -O0 -ccbin $(CXX) $(MSHADOW_NVCCFLAGS)
 else
@@ -121,6 +124,9 @@ ifeq ($(USE_OPENCV), 1)
 else
 	CFLAGS+= -DMXNET_USE_OPENCV=0
 endif
+
+
+BIN += bin/uprd
 
 ifeq ($(USE_OPENMP), 1)
 	ifneq ($(UNAME_S), Darwin)
@@ -446,9 +452,11 @@ NNVM_SRC = $(wildcard $(NNVM_PATH)/src/*/*/*.cc $(NNVM_PATH)/src/*/*.cc $(NNVM_P
 $(NNVM_PATH)/lib/libnnvm.a: $(NNVM_INC) $(NNVM_SRC)
 	+ cd $(NNVM_PATH); $(MAKE) lib/libnnvm.a DMLC_CORE_PATH=$(DMLC_CORE); cd $(ROOTDIR)
 
+bin/uprd: tools/uprd.cc lib/libmxnet.so 
+
 $(BIN) :
 	@mkdir -p $(@D)
-	$(CXX) $(CFLAGS) -std=c++11  -o $@ $(filter %.cpp %.o %.c %.a %.cc, $^) $(LDFLAGS)
+	$(CXX) $(CFLAGS) -std=c++14  -o $@ $(filter %.cpp %.o %.c %.a %.cc, $^) $(LDFLAGS) lib/libmxnet.so -I include -I src/c_api
 
 # CPP Package
 ifeq ($(USE_CPP_PACKAGE), 1)
@@ -520,6 +528,7 @@ rpkg:
 	Rscript -e "require(roxygen2); roxygen2::roxygenise('R-package')"
 	R CMD INSTALL R-package
 	rm -rf R-package/src/image_recordio.h
+
 
 rpkgtest:
 	Rscript -e "require(testthat);res<-test_dir('R-package/tests/testthat');if(!testthat:::all_passed(res)){stop('Test failures', call. = FALSE)}"

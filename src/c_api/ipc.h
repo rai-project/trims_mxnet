@@ -24,6 +24,14 @@
 
 namespace upr {
 
-void Load(std::string symbol_json_str, dmlc::Stream *fi,
+
+struct server {
+  static std::string host_name;
+  static int port;
+  static std::string address;
+};
+
+
+void Load(std::string model_name, dmlc::Stream *fi,
              std::vector<mxnet::NDArray> *data, std::vector<std::string> *keys);
 }

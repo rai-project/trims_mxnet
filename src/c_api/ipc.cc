@@ -14,19 +14,6 @@ using namespace grpc;
 
 namespace upr {
 
-struct server {
-  // NDArray::Load();
-  static std::string host_name;
-  static int port;
-  static std::string address;
-
-  static void Load(std::string symbol_json_str, dmlc::Stream *fi,
-                   std::vector<NDArray> *data, std::vector<std::string> *keys) {
-    return;
-  }
-};
-
-
 std::string server::host_name = "localhost"s;
 int server::port = dmlc::GetEnv("PORT", 50051);
 std::string server::address = fmt::format("{}:{}", host_name, port);
@@ -96,12 +83,12 @@ struct client {
     std::unique_ptr<Registry::Stub> stub_;
   };
 
-  static void Load(std::string symbol_json_str, dmlc::Stream *fi,
+  static void Load(std::string model_name, dmlc::Stream *fi,
                    std::vector<NDArray> *data, std::vector<std::string> *keys) {
 
     RegistryClient Registry(grpc::CreateChannel(
         server_address, grpc::InsecureChannelCredentials()));
-    auto open_reply = Registry.Open(symbol_json_str); // The actual RPC call!
+    auto open_reply = Registry.Open(model_name); // The actual RPC call!
 
     std::cout << "Client received open reply: " << open_reply.id() << "\n";
   }
@@ -112,19 +99,13 @@ std::string client::server_host_name = server::host_name;
 int client::server_port = server::port;
 std::string client::server_address = server::address;
 
-void Load(std::string symbol_json_str, dmlc::Stream *fi,
+void Load(std::string model_name, dmlc::Stream *fi,
           std::vector<NDArray> *data, std::vector<std::string> *keys) {
 
 
-  const bool is_server = dmlc::GetEnv("UPR_SERVER", true);
-  LOG(INFO) << "UPR:: loading in " << (is_server ? "Server" : "Client")
-            << " mode";
+  LOG(INFO) << "UPR:: loading in Client mode";
 
-  if (is_server) {
-    server::Load(symbol_json_str, fi, data, keys);
-    return;
-  }
-  client::Load(symbol_json_str, fi, data, keys);
+  client::Load(model_name, fi, data, keys);
   return;
 }
 } // namespace upr
