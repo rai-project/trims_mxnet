@@ -40,9 +40,9 @@ struct client {
       return reply;
     }
 
-    Model Info(const std::string &directory_path) {
+    Model Info(const std::string &model_name) {
       ModelRequest request;
-      request.set_directory_path(directory_path);
+      request.set_name(model_name);
       return this->Info(request);
     }
 
@@ -59,9 +59,9 @@ struct client {
       return reply;
     }
 
-    ModelHandle Open(const std::string &directory_path) {
+    ModelHandle Open(const std::string &model_name) {
       ModelRequest request;
-      request.set_directory_path(directory_path);
+      request.set_name(model_name);
       return this->Open(request);
     }
 
@@ -83,7 +83,7 @@ struct client {
     std::unique_ptr<Registry::Stub> stub_;
   };
 
-  static void Load(std::string model_name, dmlc::Stream *fi,
+  static void Load(std::string model_name, 
                    std::vector<NDArray> *data, std::vector<std::string> *keys) {
 
     RegistryClient client(grpc::CreateChannel(
@@ -99,13 +99,13 @@ std::string client::server_host_name = server::host_name;
 int client::server_port = server::port;
 std::string client::server_address = server::address;
 
-void Load(std::string model_name, dmlc::Stream *fi,
+void Load(std::string model_name, 
           std::vector<NDArray> *data, std::vector<std::string> *keys) {
 
 
   LOG(INFO) << "UPR:: loading in Client mode";
 
-  client::Load(model_name, fi, data, keys);
+  client::Load(model_name, data, keys);
   return;
 }
 } // namespace upr

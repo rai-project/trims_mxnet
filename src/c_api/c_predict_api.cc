@@ -133,11 +133,11 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
     }
     std::vector<NDArray> data;
     std::vector<std::string> names;
-    dmlc::MemoryFixedSizeStream fi((void *)param_bytes,
-                                   param_size); // NOLINT(*)
+
     LOG(INFO) << "UPR:: loading model...";
 
-    upr::Load(std::string(symbol_json_str), &fi, &data, &names);
+    const auto model_name = dmlc::GetEnv("MODEL_NAME", std::string("alexnet"));
+    upr::Load(std::string(model_name), &data, &names);
     CHECK_EQ(names.size(), data.size()) << "Invalid param file format";
     for (size_t i = 0; i < names.size(); ++i) {
       if (!strncmp(names[i].c_str(), "aux:", 4)) {

@@ -35,6 +35,6 @@ struct server {
   static std::string address;
 };
 
-void Load(std::string model_name, dmlc::Stream *fi,
+void Load(std::string model_name, 
              std::vector<mxnet::NDArray> *data, std::vector<std::string> *keys);
 }

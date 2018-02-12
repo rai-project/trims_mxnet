@@ -131,6 +131,10 @@ private:
 
     auto directory_path = request->directory_path();
     const auto model_name = request->name();
+
+    LOG(INFO) << fmt::format(
+        "loading ndarray directory_path = {} and model_name = {}",
+        directory_path, model_name);
     if (directory_path == "" && model_name == "") {
       const auto msg =
           "either the filepath or the model name must be specified in the open request"s;
@@ -148,6 +152,9 @@ private:
         throw std::runtime_error(msg);
       }
       directory_path = pth->second;
+      LOG(INFO) << fmt::format(
+          "using {} as the base directory for the model_name = {}",
+          directory_path, model_name);
     }
     if (directory_path != "" && !directory_exists(directory_path)) {
       const auto msg =
@@ -184,6 +191,10 @@ private:
     std::vector<NDArray> arrays{};
     std::vector<std::string> layer_names{};
     NDArray::Load(fi, &arrays, &layer_names);
+
+    for (const auto array : arrays) {
+      LOG(ERROR) << array.shape();
+    }
   }
 
 public:
