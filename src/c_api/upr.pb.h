@@ -36,12 +36,14 @@ namespace protobuf_upr_2eproto {
 struct TableStruct {
   static const ::google::protobuf::internal::ParseTableField entries[];
   static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
-  static const ::google::protobuf::internal::ParseTable schema[5];
+  static const ::google::protobuf::internal::ParseTable schema[6];
   static const ::google::protobuf::internal::FieldMetadata field_metadata[];
   static const ::google::protobuf::internal::SerializationTable serialization_table[];
   static const ::google::protobuf::uint32 offsets[];
 };
 void AddDescriptors();
+void InitDefaultsShapeImpl();
+void InitDefaultsShape();
 void InitDefaultsLayerImpl();
 void InitDefaultsLayer();
 void InitDefaultsModelHandleImpl();
@@ -53,6 +55,7 @@ void InitDefaultsModelRequest();
 void InitDefaultsVoidImpl();
 void InitDefaultsVoid();
 inline void InitDefaults() {
+  InitDefaultsShape();
   InitDefaultsLayer();
   InitDefaultsModelHandle();
   InitDefaultsModel();
@@ -73,6 +76,9 @@ extern ModelHandleDefaultTypeInternal _ModelHandle_default_instance_;
 class ModelRequest;
 class ModelRequestDefaultTypeInternal;
 extern ModelRequestDefaultTypeInternal _ModelRequest_default_instance_;
+class Shape;
+class ShapeDefaultTypeInternal;
+extern ShapeDefaultTypeInternal _Shape_default_instance_;
 class Void;
 class VoidDefaultTypeInternal;
 extern VoidDefaultTypeInternal _Void_default_instance_;
@@ -80,6 +86,134 @@ extern VoidDefaultTypeInternal _Void_default_instance_;
 namespace upr {
 
 // ===================================================================
+
+class Shape : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:upr.Shape) */ {
+ public:
+  Shape();
+  virtual ~Shape();
+
+  Shape(const Shape& from);
+
+  inline Shape& operator=(const Shape& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  Shape(Shape&& from) noexcept
+    : Shape() {
+    *this = ::std::move(from);
+  }
+
+  inline Shape& operator=(Shape&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  inline ::google::protobuf::Arena* GetArena() const PROTOBUF_FINAL {
+    return GetArenaNoVirtual();
+  }
+  inline void* GetMaybeArenaPointer() const PROTOBUF_FINAL {
+    return MaybeArenaPtr();
+  }
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Shape& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const Shape* internal_default_instance() {
+    return reinterpret_cast<const Shape*>(
+               &_Shape_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    0;
+
+  void UnsafeArenaSwap(Shape* other);
+  void Swap(Shape* other);
+  friend void swap(Shape& a, Shape& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline Shape* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  Shape* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const Shape& from);
+  void MergeFrom(const Shape& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(Shape* other);
+  protected:
+  explicit Shape(::google::protobuf::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::google::protobuf::Arena* arena);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return _internal_metadata_.arena();
+  }
+  inline void* MaybeArenaPtr() const {
+    return _internal_metadata_.raw_arena_ptr();
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated int32 dim = 2;
+  int dim_size() const;
+  void clear_dim();
+  static const int kDimFieldNumber = 2;
+  ::google::protobuf::int32 dim(int index) const;
+  void set_dim(int index, ::google::protobuf::int32 value);
+  void add_dim(::google::protobuf::int32 value);
+  const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
+      dim() const;
+  ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
+      mutable_dim();
+
+  // int32 rank = 1;
+  void clear_rank();
+  static const int kRankFieldNumber = 1;
+  ::google::protobuf::int32 rank() const;
+  void set_rank(::google::protobuf::int32 value);
+
+  // @@protoc_insertion_point(class_scope:upr.Shape)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  template <typename T> friend class ::google::protobuf::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::google::protobuf::RepeatedField< ::google::protobuf::int32 > dim_;
+  mutable int _dim_cached_byte_size_;
+  ::google::protobuf::int32 rank_;
+  mutable int _cached_size_;
+  friend struct ::protobuf_upr_2eproto::TableStruct;
+  friend void ::protobuf_upr_2eproto::InitDefaultsShapeImpl();
+};
+// -------------------------------------------------------------------
 
 class Layer : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:upr.Layer) */ {
  public:
@@ -107,6 +241,12 @@ class Layer : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
     return *this;
   }
   #endif
+  inline ::google::protobuf::Arena* GetArena() const PROTOBUF_FINAL {
+    return GetArenaNoVirtual();
+  }
+  inline void* GetMaybeArenaPointer() const PROTOBUF_FINAL {
+    return MaybeArenaPtr();
+  }
   static const ::google::protobuf::Descriptor* descriptor();
   static const Layer& default_instance();
 
@@ -116,8 +256,9 @@ class Layer : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
                &_Layer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    0;
+    1;
 
+  void UnsafeArenaSwap(Layer* other);
   void Swap(Layer* other);
   friend void swap(Layer& a, Layer& b) {
     a.Swap(&b);
@@ -148,12 +289,17 @@ class Layer : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
   void SharedDtor();
   void SetCachedSize(int size) const PROTOBUF_FINAL;
   void InternalSwap(Layer* other);
+  protected:
+  explicit Layer(::google::protobuf::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::google::protobuf::Arena* arena);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return NULL;
+    return _internal_metadata_.arena();
   }
   inline void* MaybeArenaPtr() const {
-    return NULL;
+    return _internal_metadata_.raw_arena_ptr();
   }
   public:
 
@@ -176,6 +322,15 @@ class Layer : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
   ::std::string* mutable_id();
   ::std::string* release_id();
   void set_allocated_id(::std::string* id);
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  ::std::string* unsafe_arena_release_id();
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  void unsafe_arena_set_allocated_id(
+      ::std::string* id);
 
   // string name = 2;
   void clear_name();
@@ -190,10 +345,19 @@ class Layer : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
   ::std::string* mutable_name();
   ::std::string* release_name();
   void set_allocated_name(::std::string* name);
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  ::std::string* unsafe_arena_release_name();
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  void unsafe_arena_set_allocated_name(
+      ::std::string* name);
 
-  // string ipc_handle_path = 4;
+  // string ipc_handle_path = 5;
   void clear_ipc_handle_path();
-  static const int kIpcHandlePathFieldNumber = 4;
+  static const int kIpcHandlePathFieldNumber = 5;
   const ::std::string& ipc_handle_path() const;
   void set_ipc_handle_path(const ::std::string& value);
   #if LANG_CXX11
@@ -204,22 +368,46 @@ class Layer : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
   ::std::string* mutable_ipc_handle_path();
   ::std::string* release_ipc_handle_path();
   void set_allocated_ipc_handle_path(::std::string* ipc_handle_path);
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  ::std::string* unsafe_arena_release_ipc_handle_path();
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  void unsafe_arena_set_allocated_ipc_handle_path(
+      ::std::string* ipc_handle_path);
 
-  // int64 byte_count = 3;
+  // .upr.Shape shape = 3;
+  bool has_shape() const;
+  void clear_shape();
+  static const int kShapeFieldNumber = 3;
+  private:
+  void _slow_mutable_shape();
+  public:
+  const ::upr::Shape& shape() const;
+  ::upr::Shape* release_shape();
+  ::upr::Shape* mutable_shape();
+  void set_allocated_shape(::upr::Shape* shape);
+  void unsafe_arena_set_allocated_shape(
+      ::upr::Shape* shape);
+  ::upr::Shape* unsafe_arena_release_shape();
+
+  // int64 byte_count = 4;
   void clear_byte_count();
-  static const int kByteCountFieldNumber = 3;
+  static const int kByteCountFieldNumber = 4;
   ::google::protobuf::int64 byte_count() const;
   void set_byte_count(::google::protobuf::int64 value);
 
-  // int64 device_raw_ptr = 5;
+  // int64 device_raw_ptr = 6;
   void clear_device_raw_ptr();
-  static const int kDeviceRawPtrFieldNumber = 5;
+  static const int kDeviceRawPtrFieldNumber = 6;
   ::google::protobuf::int64 device_raw_ptr() const;
   void set_device_raw_ptr(::google::protobuf::int64 value);
 
-  // int64 ref_count = 6;
+  // int64 ref_count = 7;
   void clear_ref_count();
-  static const int kRefCountFieldNumber = 6;
+  static const int kRefCountFieldNumber = 7;
   ::google::protobuf::int64 ref_count() const;
   void set_ref_count(::google::protobuf::int64 value);
 
@@ -227,9 +415,13 @@ class Layer : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  template <typename T> friend class ::google::protobuf::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
   ::google::protobuf::internal::ArenaStringPtr id_;
   ::google::protobuf::internal::ArenaStringPtr name_;
   ::google::protobuf::internal::ArenaStringPtr ipc_handle_path_;
+  ::upr::Shape* shape_;
   ::google::protobuf::int64 byte_count_;
   ::google::protobuf::int64 device_raw_ptr_;
   ::google::protobuf::int64 ref_count_;
@@ -265,6 +457,12 @@ class ModelHandle : public ::google::protobuf::Message /* @@protoc_insertion_poi
     return *this;
   }
   #endif
+  inline ::google::protobuf::Arena* GetArena() const PROTOBUF_FINAL {
+    return GetArenaNoVirtual();
+  }
+  inline void* GetMaybeArenaPointer() const PROTOBUF_FINAL {
+    return MaybeArenaPtr();
+  }
   static const ::google::protobuf::Descriptor* descriptor();
   static const ModelHandle& default_instance();
 
@@ -274,8 +472,9 @@ class ModelHandle : public ::google::protobuf::Message /* @@protoc_insertion_poi
                &_ModelHandle_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    1;
+    2;
 
+  void UnsafeArenaSwap(ModelHandle* other);
   void Swap(ModelHandle* other);
   friend void swap(ModelHandle& a, ModelHandle& b) {
     a.Swap(&b);
@@ -306,12 +505,17 @@ class ModelHandle : public ::google::protobuf::Message /* @@protoc_insertion_poi
   void SharedDtor();
   void SetCachedSize(int size) const PROTOBUF_FINAL;
   void InternalSwap(ModelHandle* other);
+  protected:
+  explicit ModelHandle(::google::protobuf::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::google::protobuf::Arena* arena);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return NULL;
+    return _internal_metadata_.arena();
   }
   inline void* MaybeArenaPtr() const {
-    return NULL;
+    return _internal_metadata_.raw_arena_ptr();
   }
   public:
 
@@ -346,6 +550,15 @@ class ModelHandle : public ::google::protobuf::Message /* @@protoc_insertion_poi
   ::std::string* mutable_id();
   ::std::string* release_id();
   void set_allocated_id(::std::string* id);
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  ::std::string* unsafe_arena_release_id();
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  void unsafe_arena_set_allocated_id(
+      ::std::string* id);
 
   // string model_id = 2;
   void clear_model_id();
@@ -360,6 +573,15 @@ class ModelHandle : public ::google::protobuf::Message /* @@protoc_insertion_poi
   ::std::string* mutable_model_id();
   ::std::string* release_model_id();
   void set_allocated_model_id(::std::string* model_id);
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  ::std::string* unsafe_arena_release_model_id();
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  void unsafe_arena_set_allocated_model_id(
+      ::std::string* model_id);
 
   // int64 byte_count = 3;
   void clear_byte_count();
@@ -371,6 +593,9 @@ class ModelHandle : public ::google::protobuf::Message /* @@protoc_insertion_poi
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  template <typename T> friend class ::google::protobuf::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
   ::google::protobuf::RepeatedPtrField< ::upr::Layer > layers_;
   ::google::protobuf::internal::ArenaStringPtr id_;
   ::google::protobuf::internal::ArenaStringPtr model_id_;
@@ -407,6 +632,12 @@ class Model : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
     return *this;
   }
   #endif
+  inline ::google::protobuf::Arena* GetArena() const PROTOBUF_FINAL {
+    return GetArenaNoVirtual();
+  }
+  inline void* GetMaybeArenaPointer() const PROTOBUF_FINAL {
+    return MaybeArenaPtr();
+  }
   static const ::google::protobuf::Descriptor* descriptor();
   static const Model& default_instance();
 
@@ -416,8 +647,9 @@ class Model : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
                &_Model_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    2;
+    3;
 
+  void UnsafeArenaSwap(Model* other);
   void Swap(Model* other);
   friend void swap(Model& a, Model& b) {
     a.Swap(&b);
@@ -448,12 +680,17 @@ class Model : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
   void SharedDtor();
   void SetCachedSize(int size) const PROTOBUF_FINAL;
   void InternalSwap(Model* other);
+  protected:
+  explicit Model(::google::protobuf::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::google::protobuf::Arena* arena);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return NULL;
+    return _internal_metadata_.arena();
   }
   inline void* MaybeArenaPtr() const {
-    return NULL;
+    return _internal_metadata_.raw_arena_ptr();
   }
   public:
 
@@ -463,17 +700,17 @@ class Model : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
 
   // accessors -------------------------------------------------------
 
-  // repeated .upr.ModelHandle shared_models = 6;
-  int shared_models_size() const;
-  void clear_shared_models();
-  static const int kSharedModelsFieldNumber = 6;
-  const ::upr::ModelHandle& shared_models(int index) const;
-  ::upr::ModelHandle* mutable_shared_models(int index);
-  ::upr::ModelHandle* add_shared_models();
+  // repeated .upr.ModelHandle shared_model = 6;
+  int shared_model_size() const;
+  void clear_shared_model();
+  static const int kSharedModelFieldNumber = 6;
+  const ::upr::ModelHandle& shared_model(int index) const;
+  ::upr::ModelHandle* mutable_shared_model(int index);
+  ::upr::ModelHandle* add_shared_model();
   ::google::protobuf::RepeatedPtrField< ::upr::ModelHandle >*
-      mutable_shared_models();
+      mutable_shared_model();
   const ::google::protobuf::RepeatedPtrField< ::upr::ModelHandle >&
-      shared_models() const;
+      shared_model() const;
 
   // string id = 1;
   void clear_id();
@@ -488,6 +725,15 @@ class Model : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
   ::std::string* mutable_id();
   ::std::string* release_id();
   void set_allocated_id(::std::string* id);
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  ::std::string* unsafe_arena_release_id();
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  void unsafe_arena_set_allocated_id(
+      ::std::string* id);
 
   // string name = 2;
   void clear_name();
@@ -502,6 +748,15 @@ class Model : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
   ::std::string* mutable_name();
   ::std::string* release_name();
   void set_allocated_name(::std::string* name);
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  ::std::string* unsafe_arena_release_name();
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  void unsafe_arena_set_allocated_name(
+      ::std::string* name);
 
   // string file_path = 3;
   void clear_file_path();
@@ -516,15 +771,30 @@ class Model : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
   ::std::string* mutable_file_path();
   ::std::string* release_file_path();
   void set_allocated_file_path(::std::string* file_path);
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  ::std::string* unsafe_arena_release_file_path();
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  void unsafe_arena_set_allocated_file_path(
+      ::std::string* file_path);
 
-  // .upr.ModelHandle owned_models = 5;
-  bool has_owned_models() const;
-  void clear_owned_models();
-  static const int kOwnedModelsFieldNumber = 5;
-  const ::upr::ModelHandle& owned_models() const;
-  ::upr::ModelHandle* release_owned_models();
-  ::upr::ModelHandle* mutable_owned_models();
-  void set_allocated_owned_models(::upr::ModelHandle* owned_models);
+  // .upr.ModelHandle owned_model = 5;
+  bool has_owned_model() const;
+  void clear_owned_model();
+  static const int kOwnedModelFieldNumber = 5;
+  private:
+  void _slow_mutable_owned_model();
+  public:
+  const ::upr::ModelHandle& owned_model() const;
+  ::upr::ModelHandle* release_owned_model();
+  ::upr::ModelHandle* mutable_owned_model();
+  void set_allocated_owned_model(::upr::ModelHandle* owned_model);
+  void unsafe_arena_set_allocated_owned_model(
+      ::upr::ModelHandle* owned_model);
+  ::upr::ModelHandle* unsafe_arena_release_owned_model();
 
   // int64 ref_count = 4;
   void clear_ref_count();
@@ -536,11 +806,14 @@ class Model : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
-  ::google::protobuf::RepeatedPtrField< ::upr::ModelHandle > shared_models_;
+  template <typename T> friend class ::google::protobuf::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::google::protobuf::RepeatedPtrField< ::upr::ModelHandle > shared_model_;
   ::google::protobuf::internal::ArenaStringPtr id_;
   ::google::protobuf::internal::ArenaStringPtr name_;
   ::google::protobuf::internal::ArenaStringPtr file_path_;
-  ::upr::ModelHandle* owned_models_;
+  ::upr::ModelHandle* owned_model_;
   ::google::protobuf::int64 ref_count_;
   mutable int _cached_size_;
   friend struct ::protobuf_upr_2eproto::TableStruct;
@@ -574,6 +847,12 @@ class ModelRequest : public ::google::protobuf::Message /* @@protoc_insertion_po
     return *this;
   }
   #endif
+  inline ::google::protobuf::Arena* GetArena() const PROTOBUF_FINAL {
+    return GetArenaNoVirtual();
+  }
+  inline void* GetMaybeArenaPointer() const PROTOBUF_FINAL {
+    return MaybeArenaPtr();
+  }
   static const ::google::protobuf::Descriptor* descriptor();
   static const ModelRequest& default_instance();
 
@@ -583,8 +862,9 @@ class ModelRequest : public ::google::protobuf::Message /* @@protoc_insertion_po
                &_ModelRequest_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    3;
+    4;
 
+  void UnsafeArenaSwap(ModelRequest* other);
   void Swap(ModelRequest* other);
   friend void swap(ModelRequest& a, ModelRequest& b) {
     a.Swap(&b);
@@ -615,12 +895,17 @@ class ModelRequest : public ::google::protobuf::Message /* @@protoc_insertion_po
   void SharedDtor();
   void SetCachedSize(int size) const PROTOBUF_FINAL;
   void InternalSwap(ModelRequest* other);
+  protected:
+  explicit ModelRequest(::google::protobuf::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::google::protobuf::Arena* arena);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return NULL;
+    return _internal_metadata_.arena();
   }
   inline void* MaybeArenaPtr() const {
-    return NULL;
+    return _internal_metadata_.raw_arena_ptr();
   }
   public:
 
@@ -643,6 +928,15 @@ class ModelRequest : public ::google::protobuf::Message /* @@protoc_insertion_po
   ::std::string* mutable_name();
   ::std::string* release_name();
   void set_allocated_name(::std::string* name);
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  ::std::string* unsafe_arena_release_name();
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  void unsafe_arena_set_allocated_name(
+      ::std::string* name);
 
   // string directory_path = 2;
   void clear_directory_path();
@@ -657,6 +951,15 @@ class ModelRequest : public ::google::protobuf::Message /* @@protoc_insertion_po
   ::std::string* mutable_directory_path();
   ::std::string* release_directory_path();
   void set_allocated_directory_path(::std::string* directory_path);
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  ::std::string* unsafe_arena_release_directory_path();
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  void unsafe_arena_set_allocated_directory_path(
+      ::std::string* directory_path);
 
   // bool no_cache = 3;
   void clear_no_cache();
@@ -668,6 +971,9 @@ class ModelRequest : public ::google::protobuf::Message /* @@protoc_insertion_po
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  template <typename T> friend class ::google::protobuf::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
   ::google::protobuf::internal::ArenaStringPtr name_;
   ::google::protobuf::internal::ArenaStringPtr directory_path_;
   bool no_cache_;
@@ -703,6 +1009,12 @@ class Void : public ::google::protobuf::Message /* @@protoc_insertion_point(clas
     return *this;
   }
   #endif
+  inline ::google::protobuf::Arena* GetArena() const PROTOBUF_FINAL {
+    return GetArenaNoVirtual();
+  }
+  inline void* GetMaybeArenaPointer() const PROTOBUF_FINAL {
+    return MaybeArenaPtr();
+  }
   static const ::google::protobuf::Descriptor* descriptor();
   static const Void& default_instance();
 
@@ -712,8 +1024,9 @@ class Void : public ::google::protobuf::Message /* @@protoc_insertion_point(clas
                &_Void_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    4;
+    5;
 
+  void UnsafeArenaSwap(Void* other);
   void Swap(Void* other);
   friend void swap(Void& a, Void& b) {
     a.Swap(&b);
@@ -744,12 +1057,17 @@ class Void : public ::google::protobuf::Message /* @@protoc_insertion_point(clas
   void SharedDtor();
   void SetCachedSize(int size) const PROTOBUF_FINAL;
   void InternalSwap(Void* other);
+  protected:
+  explicit Void(::google::protobuf::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::google::protobuf::Arena* arena);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return NULL;
+    return _internal_metadata_.arena();
   }
   inline void* MaybeArenaPtr() const {
-    return NULL;
+    return _internal_metadata_.raw_arena_ptr();
   }
   public:
 
@@ -763,6 +1081,9 @@ class Void : public ::google::protobuf::Message /* @@protoc_insertion_point(clas
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  template <typename T> friend class ::google::protobuf::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
   mutable int _cached_size_;
   friend struct ::protobuf_upr_2eproto::TableStruct;
   friend void ::protobuf_upr_2eproto::InitDefaultsVoidImpl();
@@ -776,50 +1097,100 @@ class Void : public ::google::protobuf::Message /* @@protoc_insertion_point(clas
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif  // __GNUC__
+// Shape
+
+// int32 rank = 1;
+inline void Shape::clear_rank() {
+  rank_ = 0;
+}
+inline ::google::protobuf::int32 Shape::rank() const {
+  // @@protoc_insertion_point(field_get:upr.Shape.rank)
+  return rank_;
+}
+inline void Shape::set_rank(::google::protobuf::int32 value) {
+  
+  rank_ = value;
+  // @@protoc_insertion_point(field_set:upr.Shape.rank)
+}
+
+// repeated int32 dim = 2;
+inline int Shape::dim_size() const {
+  return dim_.size();
+}
+inline void Shape::clear_dim() {
+  dim_.Clear();
+}
+inline ::google::protobuf::int32 Shape::dim(int index) const {
+  // @@protoc_insertion_point(field_get:upr.Shape.dim)
+  return dim_.Get(index);
+}
+inline void Shape::set_dim(int index, ::google::protobuf::int32 value) {
+  dim_.Set(index, value);
+  // @@protoc_insertion_point(field_set:upr.Shape.dim)
+}
+inline void Shape::add_dim(::google::protobuf::int32 value) {
+  dim_.Add(value);
+  // @@protoc_insertion_point(field_add:upr.Shape.dim)
+}
+inline const ::google::protobuf::RepeatedField< ::google::protobuf::int32 >&
+Shape::dim() const {
+  // @@protoc_insertion_point(field_list:upr.Shape.dim)
+  return dim_;
+}
+inline ::google::protobuf::RepeatedField< ::google::protobuf::int32 >*
+Shape::mutable_dim() {
+  // @@protoc_insertion_point(field_mutable_list:upr.Shape.dim)
+  return &dim_;
+}
+
+// -------------------------------------------------------------------
+
 // Layer
 
 // string id = 1;
 inline void Layer::clear_id() {
-  id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  id_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline const ::std::string& Layer::id() const {
   // @@protoc_insertion_point(field_get:upr.Layer.id)
-  return id_.GetNoArena();
+  return id_.Get();
 }
 inline void Layer::set_id(const ::std::string& value) {
   
-  id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  id_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value, GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set:upr.Layer.id)
 }
 #if LANG_CXX11
 inline void Layer::set_id(::std::string&& value) {
   
-  id_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  id_.Set(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_rvalue:upr.Layer.id)
 }
 #endif
 inline void Layer::set_id(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
-  id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  id_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_char:upr.Layer.id)
 }
-inline void Layer::set_id(const char* value, size_t size) {
+inline void Layer::set_id(const char* value,
+    size_t size) {
   
-  id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
+  id_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_pointer:upr.Layer.id)
 }
 inline ::std::string* Layer::mutable_id() {
   
   // @@protoc_insertion_point(field_mutable:upr.Layer.id)
-  return id_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return id_.Mutable(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline ::std::string* Layer::release_id() {
   // @@protoc_insertion_point(field_release:upr.Layer.id)
   
-  return id_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return id_.Release(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline void Layer::set_allocated_id(::std::string* id) {
   if (id != NULL) {
@@ -827,52 +1198,74 @@ inline void Layer::set_allocated_id(::std::string* id) {
   } else {
     
   }
-  id_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), id);
+  id_.SetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), id,
+      GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_allocated:upr.Layer.id)
+}
+inline ::std::string* Layer::unsafe_arena_release_id() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:upr.Layer.id)
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  
+  return id_.UnsafeArenaRelease(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      GetArenaNoVirtual());
+}
+inline void Layer::unsafe_arena_set_allocated_id(
+    ::std::string* id) {
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  if (id != NULL) {
+    
+  } else {
+    
+  }
+  id_.UnsafeArenaSetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      id, GetArenaNoVirtual());
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:upr.Layer.id)
 }
 
 // string name = 2;
 inline void Layer::clear_name() {
-  name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  name_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline const ::std::string& Layer::name() const {
   // @@protoc_insertion_point(field_get:upr.Layer.name)
-  return name_.GetNoArena();
+  return name_.Get();
 }
 inline void Layer::set_name(const ::std::string& value) {
   
-  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  name_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value, GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set:upr.Layer.name)
 }
 #if LANG_CXX11
 inline void Layer::set_name(::std::string&& value) {
   
-  name_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  name_.Set(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_rvalue:upr.Layer.name)
 }
 #endif
 inline void Layer::set_name(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
-  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  name_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_char:upr.Layer.name)
 }
-inline void Layer::set_name(const char* value, size_t size) {
+inline void Layer::set_name(const char* value,
+    size_t size) {
   
-  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
+  name_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_pointer:upr.Layer.name)
 }
 inline ::std::string* Layer::mutable_name() {
   
   // @@protoc_insertion_point(field_mutable:upr.Layer.name)
-  return name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return name_.Mutable(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline ::std::string* Layer::release_name() {
   // @@protoc_insertion_point(field_release:upr.Layer.name)
   
-  return name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return name_.Release(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline void Layer::set_allocated_name(::std::string* name) {
   if (name != NULL) {
@@ -880,11 +1273,92 @@ inline void Layer::set_allocated_name(::std::string* name) {
   } else {
     
   }
-  name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name);
+  name_.SetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name,
+      GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_allocated:upr.Layer.name)
 }
+inline ::std::string* Layer::unsafe_arena_release_name() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:upr.Layer.name)
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  
+  return name_.UnsafeArenaRelease(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      GetArenaNoVirtual());
+}
+inline void Layer::unsafe_arena_set_allocated_name(
+    ::std::string* name) {
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  if (name != NULL) {
+    
+  } else {
+    
+  }
+  name_.UnsafeArenaSetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      name, GetArenaNoVirtual());
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:upr.Layer.name)
+}
 
-// int64 byte_count = 3;
+// .upr.Shape shape = 3;
+inline bool Layer::has_shape() const {
+  return this != internal_default_instance() && shape_ != NULL;
+}
+inline void Layer::clear_shape() {
+  if (GetArenaNoVirtual() == NULL && shape_ != NULL) {
+    delete shape_;
+  }
+  shape_ = NULL;
+}
+inline const ::upr::Shape& Layer::shape() const {
+  const ::upr::Shape* p = shape_;
+  // @@protoc_insertion_point(field_get:upr.Layer.shape)
+  return p != NULL ? *p : *reinterpret_cast<const ::upr::Shape*>(
+      &::upr::_Shape_default_instance_);
+}
+inline ::upr::Shape* Layer::release_shape() {
+  // @@protoc_insertion_point(field_release:upr.Layer.shape)
+  
+  ::upr::Shape* temp = shape_;
+  if (GetArenaNoVirtual() != NULL) {
+    temp = ::google::protobuf::internal::DuplicateIfNonNull(temp, NULL);
+  }
+  shape_ = NULL;
+  return temp;
+}
+inline ::upr::Shape* Layer::unsafe_arena_release_shape() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:upr.Layer.shape)
+  
+  ::upr::Shape* temp = shape_;
+  shape_ = NULL;
+  return temp;
+}
+inline ::upr::Shape* Layer::mutable_shape() {
+  
+  if (shape_ == NULL) {
+    _slow_mutable_shape();
+  }
+  // @@protoc_insertion_point(field_mutable:upr.Layer.shape)
+  return shape_;
+}
+inline void Layer::set_allocated_shape(::upr::Shape* shape) {
+  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
+  if (message_arena == NULL) {
+    delete shape_;
+  }
+  if (shape) {
+    ::google::protobuf::Arena* submessage_arena =
+      ::google::protobuf::Arena::GetArena(shape);
+    if (message_arena != submessage_arena) {
+      shape = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, shape, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  shape_ = shape;
+  // @@protoc_insertion_point(field_set_allocated:upr.Layer.shape)
+}
+
+// int64 byte_count = 4;
 inline void Layer::clear_byte_count() {
   byte_count_ = GOOGLE_LONGLONG(0);
 }
@@ -898,48 +1372,50 @@ inline void Layer::set_byte_count(::google::protobuf::int64 value) {
   // @@protoc_insertion_point(field_set:upr.Layer.byte_count)
 }
 
-// string ipc_handle_path = 4;
+// string ipc_handle_path = 5;
 inline void Layer::clear_ipc_handle_path() {
-  ipc_handle_path_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ipc_handle_path_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline const ::std::string& Layer::ipc_handle_path() const {
   // @@protoc_insertion_point(field_get:upr.Layer.ipc_handle_path)
-  return ipc_handle_path_.GetNoArena();
+  return ipc_handle_path_.Get();
 }
 inline void Layer::set_ipc_handle_path(const ::std::string& value) {
   
-  ipc_handle_path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  ipc_handle_path_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value, GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set:upr.Layer.ipc_handle_path)
 }
 #if LANG_CXX11
 inline void Layer::set_ipc_handle_path(::std::string&& value) {
   
-  ipc_handle_path_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  ipc_handle_path_.Set(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_rvalue:upr.Layer.ipc_handle_path)
 }
 #endif
 inline void Layer::set_ipc_handle_path(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
-  ipc_handle_path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  ipc_handle_path_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_char:upr.Layer.ipc_handle_path)
 }
-inline void Layer::set_ipc_handle_path(const char* value, size_t size) {
+inline void Layer::set_ipc_handle_path(const char* value,
+    size_t size) {
   
-  ipc_handle_path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
+  ipc_handle_path_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_pointer:upr.Layer.ipc_handle_path)
 }
 inline ::std::string* Layer::mutable_ipc_handle_path() {
   
   // @@protoc_insertion_point(field_mutable:upr.Layer.ipc_handle_path)
-  return ipc_handle_path_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return ipc_handle_path_.Mutable(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline ::std::string* Layer::release_ipc_handle_path() {
   // @@protoc_insertion_point(field_release:upr.Layer.ipc_handle_path)
   
-  return ipc_handle_path_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return ipc_handle_path_.Release(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline void Layer::set_allocated_ipc_handle_path(::std::string* ipc_handle_path) {
   if (ipc_handle_path != NULL) {
@@ -947,11 +1423,31 @@ inline void Layer::set_allocated_ipc_handle_path(::std::string* ipc_handle_path)
   } else {
     
   }
-  ipc_handle_path_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ipc_handle_path);
+  ipc_handle_path_.SetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ipc_handle_path,
+      GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_allocated:upr.Layer.ipc_handle_path)
 }
+inline ::std::string* Layer::unsafe_arena_release_ipc_handle_path() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:upr.Layer.ipc_handle_path)
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  
+  return ipc_handle_path_.UnsafeArenaRelease(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      GetArenaNoVirtual());
+}
+inline void Layer::unsafe_arena_set_allocated_ipc_handle_path(
+    ::std::string* ipc_handle_path) {
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  if (ipc_handle_path != NULL) {
+    
+  } else {
+    
+  }
+  ipc_handle_path_.UnsafeArenaSetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ipc_handle_path, GetArenaNoVirtual());
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:upr.Layer.ipc_handle_path)
+}
 
-// int64 device_raw_ptr = 5;
+// int64 device_raw_ptr = 6;
 inline void Layer::clear_device_raw_ptr() {
   device_raw_ptr_ = GOOGLE_LONGLONG(0);
 }
@@ -965,7 +1461,7 @@ inline void Layer::set_device_raw_ptr(::google::protobuf::int64 value) {
   // @@protoc_insertion_point(field_set:upr.Layer.device_raw_ptr)
 }
 
-// int64 ref_count = 6;
+// int64 ref_count = 7;
 inline void Layer::clear_ref_count() {
   ref_count_ = GOOGLE_LONGLONG(0);
 }
@@ -985,46 +1481,48 @@ inline void Layer::set_ref_count(::google::protobuf::int64 value) {
 
 // string id = 1;
 inline void ModelHandle::clear_id() {
-  id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  id_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline const ::std::string& ModelHandle::id() const {
   // @@protoc_insertion_point(field_get:upr.ModelHandle.id)
-  return id_.GetNoArena();
+  return id_.Get();
 }
 inline void ModelHandle::set_id(const ::std::string& value) {
   
-  id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  id_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value, GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set:upr.ModelHandle.id)
 }
 #if LANG_CXX11
 inline void ModelHandle::set_id(::std::string&& value) {
   
-  id_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  id_.Set(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_rvalue:upr.ModelHandle.id)
 }
 #endif
 inline void ModelHandle::set_id(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
-  id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  id_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_char:upr.ModelHandle.id)
 }
-inline void ModelHandle::set_id(const char* value, size_t size) {
+inline void ModelHandle::set_id(const char* value,
+    size_t size) {
   
-  id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
+  id_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_pointer:upr.ModelHandle.id)
 }
 inline ::std::string* ModelHandle::mutable_id() {
   
   // @@protoc_insertion_point(field_mutable:upr.ModelHandle.id)
-  return id_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return id_.Mutable(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline ::std::string* ModelHandle::release_id() {
   // @@protoc_insertion_point(field_release:upr.ModelHandle.id)
   
-  return id_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return id_.Release(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline void ModelHandle::set_allocated_id(::std::string* id) {
   if (id != NULL) {
@@ -1032,52 +1530,74 @@ inline void ModelHandle::set_allocated_id(::std::string* id) {
   } else {
     
   }
-  id_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), id);
+  id_.SetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), id,
+      GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_allocated:upr.ModelHandle.id)
+}
+inline ::std::string* ModelHandle::unsafe_arena_release_id() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:upr.ModelHandle.id)
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  
+  return id_.UnsafeArenaRelease(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      GetArenaNoVirtual());
+}
+inline void ModelHandle::unsafe_arena_set_allocated_id(
+    ::std::string* id) {
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  if (id != NULL) {
+    
+  } else {
+    
+  }
+  id_.UnsafeArenaSetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      id, GetArenaNoVirtual());
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:upr.ModelHandle.id)
 }
 
 // string model_id = 2;
 inline void ModelHandle::clear_model_id() {
-  model_id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  model_id_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline const ::std::string& ModelHandle::model_id() const {
   // @@protoc_insertion_point(field_get:upr.ModelHandle.model_id)
-  return model_id_.GetNoArena();
+  return model_id_.Get();
 }
 inline void ModelHandle::set_model_id(const ::std::string& value) {
   
-  model_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  model_id_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value, GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set:upr.ModelHandle.model_id)
 }
 #if LANG_CXX11
 inline void ModelHandle::set_model_id(::std::string&& value) {
   
-  model_id_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  model_id_.Set(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_rvalue:upr.ModelHandle.model_id)
 }
 #endif
 inline void ModelHandle::set_model_id(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
-  model_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  model_id_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_char:upr.ModelHandle.model_id)
 }
-inline void ModelHandle::set_model_id(const char* value, size_t size) {
+inline void ModelHandle::set_model_id(const char* value,
+    size_t size) {
   
-  model_id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
+  model_id_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_pointer:upr.ModelHandle.model_id)
 }
 inline ::std::string* ModelHandle::mutable_model_id() {
   
   // @@protoc_insertion_point(field_mutable:upr.ModelHandle.model_id)
-  return model_id_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return model_id_.Mutable(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline ::std::string* ModelHandle::release_model_id() {
   // @@protoc_insertion_point(field_release:upr.ModelHandle.model_id)
   
-  return model_id_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return model_id_.Release(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline void ModelHandle::set_allocated_model_id(::std::string* model_id) {
   if (model_id != NULL) {
@@ -1085,8 +1605,28 @@ inline void ModelHandle::set_allocated_model_id(::std::string* model_id) {
   } else {
     
   }
-  model_id_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), model_id);
+  model_id_.SetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), model_id,
+      GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_allocated:upr.ModelHandle.model_id)
+}
+inline ::std::string* ModelHandle::unsafe_arena_release_model_id() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:upr.ModelHandle.model_id)
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  
+  return model_id_.UnsafeArenaRelease(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      GetArenaNoVirtual());
+}
+inline void ModelHandle::unsafe_arena_set_allocated_model_id(
+    ::std::string* model_id) {
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  if (model_id != NULL) {
+    
+  } else {
+    
+  }
+  model_id_.UnsafeArenaSetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      model_id, GetArenaNoVirtual());
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:upr.ModelHandle.model_id)
 }
 
 // int64 byte_count = 3;
@@ -1139,46 +1679,48 @@ ModelHandle::layers() const {
 
 // string id = 1;
 inline void Model::clear_id() {
-  id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  id_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline const ::std::string& Model::id() const {
   // @@protoc_insertion_point(field_get:upr.Model.id)
-  return id_.GetNoArena();
+  return id_.Get();
 }
 inline void Model::set_id(const ::std::string& value) {
   
-  id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  id_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value, GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set:upr.Model.id)
 }
 #if LANG_CXX11
 inline void Model::set_id(::std::string&& value) {
   
-  id_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  id_.Set(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_rvalue:upr.Model.id)
 }
 #endif
 inline void Model::set_id(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
-  id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  id_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_char:upr.Model.id)
 }
-inline void Model::set_id(const char* value, size_t size) {
+inline void Model::set_id(const char* value,
+    size_t size) {
   
-  id_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
+  id_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_pointer:upr.Model.id)
 }
 inline ::std::string* Model::mutable_id() {
   
   // @@protoc_insertion_point(field_mutable:upr.Model.id)
-  return id_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return id_.Mutable(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline ::std::string* Model::release_id() {
   // @@protoc_insertion_point(field_release:upr.Model.id)
   
-  return id_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return id_.Release(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline void Model::set_allocated_id(::std::string* id) {
   if (id != NULL) {
@@ -1186,52 +1728,74 @@ inline void Model::set_allocated_id(::std::string* id) {
   } else {
     
   }
-  id_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), id);
+  id_.SetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), id,
+      GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_allocated:upr.Model.id)
+}
+inline ::std::string* Model::unsafe_arena_release_id() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:upr.Model.id)
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  
+  return id_.UnsafeArenaRelease(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      GetArenaNoVirtual());
+}
+inline void Model::unsafe_arena_set_allocated_id(
+    ::std::string* id) {
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  if (id != NULL) {
+    
+  } else {
+    
+  }
+  id_.UnsafeArenaSetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      id, GetArenaNoVirtual());
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:upr.Model.id)
 }
 
 // string name = 2;
 inline void Model::clear_name() {
-  name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  name_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline const ::std::string& Model::name() const {
   // @@protoc_insertion_point(field_get:upr.Model.name)
-  return name_.GetNoArena();
+  return name_.Get();
 }
 inline void Model::set_name(const ::std::string& value) {
   
-  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  name_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value, GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set:upr.Model.name)
 }
 #if LANG_CXX11
 inline void Model::set_name(::std::string&& value) {
   
-  name_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  name_.Set(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_rvalue:upr.Model.name)
 }
 #endif
 inline void Model::set_name(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
-  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  name_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_char:upr.Model.name)
 }
-inline void Model::set_name(const char* value, size_t size) {
+inline void Model::set_name(const char* value,
+    size_t size) {
   
-  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
+  name_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_pointer:upr.Model.name)
 }
 inline ::std::string* Model::mutable_name() {
   
   // @@protoc_insertion_point(field_mutable:upr.Model.name)
-  return name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return name_.Mutable(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline ::std::string* Model::release_name() {
   // @@protoc_insertion_point(field_release:upr.Model.name)
   
-  return name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return name_.Release(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline void Model::set_allocated_name(::std::string* name) {
   if (name != NULL) {
@@ -1239,52 +1803,74 @@ inline void Model::set_allocated_name(::std::string* name) {
   } else {
     
   }
-  name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name);
+  name_.SetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name,
+      GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_allocated:upr.Model.name)
+}
+inline ::std::string* Model::unsafe_arena_release_name() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:upr.Model.name)
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  
+  return name_.UnsafeArenaRelease(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      GetArenaNoVirtual());
+}
+inline void Model::unsafe_arena_set_allocated_name(
+    ::std::string* name) {
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  if (name != NULL) {
+    
+  } else {
+    
+  }
+  name_.UnsafeArenaSetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      name, GetArenaNoVirtual());
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:upr.Model.name)
 }
 
 // string file_path = 3;
 inline void Model::clear_file_path() {
-  file_path_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  file_path_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline const ::std::string& Model::file_path() const {
   // @@protoc_insertion_point(field_get:upr.Model.file_path)
-  return file_path_.GetNoArena();
+  return file_path_.Get();
 }
 inline void Model::set_file_path(const ::std::string& value) {
   
-  file_path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  file_path_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value, GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set:upr.Model.file_path)
 }
 #if LANG_CXX11
 inline void Model::set_file_path(::std::string&& value) {
   
-  file_path_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  file_path_.Set(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_rvalue:upr.Model.file_path)
 }
 #endif
 inline void Model::set_file_path(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
-  file_path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  file_path_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_char:upr.Model.file_path)
 }
-inline void Model::set_file_path(const char* value, size_t size) {
+inline void Model::set_file_path(const char* value,
+    size_t size) {
   
-  file_path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
+  file_path_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_pointer:upr.Model.file_path)
 }
 inline ::std::string* Model::mutable_file_path() {
   
   // @@protoc_insertion_point(field_mutable:upr.Model.file_path)
-  return file_path_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return file_path_.Mutable(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline ::std::string* Model::release_file_path() {
   // @@protoc_insertion_point(field_release:upr.Model.file_path)
   
-  return file_path_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return file_path_.Release(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline void Model::set_allocated_file_path(::std::string* file_path) {
   if (file_path != NULL) {
@@ -1292,8 +1878,28 @@ inline void Model::set_allocated_file_path(::std::string* file_path) {
   } else {
     
   }
-  file_path_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), file_path);
+  file_path_.SetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), file_path,
+      GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_allocated:upr.Model.file_path)
+}
+inline ::std::string* Model::unsafe_arena_release_file_path() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:upr.Model.file_path)
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  
+  return file_path_.UnsafeArenaRelease(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      GetArenaNoVirtual());
+}
+inline void Model::unsafe_arena_set_allocated_file_path(
+    ::std::string* file_path) {
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  if (file_path != NULL) {
+    
+  } else {
+    
+  }
+  file_path_.UnsafeArenaSetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      file_path, GetArenaNoVirtual());
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:upr.Model.file_path)
 }
 
 // int64 ref_count = 4;
@@ -1310,84 +1916,95 @@ inline void Model::set_ref_count(::google::protobuf::int64 value) {
   // @@protoc_insertion_point(field_set:upr.Model.ref_count)
 }
 
-// .upr.ModelHandle owned_models = 5;
-inline bool Model::has_owned_models() const {
-  return this != internal_default_instance() && owned_models_ != NULL;
+// .upr.ModelHandle owned_model = 5;
+inline bool Model::has_owned_model() const {
+  return this != internal_default_instance() && owned_model_ != NULL;
 }
-inline void Model::clear_owned_models() {
-  if (GetArenaNoVirtual() == NULL && owned_models_ != NULL) {
-    delete owned_models_;
+inline void Model::clear_owned_model() {
+  if (GetArenaNoVirtual() == NULL && owned_model_ != NULL) {
+    delete owned_model_;
   }
-  owned_models_ = NULL;
+  owned_model_ = NULL;
 }
-inline const ::upr::ModelHandle& Model::owned_models() const {
-  const ::upr::ModelHandle* p = owned_models_;
-  // @@protoc_insertion_point(field_get:upr.Model.owned_models)
+inline const ::upr::ModelHandle& Model::owned_model() const {
+  const ::upr::ModelHandle* p = owned_model_;
+  // @@protoc_insertion_point(field_get:upr.Model.owned_model)
   return p != NULL ? *p : *reinterpret_cast<const ::upr::ModelHandle*>(
       &::upr::_ModelHandle_default_instance_);
 }
-inline ::upr::ModelHandle* Model::release_owned_models() {
-  // @@protoc_insertion_point(field_release:upr.Model.owned_models)
+inline ::upr::ModelHandle* Model::release_owned_model() {
+  // @@protoc_insertion_point(field_release:upr.Model.owned_model)
   
-  ::upr::ModelHandle* temp = owned_models_;
-  owned_models_ = NULL;
+  ::upr::ModelHandle* temp = owned_model_;
+  if (GetArenaNoVirtual() != NULL) {
+    temp = ::google::protobuf::internal::DuplicateIfNonNull(temp, NULL);
+  }
+  owned_model_ = NULL;
   return temp;
 }
-inline ::upr::ModelHandle* Model::mutable_owned_models() {
+inline ::upr::ModelHandle* Model::unsafe_arena_release_owned_model() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:upr.Model.owned_model)
   
-  if (owned_models_ == NULL) {
-    owned_models_ = new ::upr::ModelHandle;
-  }
-  // @@protoc_insertion_point(field_mutable:upr.Model.owned_models)
-  return owned_models_;
+  ::upr::ModelHandle* temp = owned_model_;
+  owned_model_ = NULL;
+  return temp;
 }
-inline void Model::set_allocated_owned_models(::upr::ModelHandle* owned_models) {
+inline ::upr::ModelHandle* Model::mutable_owned_model() {
+  
+  if (owned_model_ == NULL) {
+    _slow_mutable_owned_model();
+  }
+  // @@protoc_insertion_point(field_mutable:upr.Model.owned_model)
+  return owned_model_;
+}
+inline void Model::set_allocated_owned_model(::upr::ModelHandle* owned_model) {
   ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
   if (message_arena == NULL) {
-    delete owned_models_;
+    delete owned_model_;
   }
-  if (owned_models) {
-    ::google::protobuf::Arena* submessage_arena = NULL;
+  if (owned_model) {
+    ::google::protobuf::Arena* submessage_arena =
+      ::google::protobuf::Arena::GetArena(owned_model);
     if (message_arena != submessage_arena) {
-      owned_models = ::google::protobuf::internal::GetOwnedMessage(
-          message_arena, owned_models, submessage_arena);
+      owned_model = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, owned_model, submessage_arena);
     }
     
   } else {
     
   }
-  owned_models_ = owned_models;
-  // @@protoc_insertion_point(field_set_allocated:upr.Model.owned_models)
+  owned_model_ = owned_model;
+  // @@protoc_insertion_point(field_set_allocated:upr.Model.owned_model)
 }
 
-// repeated .upr.ModelHandle shared_models = 6;
-inline int Model::shared_models_size() const {
-  return shared_models_.size();
+// repeated .upr.ModelHandle shared_model = 6;
+inline int Model::shared_model_size() const {
+  return shared_model_.size();
 }
-inline void Model::clear_shared_models() {
-  shared_models_.Clear();
+inline void Model::clear_shared_model() {
+  shared_model_.Clear();
 }
-inline const ::upr::ModelHandle& Model::shared_models(int index) const {
-  // @@protoc_insertion_point(field_get:upr.Model.shared_models)
-  return shared_models_.Get(index);
+inline const ::upr::ModelHandle& Model::shared_model(int index) const {
+  // @@protoc_insertion_point(field_get:upr.Model.shared_model)
+  return shared_model_.Get(index);
 }
-inline ::upr::ModelHandle* Model::mutable_shared_models(int index) {
-  // @@protoc_insertion_point(field_mutable:upr.Model.shared_models)
-  return shared_models_.Mutable(index);
+inline ::upr::ModelHandle* Model::mutable_shared_model(int index) {
+  // @@protoc_insertion_point(field_mutable:upr.Model.shared_model)
+  return shared_model_.Mutable(index);
 }
-inline ::upr::ModelHandle* Model::add_shared_models() {
-  // @@protoc_insertion_point(field_add:upr.Model.shared_models)
-  return shared_models_.Add();
+inline ::upr::ModelHandle* Model::add_shared_model() {
+  // @@protoc_insertion_point(field_add:upr.Model.shared_model)
+  return shared_model_.Add();
 }
 inline ::google::protobuf::RepeatedPtrField< ::upr::ModelHandle >*
-Model::mutable_shared_models() {
-  // @@protoc_insertion_point(field_mutable_list:upr.Model.shared_models)
-  return &shared_models_;
+Model::mutable_shared_model() {
+  // @@protoc_insertion_point(field_mutable_list:upr.Model.shared_model)
+  return &shared_model_;
 }
 inline const ::google::protobuf::RepeatedPtrField< ::upr::ModelHandle >&
-Model::shared_models() const {
-  // @@protoc_insertion_point(field_list:upr.Model.shared_models)
-  return shared_models_;
+Model::shared_model() const {
+  // @@protoc_insertion_point(field_list:upr.Model.shared_model)
+  return shared_model_;
 }
 
 // -------------------------------------------------------------------
@@ -1396,46 +2013,48 @@ Model::shared_models() const {
 
 // string name = 1;
 inline void ModelRequest::clear_name() {
-  name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  name_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline const ::std::string& ModelRequest::name() const {
   // @@protoc_insertion_point(field_get:upr.ModelRequest.name)
-  return name_.GetNoArena();
+  return name_.Get();
 }
 inline void ModelRequest::set_name(const ::std::string& value) {
   
-  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  name_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value, GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set:upr.ModelRequest.name)
 }
 #if LANG_CXX11
 inline void ModelRequest::set_name(::std::string&& value) {
   
-  name_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  name_.Set(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_rvalue:upr.ModelRequest.name)
 }
 #endif
 inline void ModelRequest::set_name(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
-  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  name_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_char:upr.ModelRequest.name)
 }
-inline void ModelRequest::set_name(const char* value, size_t size) {
+inline void ModelRequest::set_name(const char* value,
+    size_t size) {
   
-  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
+  name_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_pointer:upr.ModelRequest.name)
 }
 inline ::std::string* ModelRequest::mutable_name() {
   
   // @@protoc_insertion_point(field_mutable:upr.ModelRequest.name)
-  return name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return name_.Mutable(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline ::std::string* ModelRequest::release_name() {
   // @@protoc_insertion_point(field_release:upr.ModelRequest.name)
   
-  return name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return name_.Release(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline void ModelRequest::set_allocated_name(::std::string* name) {
   if (name != NULL) {
@@ -1443,52 +2062,74 @@ inline void ModelRequest::set_allocated_name(::std::string* name) {
   } else {
     
   }
-  name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name);
+  name_.SetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name,
+      GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_allocated:upr.ModelRequest.name)
+}
+inline ::std::string* ModelRequest::unsafe_arena_release_name() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:upr.ModelRequest.name)
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  
+  return name_.UnsafeArenaRelease(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      GetArenaNoVirtual());
+}
+inline void ModelRequest::unsafe_arena_set_allocated_name(
+    ::std::string* name) {
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  if (name != NULL) {
+    
+  } else {
+    
+  }
+  name_.UnsafeArenaSetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      name, GetArenaNoVirtual());
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:upr.ModelRequest.name)
 }
 
 // string directory_path = 2;
 inline void ModelRequest::clear_directory_path() {
-  directory_path_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  directory_path_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline const ::std::string& ModelRequest::directory_path() const {
   // @@protoc_insertion_point(field_get:upr.ModelRequest.directory_path)
-  return directory_path_.GetNoArena();
+  return directory_path_.Get();
 }
 inline void ModelRequest::set_directory_path(const ::std::string& value) {
   
-  directory_path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  directory_path_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value, GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set:upr.ModelRequest.directory_path)
 }
 #if LANG_CXX11
 inline void ModelRequest::set_directory_path(::std::string&& value) {
   
-  directory_path_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  directory_path_.Set(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_rvalue:upr.ModelRequest.directory_path)
 }
 #endif
 inline void ModelRequest::set_directory_path(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
-  directory_path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  directory_path_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_char:upr.ModelRequest.directory_path)
 }
-inline void ModelRequest::set_directory_path(const char* value, size_t size) {
+inline void ModelRequest::set_directory_path(const char* value,
+    size_t size) {
   
-  directory_path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
+  directory_path_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_pointer:upr.ModelRequest.directory_path)
 }
 inline ::std::string* ModelRequest::mutable_directory_path() {
   
   // @@protoc_insertion_point(field_mutable:upr.ModelRequest.directory_path)
-  return directory_path_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return directory_path_.Mutable(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline ::std::string* ModelRequest::release_directory_path() {
   // @@protoc_insertion_point(field_release:upr.ModelRequest.directory_path)
   
-  return directory_path_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return directory_path_.Release(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
 inline void ModelRequest::set_allocated_directory_path(::std::string* directory_path) {
   if (directory_path != NULL) {
@@ -1496,8 +2137,28 @@ inline void ModelRequest::set_allocated_directory_path(::std::string* directory_
   } else {
     
   }
-  directory_path_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), directory_path);
+  directory_path_.SetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), directory_path,
+      GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_allocated:upr.ModelRequest.directory_path)
+}
+inline ::std::string* ModelRequest::unsafe_arena_release_directory_path() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:upr.ModelRequest.directory_path)
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  
+  return directory_path_.UnsafeArenaRelease(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      GetArenaNoVirtual());
+}
+inline void ModelRequest::unsafe_arena_set_allocated_directory_path(
+    ::std::string* directory_path) {
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  if (directory_path != NULL) {
+    
+  } else {
+    
+  }
+  directory_path_.UnsafeArenaSetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      directory_path, GetArenaNoVirtual());
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:upr.ModelRequest.directory_path)
 }
 
 // bool no_cache = 3;
@@ -1521,6 +2182,8 @@ inline void ModelRequest::set_no_cache(bool value) {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

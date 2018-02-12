@@ -4,21 +4,30 @@ package upr;
 
 option go_package = "upr";
 
-// option cc_enable_arenas = true;
+option cc_enable_arenas = true;
+
+message Shape {
+  // rank of the the dims (i.e. the length of the dims)
+  int32 rank = 1;
+  // size in each dimension
+  repeated int32 dim = 2;
+}
 
 message Layer {
   // a unique id
   string id = 1;
   // name of the layer
   string name = 2;
+  // tensor shape 
+  Shape shape = 3;
   // byte count for the layer
-  int64 byte_count = 3;
+  int64 byte_count = 4;
   // the cuda ipc handle fifo
-  string ipc_handle_path = 4;
+  string ipc_handle_path = 5;
   // the raw cuda device ptr (as void *)
-  int64 device_raw_ptr = 5;
+  int64 device_raw_ptr = 6;
   // the ref count for the layer (this is equal to the model ref_count)
-  int64 ref_count = 6;
+  int64 ref_count = 7;
 }
 
 // a model that's shared
@@ -44,9 +53,9 @@ message Model {
   // the refcount for the entire model
   int64 ref_count = 4;
   // the model that's owned by the current process
-  ModelHandle owned_models = 5;
+  ModelHandle owned_model = 5;
   // the set of shared models
-  repeated ModelHandle shared_models = 6;
+  repeated ModelHandle shared_model = 6;
 }
 
 message ModelRequest {

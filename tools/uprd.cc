@@ -126,6 +126,21 @@ template <typename K, typename V> std::vector<K> keys(const std::map<K, V> &m) {
 
 class RegistryImpl final : public Registry::Service {
 private:
+  void to_shape(Shape *res, TShape shape) {
+
+    res->set_rank(shape.ndim());
+    for (const auto dim : shape) {
+      res->add_dim(dim);
+    }
+  }
+  void to_layer(Layer *layer, std::string name, NDArray array) {
+
+    layer->set_id(sole::uuid1().pretty());
+    layer->set_name(name);
+
+    const auto shape = layer->mutable_shape();
+    to_shape(shape, array.shape());
+  }
   void load_ndarray(::google::protobuf::RepeatedPtrField<Layer> *layers,
                     const ModelRequest *request) {
 
@@ -192,8 +207,11 @@ private:
     std::vector<std::string> layer_names{};
     NDArray::Load(fi, &arrays, &layer_names);
 
+    size_t ii = 0;
     for (const auto array : arrays) {
-      LOG(ERROR) << array.shape();
+      const auto layer_name = layer_names[ii++];
+      auto layer = layers->Add();
+      to_layer(layer, layer_name, array);
     }
   }
 
