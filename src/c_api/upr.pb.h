@@ -620,19 +620,19 @@ class ModelRequest : public ::google::protobuf::Message /* @@protoc_insertion_po
 
   // accessors -------------------------------------------------------
 
-  // string model_name = 1;
-  void clear_model_name();
-  static const int kModelNameFieldNumber = 1;
-  const ::std::string& model_name() const;
-  void set_model_name(const ::std::string& value);
+  // string name = 1;
+  void clear_name();
+  static const int kNameFieldNumber = 1;
+  const ::std::string& name() const;
+  void set_name(const ::std::string& value);
   #if LANG_CXX11
-  void set_model_name(::std::string&& value);
+  void set_name(::std::string&& value);
   #endif
-  void set_model_name(const char* value);
-  void set_model_name(const char* value, size_t size);
-  ::std::string* mutable_model_name();
-  ::std::string* release_model_name();
-  void set_allocated_model_name(::std::string* model_name);
+  void set_name(const char* value);
+  void set_name(const char* value, size_t size);
+  ::std::string* mutable_name();
+  ::std::string* release_name();
+  void set_allocated_name(::std::string* name);
 
   // string file_path = 2;
   void clear_file_path();
@@ -658,7 +658,7 @@ class ModelRequest : public ::google::protobuf::Message /* @@protoc_insertion_po
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
-  ::google::protobuf::internal::ArenaStringPtr model_name_;
+  ::google::protobuf::internal::ArenaStringPtr name_;
   ::google::protobuf::internal::ArenaStringPtr file_path_;
   bool no_cache_;
   mutable int _cached_size_;
@@ -1334,57 +1334,57 @@ Model::models() const {
 
 // ModelRequest
 
-// string model_name = 1;
-inline void ModelRequest::clear_model_name() {
-  model_name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+// string name = 1;
+inline void ModelRequest::clear_name() {
+  name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline const ::std::string& ModelRequest::model_name() const {
-  // @@protoc_insertion_point(field_get:upr.ModelRequest.model_name)
-  return model_name_.GetNoArena();
+inline const ::std::string& ModelRequest::name() const {
+  // @@protoc_insertion_point(field_get:upr.ModelRequest.name)
+  return name_.GetNoArena();
 }
-inline void ModelRequest::set_model_name(const ::std::string& value) {
+inline void ModelRequest::set_name(const ::std::string& value) {
   
-  model_name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:upr.ModelRequest.model_name)
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:upr.ModelRequest.name)
 }
 #if LANG_CXX11
-inline void ModelRequest::set_model_name(::std::string&& value) {
+inline void ModelRequest::set_name(::std::string&& value) {
   
-  model_name_.SetNoArena(
+  name_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:upr.ModelRequest.model_name)
+  // @@protoc_insertion_point(field_set_rvalue:upr.ModelRequest.name)
 }
 #endif
-inline void ModelRequest::set_model_name(const char* value) {
+inline void ModelRequest::set_name(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
-  model_name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:upr.ModelRequest.model_name)
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:upr.ModelRequest.name)
 }
-inline void ModelRequest::set_model_name(const char* value, size_t size) {
+inline void ModelRequest::set_name(const char* value, size_t size) {
   
-  model_name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:upr.ModelRequest.model_name)
+  // @@protoc_insertion_point(field_set_pointer:upr.ModelRequest.name)
 }
-inline ::std::string* ModelRequest::mutable_model_name() {
+inline ::std::string* ModelRequest::mutable_name() {
   
-  // @@protoc_insertion_point(field_mutable:upr.ModelRequest.model_name)
-  return model_name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  // @@protoc_insertion_point(field_mutable:upr.ModelRequest.name)
+  return name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline ::std::string* ModelRequest::release_model_name() {
-  // @@protoc_insertion_point(field_release:upr.ModelRequest.model_name)
+inline ::std::string* ModelRequest::release_name() {
+  // @@protoc_insertion_point(field_release:upr.ModelRequest.name)
   
-  return model_name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void ModelRequest::set_allocated_model_name(::std::string* model_name) {
-  if (model_name != NULL) {
+inline void ModelRequest::set_allocated_name(::std::string* name) {
+  if (name != NULL) {
     
   } else {
     
   }
-  model_name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), model_name);
-  // @@protoc_insertion_point(field_set_allocated:upr.ModelRequest.model_name)
+  name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name);
+  // @@protoc_insertion_point(field_set_allocated:upr.ModelRequest.name)
 }
 
 // string file_path = 2;

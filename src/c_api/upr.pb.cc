@@ -192,7 +192,7 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::ModelRequest, model_name_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::ModelRequest, name_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::ModelRequest, file_path_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::ModelRequest, no_cache_),
   ~0u,  // no _has_bits_
@@ -247,16 +247,16 @@ void AddDescriptorsImpl() {
       " \001(\003\022\032\n\006layers\030\004 \003(\0132\n.upr.Layer\"i\n\005Mode"
       "l\022\n\n\002id\030\001 \001(\t\022\014\n\004name\030\002 \001(\t\022\021\n\tfile_path"
       "\030\003 \001(\t\022\021\n\tref_count\030\004 \001(\003\022 \n\006models\030\005 \003("
-      "\0132\020.upr.ModelHandle\"G\n\014ModelRequest\022\022\n\nm"
-      "odel_name\030\001 \001(\t\022\021\n\tfile_path\030\002 \001(\t\022\020\n\010no"
-      "_cache\030\003 \001(\010\"\006\n\004Void2\212\001\n\010Registry\022-\n\004Ope"
-      "n\022\021.upr.ModelRequest\032\020.upr.ModelHandle\"\000"
-      "\022&\n\005Close\022\020.upr.ModelHandle\032\t.upr.Void\"\000"
-      "\022\'\n\004Info\022\021.upr.ModelRequest\032\n.upr.Model\""
-      "\000B\005Z\003uprb\006proto3"
+      "\0132\020.upr.ModelHandle\"A\n\014ModelRequest\022\014\n\004n"
+      "ame\030\001 \001(\t\022\021\n\tfile_path\030\002 \001(\t\022\020\n\010no_cache"
+      "\030\003 \001(\010\"\006\n\004Void2\212\001\n\010Registry\022-\n\004Open\022\021.up"
+      "r.ModelRequest\032\020.upr.ModelHandle\"\000\022&\n\005Cl"
+      "ose\022\020.upr.ModelHandle\032\t.upr.Void\"\000\022\'\n\004In"
+      "fo\022\021.upr.ModelRequest\032\n.upr.Model\"\000B\005Z\003u"
+      "prb\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 576);
+      descriptor, 570);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "upr.proto", &protobuf_RegisterTypes);
 }
@@ -1611,7 +1611,7 @@ void Model::InternalSwap(Model* other) {
 void ModelRequest::InitAsDefaultInstance() {
 }
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int ModelRequest::kModelNameFieldNumber;
+const int ModelRequest::kNameFieldNumber;
 const int ModelRequest::kFilePathFieldNumber;
 const int ModelRequest::kNoCacheFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
@@ -1629,9 +1629,9 @@ ModelRequest::ModelRequest(const ModelRequest& from)
       _internal_metadata_(NULL),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  model_name_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.model_name().size() > 0) {
-    model_name_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.model_name_);
+  name_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.name().size() > 0) {
+    name_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.name_);
   }
   file_path_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (from.file_path().size() > 0) {
@@ -1642,7 +1642,7 @@ ModelRequest::ModelRequest(const ModelRequest& from)
 }
 
 void ModelRequest::SharedCtor() {
-  model_name_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  name_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   file_path_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   no_cache_ = false;
   _cached_size_ = 0;
@@ -1654,7 +1654,7 @@ ModelRequest::~ModelRequest() {
 }
 
 void ModelRequest::SharedDtor() {
-  model_name_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  name_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   file_path_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 
@@ -1687,7 +1687,7 @@ void ModelRequest::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  model_name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   file_path_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   no_cache_ = false;
   _internal_metadata_.Clear();
@@ -1703,16 +1703,16 @@ bool ModelRequest::MergePartialFromCodedStream(
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // string model_name = 1;
+      // string name = 1;
       case 1: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_model_name()));
+                input, this->mutable_name()));
           DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->model_name().data(), static_cast<int>(this->model_name().length()),
+            this->name().data(), static_cast<int>(this->name().length()),
             ::google::protobuf::internal::WireFormatLite::PARSE,
-            "upr.ModelRequest.model_name"));
+            "upr.ModelRequest.name"));
         } else {
           goto handle_unusual;
         }
@@ -1775,14 +1775,14 @@ void ModelRequest::SerializeWithCachedSizes(
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // string model_name = 1;
-  if (this->model_name().size() > 0) {
+  // string name = 1;
+  if (this->name().size() > 0) {
     ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->model_name().data(), static_cast<int>(this->model_name().length()),
+      this->name().data(), static_cast<int>(this->name().length()),
       ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "upr.ModelRequest.model_name");
+      "upr.ModelRequest.name");
     ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      1, this->model_name(), output);
+      1, this->name(), output);
   }
 
   // string file_path = 2;
@@ -1814,15 +1814,15 @@ void ModelRequest::SerializeWithCachedSizes(
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // string model_name = 1;
-  if (this->model_name().size() > 0) {
+  // string name = 1;
+  if (this->name().size() > 0) {
     ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->model_name().data(), static_cast<int>(this->model_name().length()),
+      this->name().data(), static_cast<int>(this->name().length()),
       ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "upr.ModelRequest.model_name");
+      "upr.ModelRequest.name");
     target =
       ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        1, this->model_name(), target);
+        1, this->name(), target);
   }
 
   // string file_path = 2;
@@ -1858,11 +1858,11 @@ size_t ModelRequest::ByteSizeLong() const {
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
   }
-  // string model_name = 1;
-  if (this->model_name().size() > 0) {
+  // string name = 1;
+  if (this->name().size() > 0) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->model_name());
+        this->name());
   }
 
   // string file_path = 2;
@@ -1906,9 +1906,9 @@ void ModelRequest::MergeFrom(const ModelRequest& from) {
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from.model_name().size() > 0) {
+  if (from.name().size() > 0) {
 
-    model_name_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.model_name_);
+    name_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.name_);
   }
   if (from.file_path().size() > 0) {
 
@@ -1943,7 +1943,7 @@ void ModelRequest::Swap(ModelRequest* other) {
 }
 void ModelRequest::InternalSwap(ModelRequest* other) {
   using std::swap;
-  model_name_.Swap(&other->model_name_);
+  name_.Swap(&other->name_);
   file_path_.Swap(&other->file_path_);
   swap(no_cache_, other->no_cache_);
   _internal_metadata_.Swap(&other->_internal_metadata_);

@@ -51,7 +51,7 @@ message ModelRequest {
   // name of the model. the model is either read from
   // cache, but if does not exist (and file_path is
   // valid) then read from file
-  string model_name = 1;
+  string name = 1;
   // file path used to read model if does not exist in registry
   string file_path = 2;
   // if true then the model is never read from cache
