@@ -48,7 +48,7 @@ message Model {
 }
 
 message ModelRequest {
-  // name of the model . the model is either read from
+  // name of the model. the model is either read from
   // cache, but if does not exist (and file_path is
   // valid) then read from file
   string model_name = 1;

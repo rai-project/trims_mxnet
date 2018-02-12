@@ -22,15 +22,18 @@
 #include <string>
 #include <vector>
 
-namespace upr {
+#define BYTE 1
+#define KBYTE 1024 * BYTE
+#define MBYTE 1024 * KBYTE
+#define DATA_SIZE 4 * BYTE
 
+namespace upr {
 
 struct server {
   static std::string host_name;
   static int port;
   static std::string address;
 };
-
 
 void Load(std::string model_name, dmlc::Stream *fi,
              std::vector<mxnet::NDArray> *data, std::vector<std::string> *keys);
