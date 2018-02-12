@@ -463,17 +463,17 @@ class Model : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
 
   // accessors -------------------------------------------------------
 
-  // repeated .upr.ModelHandle models = 5;
-  int models_size() const;
-  void clear_models();
-  static const int kModelsFieldNumber = 5;
-  const ::upr::ModelHandle& models(int index) const;
-  ::upr::ModelHandle* mutable_models(int index);
-  ::upr::ModelHandle* add_models();
+  // repeated .upr.ModelHandle shared_models = 6;
+  int shared_models_size() const;
+  void clear_shared_models();
+  static const int kSharedModelsFieldNumber = 6;
+  const ::upr::ModelHandle& shared_models(int index) const;
+  ::upr::ModelHandle* mutable_shared_models(int index);
+  ::upr::ModelHandle* add_shared_models();
   ::google::protobuf::RepeatedPtrField< ::upr::ModelHandle >*
-      mutable_models();
+      mutable_shared_models();
   const ::google::protobuf::RepeatedPtrField< ::upr::ModelHandle >&
-      models() const;
+      shared_models() const;
 
   // string id = 1;
   void clear_id();
@@ -517,6 +517,15 @@ class Model : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
   ::std::string* release_file_path();
   void set_allocated_file_path(::std::string* file_path);
 
+  // .upr.ModelHandle owned_models = 5;
+  bool has_owned_models() const;
+  void clear_owned_models();
+  static const int kOwnedModelsFieldNumber = 5;
+  const ::upr::ModelHandle& owned_models() const;
+  ::upr::ModelHandle* release_owned_models();
+  ::upr::ModelHandle* mutable_owned_models();
+  void set_allocated_owned_models(::upr::ModelHandle* owned_models);
+
   // int64 ref_count = 4;
   void clear_ref_count();
   static const int kRefCountFieldNumber = 4;
@@ -527,10 +536,11 @@ class Model : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
-  ::google::protobuf::RepeatedPtrField< ::upr::ModelHandle > models_;
+  ::google::protobuf::RepeatedPtrField< ::upr::ModelHandle > shared_models_;
   ::google::protobuf::internal::ArenaStringPtr id_;
   ::google::protobuf::internal::ArenaStringPtr name_;
   ::google::protobuf::internal::ArenaStringPtr file_path_;
+  ::upr::ModelHandle* owned_models_;
   ::google::protobuf::int64 ref_count_;
   mutable int _cached_size_;
   friend struct ::protobuf_upr_2eproto::TableStruct;
@@ -634,19 +644,19 @@ class ModelRequest : public ::google::protobuf::Message /* @@protoc_insertion_po
   ::std::string* release_name();
   void set_allocated_name(::std::string* name);
 
-  // string file_path = 2;
-  void clear_file_path();
-  static const int kFilePathFieldNumber = 2;
-  const ::std::string& file_path() const;
-  void set_file_path(const ::std::string& value);
+  // string directory_path = 2;
+  void clear_directory_path();
+  static const int kDirectoryPathFieldNumber = 2;
+  const ::std::string& directory_path() const;
+  void set_directory_path(const ::std::string& value);
   #if LANG_CXX11
-  void set_file_path(::std::string&& value);
+  void set_directory_path(::std::string&& value);
   #endif
-  void set_file_path(const char* value);
-  void set_file_path(const char* value, size_t size);
-  ::std::string* mutable_file_path();
-  ::std::string* release_file_path();
-  void set_allocated_file_path(::std::string* file_path);
+  void set_directory_path(const char* value);
+  void set_directory_path(const char* value, size_t size);
+  ::std::string* mutable_directory_path();
+  ::std::string* release_directory_path();
+  void set_allocated_directory_path(::std::string* directory_path);
 
   // bool no_cache = 3;
   void clear_no_cache();
@@ -659,7 +669,7 @@ class ModelRequest : public ::google::protobuf::Message /* @@protoc_insertion_po
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::internal::ArenaStringPtr name_;
-  ::google::protobuf::internal::ArenaStringPtr file_path_;
+  ::google::protobuf::internal::ArenaStringPtr directory_path_;
   bool no_cache_;
   mutable int _cached_size_;
   friend struct ::protobuf_upr_2eproto::TableStruct;
@@ -1300,34 +1310,84 @@ inline void Model::set_ref_count(::google::protobuf::int64 value) {
   // @@protoc_insertion_point(field_set:upr.Model.ref_count)
 }
 
-// repeated .upr.ModelHandle models = 5;
-inline int Model::models_size() const {
-  return models_.size();
+// .upr.ModelHandle owned_models = 5;
+inline bool Model::has_owned_models() const {
+  return this != internal_default_instance() && owned_models_ != NULL;
 }
-inline void Model::clear_models() {
-  models_.Clear();
+inline void Model::clear_owned_models() {
+  if (GetArenaNoVirtual() == NULL && owned_models_ != NULL) {
+    delete owned_models_;
+  }
+  owned_models_ = NULL;
 }
-inline const ::upr::ModelHandle& Model::models(int index) const {
-  // @@protoc_insertion_point(field_get:upr.Model.models)
-  return models_.Get(index);
+inline const ::upr::ModelHandle& Model::owned_models() const {
+  const ::upr::ModelHandle* p = owned_models_;
+  // @@protoc_insertion_point(field_get:upr.Model.owned_models)
+  return p != NULL ? *p : *reinterpret_cast<const ::upr::ModelHandle*>(
+      &::upr::_ModelHandle_default_instance_);
 }
-inline ::upr::ModelHandle* Model::mutable_models(int index) {
-  // @@protoc_insertion_point(field_mutable:upr.Model.models)
-  return models_.Mutable(index);
+inline ::upr::ModelHandle* Model::release_owned_models() {
+  // @@protoc_insertion_point(field_release:upr.Model.owned_models)
+  
+  ::upr::ModelHandle* temp = owned_models_;
+  owned_models_ = NULL;
+  return temp;
 }
-inline ::upr::ModelHandle* Model::add_models() {
-  // @@protoc_insertion_point(field_add:upr.Model.models)
-  return models_.Add();
+inline ::upr::ModelHandle* Model::mutable_owned_models() {
+  
+  if (owned_models_ == NULL) {
+    owned_models_ = new ::upr::ModelHandle;
+  }
+  // @@protoc_insertion_point(field_mutable:upr.Model.owned_models)
+  return owned_models_;
+}
+inline void Model::set_allocated_owned_models(::upr::ModelHandle* owned_models) {
+  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
+  if (message_arena == NULL) {
+    delete owned_models_;
+  }
+  if (owned_models) {
+    ::google::protobuf::Arena* submessage_arena = NULL;
+    if (message_arena != submessage_arena) {
+      owned_models = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, owned_models, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  owned_models_ = owned_models;
+  // @@protoc_insertion_point(field_set_allocated:upr.Model.owned_models)
+}
+
+// repeated .upr.ModelHandle shared_models = 6;
+inline int Model::shared_models_size() const {
+  return shared_models_.size();
+}
+inline void Model::clear_shared_models() {
+  shared_models_.Clear();
+}
+inline const ::upr::ModelHandle& Model::shared_models(int index) const {
+  // @@protoc_insertion_point(field_get:upr.Model.shared_models)
+  return shared_models_.Get(index);
+}
+inline ::upr::ModelHandle* Model::mutable_shared_models(int index) {
+  // @@protoc_insertion_point(field_mutable:upr.Model.shared_models)
+  return shared_models_.Mutable(index);
+}
+inline ::upr::ModelHandle* Model::add_shared_models() {
+  // @@protoc_insertion_point(field_add:upr.Model.shared_models)
+  return shared_models_.Add();
 }
 inline ::google::protobuf::RepeatedPtrField< ::upr::ModelHandle >*
-Model::mutable_models() {
-  // @@protoc_insertion_point(field_mutable_list:upr.Model.models)
-  return &models_;
+Model::mutable_shared_models() {
+  // @@protoc_insertion_point(field_mutable_list:upr.Model.shared_models)
+  return &shared_models_;
 }
 inline const ::google::protobuf::RepeatedPtrField< ::upr::ModelHandle >&
-Model::models() const {
-  // @@protoc_insertion_point(field_list:upr.Model.models)
-  return models_;
+Model::shared_models() const {
+  // @@protoc_insertion_point(field_list:upr.Model.shared_models)
+  return shared_models_;
 }
 
 // -------------------------------------------------------------------
@@ -1387,57 +1447,57 @@ inline void ModelRequest::set_allocated_name(::std::string* name) {
   // @@protoc_insertion_point(field_set_allocated:upr.ModelRequest.name)
 }
 
-// string file_path = 2;
-inline void ModelRequest::clear_file_path() {
-  file_path_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+// string directory_path = 2;
+inline void ModelRequest::clear_directory_path() {
+  directory_path_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline const ::std::string& ModelRequest::file_path() const {
-  // @@protoc_insertion_point(field_get:upr.ModelRequest.file_path)
-  return file_path_.GetNoArena();
+inline const ::std::string& ModelRequest::directory_path() const {
+  // @@protoc_insertion_point(field_get:upr.ModelRequest.directory_path)
+  return directory_path_.GetNoArena();
 }
-inline void ModelRequest::set_file_path(const ::std::string& value) {
+inline void ModelRequest::set_directory_path(const ::std::string& value) {
   
-  file_path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:upr.ModelRequest.file_path)
+  directory_path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:upr.ModelRequest.directory_path)
 }
 #if LANG_CXX11
-inline void ModelRequest::set_file_path(::std::string&& value) {
+inline void ModelRequest::set_directory_path(::std::string&& value) {
   
-  file_path_.SetNoArena(
+  directory_path_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:upr.ModelRequest.file_path)
+  // @@protoc_insertion_point(field_set_rvalue:upr.ModelRequest.directory_path)
 }
 #endif
-inline void ModelRequest::set_file_path(const char* value) {
+inline void ModelRequest::set_directory_path(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
-  file_path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:upr.ModelRequest.file_path)
+  directory_path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:upr.ModelRequest.directory_path)
 }
-inline void ModelRequest::set_file_path(const char* value, size_t size) {
+inline void ModelRequest::set_directory_path(const char* value, size_t size) {
   
-  file_path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  directory_path_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:upr.ModelRequest.file_path)
+  // @@protoc_insertion_point(field_set_pointer:upr.ModelRequest.directory_path)
 }
-inline ::std::string* ModelRequest::mutable_file_path() {
+inline ::std::string* ModelRequest::mutable_directory_path() {
   
-  // @@protoc_insertion_point(field_mutable:upr.ModelRequest.file_path)
-  return file_path_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  // @@protoc_insertion_point(field_mutable:upr.ModelRequest.directory_path)
+  return directory_path_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline ::std::string* ModelRequest::release_file_path() {
-  // @@protoc_insertion_point(field_release:upr.ModelRequest.file_path)
+inline ::std::string* ModelRequest::release_directory_path() {
+  // @@protoc_insertion_point(field_release:upr.ModelRequest.directory_path)
   
-  return file_path_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return directory_path_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void ModelRequest::set_allocated_file_path(::std::string* file_path) {
-  if (file_path != NULL) {
+inline void ModelRequest::set_allocated_directory_path(::std::string* directory_path) {
+  if (directory_path != NULL) {
     
   } else {
     
   }
-  file_path_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), file_path);
-  // @@protoc_insertion_point(field_set_allocated:upr.ModelRequest.file_path)
+  directory_path_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), directory_path);
+  // @@protoc_insertion_point(field_set_allocated:upr.ModelRequest.directory_path)
 }
 
 // bool no_cache = 3;

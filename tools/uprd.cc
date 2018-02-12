@@ -1,18 +1,26 @@
+#include "fmt/format.h"
 #include "ipc.h"
 #include "mxnet/c_api.h"
 #include "mxnet/c_predict_api.h"
 #include "prettyprint.hpp"
+#include "sole/sole.hpp"
 #include "upr.grpc.pb.h"
 #include "upr.pb.h"
+#include <dmlc/base.h>
+#include <dmlc/io.h>
 #include <grpc++/grpc++.h>
 #include <grpc/support/log.h>
 #include <iostream>
 
 #include <fcntl.h>
+#include <stdexcept>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <thread>
 #include <unistd.h>
+
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include <cuda_runtime_api.h>
 
@@ -22,6 +30,11 @@ using namespace std::string_literals;
 using namespace grpc;
 
 static const auto BASE_PATH = "/tmp/persistent"s;
+static const auto CARML_HOME_BASE_DIR = "/home/abduld/carml/data/mxnet/"s;
+
+static std::map<std::string, std::string> model_directory_paths{
+    {"alexnet", CARML_HOME_BASE_DIR + "alexnet"},
+    {"vgg16", CARML_HOME_BASE_DIR + "vgg16"}};
 
 #define CUDA_CHECK_CALL(func, msg)                                             \
   {                                                                            \
@@ -30,7 +43,34 @@ static const auto BASE_PATH = "/tmp/persistent"s;
         << "CUDA[" << msg << "]:: " << cudaGetErrorString(e);                  \
   }
 
-FILE *makefifo(std::string name, void *data) {
+static bool directory_exists(const std::string &path) {
+  struct stat sb;
+  if (stat(path.c_str(), &sb) == -1) {
+    int errsv = errno;
+    return false;
+  }
+
+  if ((sb.st_mode & S_IFMT) == S_IFDIR) {
+    return true;
+  }
+  return false;
+}
+
+static bool file_exists(const std::string &path) {
+
+  struct stat sb;
+  if (stat(path.c_str(), &sb) == -1) {
+    int errsv = errno;
+    return false;
+  }
+
+  if ((sb.st_mode & S_IFMT) == S_IFDIR) {
+    return false;
+  }
+  return true;
+}
+
+static FILE *makefifo(std::string name, void *data) {
   cudaIpcMemHandle_t handle;
   cudaIpcGetMemHandle(&handle, data);
 
@@ -85,6 +125,67 @@ template <typename K, typename V> std::vector<K> keys(const std::map<K, V> &m) {
 }
 
 class RegistryImpl final : public Registry::Service {
+private:
+  void load_ndarray(::google::protobuf::RepeatedPtrField<Layer> *layers,
+                    const ModelRequest *request) {
+
+    auto directory_path = request->directory_path();
+    const auto model_name = request->name();
+    if (directory_path == "" && model_name == "") {
+      const auto msg =
+          "either the filepath or the model name must be specified in the open request"s;
+      LOG(ERROR) << msg;
+      throw std::runtime_error(msg);
+    }
+    if (directory_path == "" && model_name != "") {
+      // we need to load the model from the map
+      const auto pth = model_directory_paths.find(model_name);
+      if (pth == model_directory_paths.end()) {
+        const auto msg = fmt::format(
+            "the model path for {} was not found in the model directory",
+            model_name);
+        LOG(ERROR) << msg;
+        throw std::runtime_error(msg);
+      }
+      directory_path = pth->second;
+    }
+    if (directory_path != "" && !directory_exists(directory_path)) {
+      const auto msg =
+          fmt::format("directory_path {} does not exist", directory_path);
+      LOG(ERROR) << msg;
+      throw std::runtime_error(msg);
+    }
+
+    const auto params_path = directory_path + "/model.params";
+
+    if (!file_exists(params_path)) {
+      const auto msg =
+          fmt::format("the parameter file was not found in {}", params_path);
+      LOG(ERROR) << msg;
+      throw std::runtime_error(msg);
+    }
+
+    const auto symbol_path = directory_path + "/model.symbol";
+    if (!file_exists(symbol_path)) {
+      const auto msg =
+          fmt::format("the symbol file was not found in {}", symbol_path);
+      LOG(ERROR) << msg;
+      throw std::runtime_error(msg);
+    }
+
+    dmlc::Stream *fi(dmlc::Stream::Create(params_path.c_str(), "r", true));
+    if (fi == nullptr) {
+      const auto msg =
+          fmt::format("unable to create a stream for {}", params_path);
+      LOG(ERROR) << msg;
+      throw std::runtime_error(msg);
+    }
+
+    std::vector<NDArray> arrays{};
+    std::vector<std::string> layer_names{};
+    NDArray::Load(fi, &arrays, &layer_names);
+  }
+
 public:
   grpc::Status Open(grpc::ServerContext *context, const ModelRequest *request,
                     ModelHandle *reply) override {
@@ -93,20 +194,30 @@ public:
     auto it = memory_db_.find(request->name());
     float *data;
     if (it == memory_db_.end()) {
-      unsigned int byte_count = (unsigned int)DATA_SIZE;
-      CUDA_CHECK_CALL(cudaMalloc((void **)&data, byte_count), "malloc failed");
-      CUDA_CHECK_CALL(cudaMemset(data, 0, byte_count), "memset fail");
-      // no cuda free in shutdown handling yet
+
+      const auto uuid = sole::uuid1().pretty();
 
       Model model;
-      model.set_id(request->name());
+      model.set_id(uuid);
       model.set_name(request->name());
 
       memory_db_[request->name()] = std::make_unique<Model>(model);
 
-      std::cout << "keys = " << keys(memory_db_) << "\n";
+      // std::cout << "keys = " << keys(memory_db_) << "\n";
 
       it = memory_db_.find(request->name());
+
+      ModelHandle owned_model;
+      owned_model.set_id("owned-by-" + uuid);
+      owned_model.set_model_id(model.id());
+      owned_model.set_byte_count(0);
+      load_ndarray(owned_model.mutable_layers(), request);
+
+      int64_t byte_count = 0;
+      for (const auto it : owned_model.layers()) {
+        byte_count += it.byte_count();
+      }
+      owned_model.set_byte_count(byte_count);
     }
 
     const auto path = BASE_PATH + "/handle_"s + nextSuffix();

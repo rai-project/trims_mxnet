@@ -40,9 +40,9 @@ struct client {
       return reply;
     }
 
-    Model Info(const std::string &file_path) {
+    Model Info(const std::string &directory_path) {
       ModelRequest request;
-      request.set_file_path(file_path);
+      request.set_directory_path(directory_path);
       return this->Info(request);
     }
 
@@ -59,9 +59,9 @@ struct client {
       return reply;
     }
 
-    ModelHandle Open(const std::string &file_path) {
+    ModelHandle Open(const std::string &directory_path) {
       ModelRequest request;
-      request.set_file_path(file_path);
+      request.set_directory_path(directory_path);
       return this->Open(request);
     }
 
@@ -86,9 +86,9 @@ struct client {
   static void Load(std::string model_name, dmlc::Stream *fi,
                    std::vector<NDArray> *data, std::vector<std::string> *keys) {
 
-    RegistryClient Registry(grpc::CreateChannel(
+    RegistryClient client(grpc::CreateChannel(
         server_address, grpc::InsecureChannelCredentials()));
-    auto open_reply = Registry.Open(model_name); // The actual RPC call!
+    auto open_reply = client.Open(model_name); // The actual RPC call!
 
     std::cout << "Client received open reply: " << open_reply.id() << "\n";
   }

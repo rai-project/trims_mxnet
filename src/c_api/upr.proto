@@ -43,8 +43,10 @@ message Model {
   string file_path = 3;
   // the refcount for the entire model
   int64 ref_count = 4;
+  // the model that's owned by the current process
+  ModelHandle owned_models = 5;
   // the set of shared models
-  repeated ModelHandle models = 5;
+  repeated ModelHandle shared_models = 6;
 }
 
 message ModelRequest {
@@ -52,8 +54,10 @@ message ModelRequest {
   // cache, but if does not exist (and file_path is
   // valid) then read from file
   string name = 1;
-  // file path used to read model if does not exist in registry
-  string file_path = 2;
+  // directory path used to read model if does not exist in registry
+  // the directory is assumed to contain two files one called 
+  // model.params and model.symbol (model is not the model name)
+  string directory_path = 2;
   // if true then the model is never read from cache
   bool no_cache = 3;
 }
