@@ -525,17 +525,17 @@ class ModelHandle : public ::google::protobuf::Message /* @@protoc_insertion_poi
 
   // accessors -------------------------------------------------------
 
-  // repeated .upr.Layer layers = 4;
-  int layers_size() const;
-  void clear_layers();
-  static const int kLayersFieldNumber = 4;
-  const ::upr::Layer& layers(int index) const;
-  ::upr::Layer* mutable_layers(int index);
-  ::upr::Layer* add_layers();
+  // repeated .upr.Layer layer = 4;
+  int layer_size() const;
+  void clear_layer();
+  static const int kLayerFieldNumber = 4;
+  const ::upr::Layer& layer(int index) const;
+  ::upr::Layer* mutable_layer(int index);
+  ::upr::Layer* add_layer();
   ::google::protobuf::RepeatedPtrField< ::upr::Layer >*
-      mutable_layers();
+      mutable_layer();
   const ::google::protobuf::RepeatedPtrField< ::upr::Layer >&
-      layers() const;
+      layer() const;
 
   // string id = 1;
   void clear_id();
@@ -596,7 +596,7 @@ class ModelHandle : public ::google::protobuf::Message /* @@protoc_insertion_poi
   template <typename T> friend class ::google::protobuf::Arena::InternalHelper;
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
-  ::google::protobuf::RepeatedPtrField< ::upr::Layer > layers_;
+  ::google::protobuf::RepeatedPtrField< ::upr::Layer > layer_;
   ::google::protobuf::internal::ArenaStringPtr id_;
   ::google::protobuf::internal::ArenaStringPtr model_id_;
   ::google::protobuf::int64 byte_count_;
@@ -1643,34 +1643,34 @@ inline void ModelHandle::set_byte_count(::google::protobuf::int64 value) {
   // @@protoc_insertion_point(field_set:upr.ModelHandle.byte_count)
 }
 
-// repeated .upr.Layer layers = 4;
-inline int ModelHandle::layers_size() const {
-  return layers_.size();
+// repeated .upr.Layer layer = 4;
+inline int ModelHandle::layer_size() const {
+  return layer_.size();
 }
-inline void ModelHandle::clear_layers() {
-  layers_.Clear();
+inline void ModelHandle::clear_layer() {
+  layer_.Clear();
 }
-inline const ::upr::Layer& ModelHandle::layers(int index) const {
-  // @@protoc_insertion_point(field_get:upr.ModelHandle.layers)
-  return layers_.Get(index);
+inline const ::upr::Layer& ModelHandle::layer(int index) const {
+  // @@protoc_insertion_point(field_get:upr.ModelHandle.layer)
+  return layer_.Get(index);
 }
-inline ::upr::Layer* ModelHandle::mutable_layers(int index) {
-  // @@protoc_insertion_point(field_mutable:upr.ModelHandle.layers)
-  return layers_.Mutable(index);
+inline ::upr::Layer* ModelHandle::mutable_layer(int index) {
+  // @@protoc_insertion_point(field_mutable:upr.ModelHandle.layer)
+  return layer_.Mutable(index);
 }
-inline ::upr::Layer* ModelHandle::add_layers() {
-  // @@protoc_insertion_point(field_add:upr.ModelHandle.layers)
-  return layers_.Add();
+inline ::upr::Layer* ModelHandle::add_layer() {
+  // @@protoc_insertion_point(field_add:upr.ModelHandle.layer)
+  return layer_.Add();
 }
 inline ::google::protobuf::RepeatedPtrField< ::upr::Layer >*
-ModelHandle::mutable_layers() {
-  // @@protoc_insertion_point(field_mutable_list:upr.ModelHandle.layers)
-  return &layers_;
+ModelHandle::mutable_layer() {
+  // @@protoc_insertion_point(field_mutable_list:upr.ModelHandle.layer)
+  return &layer_;
 }
 inline const ::google::protobuf::RepeatedPtrField< ::upr::Layer >&
-ModelHandle::layers() const {
-  // @@protoc_insertion_point(field_list:upr.ModelHandle.layers)
-  return layers_;
+ModelHandle::layer() const {
+  // @@protoc_insertion_point(field_list:upr.ModelHandle.layer)
+  return layer_;
 }
 
 // -------------------------------------------------------------------

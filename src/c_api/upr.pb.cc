@@ -211,7 +211,7 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::ModelHandle, id_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::ModelHandle, model_id_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::ModelHandle, byte_count_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::ModelHandle, layers_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::ModelHandle, layer_),
   ~0u,  // no _has_bits_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::Model, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -282,22 +282,22 @@ void AddDescriptorsImpl() {
       "me\030\002 \001(\t\022\031\n\005shape\030\003 \001(\0132\n.upr.Shape\022\022\n\nb"
       "yte_count\030\004 \001(\003\022\027\n\017ipc_handle_path\030\005 \001(\t"
       "\022\026\n\016device_raw_ptr\030\006 \001(\003\022\021\n\tref_count\030\007 "
-      "\001(\003\"[\n\013ModelHandle\022\n\n\002id\030\001 \001(\t\022\020\n\010model_"
-      "id\030\002 \001(\t\022\022\n\nbyte_count\030\003 \001(\003\022\032\n\006layers\030\004"
-      " \003(\0132\n.upr.Layer\"\226\001\n\005Model\022\n\n\002id\030\001 \001(\t\022\014"
-      "\n\004name\030\002 \001(\t\022\021\n\tfile_path\030\003 \001(\t\022\021\n\tref_c"
-      "ount\030\004 \001(\003\022%\n\013owned_model\030\005 \001(\0132\020.upr.Mo"
-      "delHandle\022&\n\014shared_model\030\006 \003(\0132\020.upr.Mo"
-      "delHandle\"F\n\014ModelRequest\022\014\n\004name\030\001 \001(\t\022"
-      "\026\n\016directory_path\030\002 \001(\t\022\020\n\010no_cache\030\003 \001("
-      "\010\"\006\n\004Void2\212\001\n\010Registry\022-\n\004Open\022\021.upr.Mod"
-      "elRequest\032\020.upr.ModelHandle\"\000\022&\n\005Close\022\020"
-      ".upr.ModelHandle\032\t.upr.Void\"\000\022\'\n\004Info\022\021."
-      "upr.ModelRequest\032\n.upr.Model\"\000B\010Z\003upr\370\001\001"
-      "b\006proto3"
+      "\001(\003\"Z\n\013ModelHandle\022\n\n\002id\030\001 \001(\t\022\020\n\010model_"
+      "id\030\002 \001(\t\022\022\n\nbyte_count\030\003 \001(\003\022\031\n\005layer\030\004 "
+      "\003(\0132\n.upr.Layer\"\226\001\n\005Model\022\n\n\002id\030\001 \001(\t\022\014\n"
+      "\004name\030\002 \001(\t\022\021\n\tfile_path\030\003 \001(\t\022\021\n\tref_co"
+      "unt\030\004 \001(\003\022%\n\013owned_model\030\005 \001(\0132\020.upr.Mod"
+      "elHandle\022&\n\014shared_model\030\006 \003(\0132\020.upr.Mod"
+      "elHandle\"F\n\014ModelRequest\022\014\n\004name\030\001 \001(\t\022\026"
+      "\n\016directory_path\030\002 \001(\t\022\020\n\010no_cache\030\003 \001(\010"
+      "\"\006\n\004Void2\212\001\n\010Registry\022-\n\004Open\022\021.upr.Mode"
+      "lRequest\032\020.upr.ModelHandle\"\000\022&\n\005Close\022\020."
+      "upr.ModelHandle\032\t.upr.Void\"\000\022\'\n\004Info\022\021.u"
+      "pr.ModelRequest\032\n.upr.Model\"\000B\010Z\003upr\370\001\001b"
+      "\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 688);
+      descriptor, 687);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "upr.proto", &protobuf_RegisterTypes);
 }
@@ -1231,7 +1231,7 @@ void ModelHandle::InitAsDefaultInstance() {
 const int ModelHandle::kIdFieldNumber;
 const int ModelHandle::kModelIdFieldNumber;
 const int ModelHandle::kByteCountFieldNumber;
-const int ModelHandle::kLayersFieldNumber;
+const int ModelHandle::kLayerFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ModelHandle::ModelHandle()
@@ -1245,7 +1245,7 @@ ModelHandle::ModelHandle()
 ModelHandle::ModelHandle(::google::protobuf::Arena* arena)
   : ::google::protobuf::Message(),
   _internal_metadata_(arena),
-  layers_(arena) {
+  layer_(arena) {
   ::protobuf_upr_2eproto::InitDefaultsModelHandle();
   SharedCtor();
   RegisterArenaDtor(arena);
@@ -1254,7 +1254,7 @@ ModelHandle::ModelHandle(::google::protobuf::Arena* arena)
 ModelHandle::ModelHandle(const ModelHandle& from)
   : ::google::protobuf::Message(),
       _internal_metadata_(NULL),
-      layers_(from.layers_),
+      layer_(from.layer_),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   id_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
@@ -1320,7 +1320,7 @@ void ModelHandle::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  layers_.Clear();
+  layer_.Clear();
   id_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
   model_id_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
   byte_count_ = GOOGLE_LONGLONG(0);
@@ -1383,11 +1383,11 @@ bool ModelHandle::MergePartialFromCodedStream(
         break;
       }
 
-      // repeated .upr.Layer layers = 4;
+      // repeated .upr.Layer layer = 4;
       case 4: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(34u /* 34 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(input, add_layers()));
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(input, add_layer()));
         } else {
           goto handle_unusual;
         }
@@ -1445,11 +1445,11 @@ void ModelHandle::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteInt64(3, this->byte_count(), output);
   }
 
-  // repeated .upr.Layer layers = 4;
+  // repeated .upr.Layer layer = 4;
   for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->layers_size()); i < n; i++) {
+      n = static_cast<unsigned int>(this->layer_size()); i < n; i++) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      4, this->layers(static_cast<int>(i)), output);
+      4, this->layer(static_cast<int>(i)), output);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -1493,12 +1493,12 @@ void ModelHandle::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(3, this->byte_count(), target);
   }
 
-  // repeated .upr.Layer layers = 4;
+  // repeated .upr.Layer layer = 4;
   for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->layers_size()); i < n; i++) {
+      n = static_cast<unsigned int>(this->layer_size()); i < n; i++) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
-        4, this->layers(static_cast<int>(i)), deterministic, target);
+        4, this->layer(static_cast<int>(i)), deterministic, target);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -1518,14 +1518,14 @@ size_t ModelHandle::ByteSizeLong() const {
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
   }
-  // repeated .upr.Layer layers = 4;
+  // repeated .upr.Layer layer = 4;
   {
-    unsigned int count = static_cast<unsigned int>(this->layers_size());
+    unsigned int count = static_cast<unsigned int>(this->layer_size());
     total_size += 1UL * count;
     for (unsigned int i = 0; i < count; i++) {
       total_size +=
         ::google::protobuf::internal::WireFormatLite::MessageSize(
-          this->layers(static_cast<int>(i)));
+          this->layer(static_cast<int>(i)));
     }
   }
 
@@ -1579,7 +1579,7 @@ void ModelHandle::MergeFrom(const ModelHandle& from) {
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  layers_.MergeFrom(from.layers_);
+  layer_.MergeFrom(from.layer_);
   if (from.id().size() > 0) {
     set_id(from.id());
   }
@@ -1630,7 +1630,7 @@ void ModelHandle::UnsafeArenaSwap(ModelHandle* other) {
 }
 void ModelHandle::InternalSwap(ModelHandle* other) {
   using std::swap;
-  layers_.InternalSwap(&other->layers_);
+  layer_.InternalSwap(&other->layer_);
   id_.Swap(&other->id_);
   model_id_.Swap(&other->model_id_);
   swap(byte_count_, other->byte_count_);

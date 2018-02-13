@@ -147,15 +147,20 @@ private:
   };
   std::map<std::string /* id::name */, handle_ref> open_handles{};
 
-  std::string make_ipc_handle(std::string id, std::string name, NDArray array) {
+  std::string make_ipc_handle(std::string id, std::string name, float *data) {
     const auto ipc_id = fmt::format("{}::{}", id, name);
     const auto path =
         fmt::format("{}/handle-{}.ipc", IPC_HANDLES_BASE_PATH, ipc_id);
 
-    const auto blob = array.data();
-    handle_ref handle(path, blob.dptr<float>());
+    handle_ref handle(path, data);
     open_handles.insert({ipc_id, handle});
     return handle.path();
+  }
+
+  std::string make_ipc_handle(std::string id, std::string name, NDArray array) {
+    const auto blob = array.data();
+    auto data = blob.dptr<float>();
+    return make_ipc_handle(id, name, data);
   }
 
   void close_ipc_handle(std::string id, std::string name) {
@@ -192,6 +197,7 @@ private:
     layer->set_device_raw_ptr((int64_t)blob.dptr<float>());
     layer->set_ref_count(ref_count);
   }
+
   void load_ndarray(::google::protobuf::RepeatedPtrField<Layer> *layers,
                     const ModelRequest *request, int64_t ref_count) {
 
@@ -266,6 +272,41 @@ private:
     }
   }
 
+  void from_owned_layer(Layer *layer, const Layer &owned, int64_t ref_count) {
+
+    const auto id = sole::uuid1().pretty();
+    const auto shape = layer->mutable_shape();
+
+    layer->set_id(id);
+    layer->set_name(owned.name());
+
+    shape->set_rank(owned.shape().rank());
+    for (const auto dim : owned.shape().dim()) {
+      shape->add_dim(dim);
+    }
+    layer->set_byte_count(owned.byte_count());
+    layer->set_ipc_handle_path(
+        make_ipc_handle(id, owned.name(), (float *)owned.device_raw_ptr()));
+    layer->set_device_raw_ptr(owned.device_raw_ptr());
+    layer->set_ref_count(ref_count);
+  }
+
+  void from_owned_modelhandle(ModelHandle *handle, const ModelHandle &owned,
+                              int64_t ref_count) {
+
+    const auto uuid = sole::uuid1().pretty();
+    handle->set_id(uuid);
+    handle->set_model_id(owned.model_id());
+    handle->set_byte_count(owned.byte_count());
+
+    auto layers = handle->mutable_layer();
+
+    for (const auto owned_layer : owned.layer()) {
+      auto trgt_layer = layers->Add();
+      from_owned_layer(trgt_layer, owned_layer, ref_count);
+    }
+  }
+
 public:
   grpc::Status Open(grpc::ServerContext *context, const ModelRequest *request,
                     ModelHandle *reply) override {
@@ -280,38 +321,37 @@ public:
       Model model;
       model.set_id(uuid);
       model.set_name(request->name());
+      model.set_ref_count(0);
 
-      memory_db_[request->name()] = std::make_unique<Model>(model);
-
-      // std::cout << "keys = " << keys(memory_db_) << "\n";
-
-      it = memory_db_.find(request->name());
-
-      ModelHandle owned_model;
-      owned_model.set_id("owned-by-" + uuid);
-      owned_model.set_model_id(model.id());
-      owned_model.set_byte_count(0);
-      load_ndarray(owned_model.mutable_layers(), request, /*ref_count=*/0);
+      auto owned_model = model.mutable_owned_model();
+      owned_model->set_id("owned-by-" + uuid);
+      owned_model->set_model_id(model.id());
+      owned_model->set_byte_count(0);
+      load_ndarray(owned_model->mutable_layer(), request, /*ref_count=*/0);
 
       int64_t byte_count = 0;
-      for (const auto it : owned_model.layers()) {
+      for (const auto it : owned_model->layer()) {
         byte_count += it.byte_count();
       }
-      owned_model.set_byte_count(byte_count);
+      owned_model->set_byte_count(byte_count);
+
+      memory_db_[request->name()] = std::make_unique<Model>(model);
     }
 
-    const auto path = IPC_HANDLES_BASE_PATH + "/handle_"s + nextSuffix();
-#ifdef IMPLEMENT_ND_ARRAYLOAD
-    const auto fp = makefifo(path, data);
-    it->second->add_file_ptrs((int64_t)fp);
-    it->second->set_ref_count(it->second->ref_count() + 1);
+    // std::cout << "keys = " << keys(memory_db_) << "\n";
 
-    const auto paths = it->second->paths();
-    reply->set_path(it->second->paths(paths.size() - 1));
-    reply->set_byte_count(it->second->byte_count());
-#else
-    std::cerr << "implement ndarray load\n";
-#endif
+    it = memory_db_.find(request->name());
+    CHECK(it != memory_db_.end()) << "expecting the model to be there";
+
+    CHECK(it->second != nullptr) << "expecting a valid model";
+
+    // now we need to use the owned array to create
+    // new memory handles
+    it->second->set_ref_count(it->second->ref_count() + 1);
+    auto handle = it->second->mutable_shared_model()->Add();
+    from_owned_modelhandle(handle, it->second->owned_model(),
+                           it->second->ref_count());
+
     return grpc::Status::OK;
   }
 

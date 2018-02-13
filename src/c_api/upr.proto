@@ -18,7 +18,7 @@ message Layer {
   string id = 1;
   // name of the layer
   string name = 2;
-  // tensor shape 
+  // tensor shape
   Shape shape = 3;
   // byte count for the layer
   int64 byte_count = 4;
@@ -40,7 +40,7 @@ message ModelHandle {
   // the total number of bytes for the model
   int64 byte_count = 3;
   // the sequence of layers
-  repeated Layer layers = 4;
+  repeated Layer layer = 4;
 }
 
 message Model {
@@ -64,7 +64,7 @@ message ModelRequest {
   // valid) then read from file
   string name = 1;
   // directory path used to read model if does not exist in registry
-  // the directory is assumed to contain two files one called 
+  // the directory is assumed to contain two files one called
   // model.params and model.symbol (model is not the model name)
   string directory_path = 2;
   // if true then the model is never read from cache
