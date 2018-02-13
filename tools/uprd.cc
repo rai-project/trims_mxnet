@@ -29,7 +29,8 @@ using namespace mxnet;
 using namespace std::string_literals;
 using namespace grpc;
 
-static const auto BASE_PATH = "/tmp/persistent"s;
+static const auto element_size = sizeof(float);
+static const auto IPC_HANDLES_BASE_PATH = "/tmp/persistent"s;
 static const auto CARML_HOME_BASE_DIR = "/home/abduld/carml/data/mxnet/"s;
 
 static std::map<std::string, std::string> model_directory_paths{
@@ -41,6 +42,10 @@ static std::map<std::string, std::string> model_directory_paths{
     cudaError_t e = (func);                                                    \
     CHECK(e == cudaSuccess || e == cudaErrorCudartUnloading)                   \
         << "CUDA[" << msg << "]:: " << cudaGetErrorString(e);                  \
+    if (e != cudaSuccess) {                                                    \
+      throw std::runtime_error(                                                \
+          fmt::format("CUDA[{}]:: {}", msg, cudaGetErrorString(e)));           \
+    }                                                                          \
   }
 
 static bool directory_exists(const std::string &path) {
@@ -70,51 +75,6 @@ static bool file_exists(const std::string &path) {
   return true;
 }
 
-static FILE *makefifo(std::string name, void *data) {
-  cudaIpcMemHandle_t handle;
-  cudaIpcGetMemHandle(&handle, data);
-
-  const auto cmd = std::string("rm -f ") + name;
-  system(cmd.c_str());                  // remove any debris
-  int ret = mkfifo(name.c_str(), 0600); // create fifo
-  if (ret != 0) {
-    printf("mkfifo error: %d\n", ret);
-  }
-
-  system(std::string("rm -f "s + name).c_str());
-
-  auto fp = fopen(name.c_str(), "w");
-  if (fp == NULL) {
-    printf("fifo open fail \n");
-    return nullptr;
-  }
-
-  auto fd = fileno(fp);
-  const auto flags = fcntl(fd, F_GETFL);
-  fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-
-  std::cout << "in process mkfifo"
-            << "\n";
-
-  unsigned char handle_buffer[sizeof(handle) + 1];
-  memset(handle_buffer, 0, sizeof(handle) + 1);
-  memcpy(handle_buffer, (unsigned char *)(&handle), sizeof(handle));
-
-  for (size_t ii = 0; ii < sizeof(handle); ii++) {
-    ret = fprintf(fp, "%c", handle_buffer[ii]);
-    if (ret != 1) {
-      printf("ret = %d\n", ret);
-      return nullptr;
-    }
-  }
-
-  fclose(fp);
-
-  std::cout << "wrote " << sizeof(handle) << " bytes to " << name << "\n";
-
-  return fp;
-}
-
 template <typename K, typename V> std::vector<K> keys(const std::map<K, V> &m) {
   std::vector<K> res;
   std::transform(m.begin(), m.end(), std::back_inserter(res),
@@ -126,23 +86,114 @@ template <typename K, typename V> std::vector<K> keys(const std::map<K, V> &m) {
 
 class RegistryImpl final : public Registry::Service {
 private:
-  void to_shape(Shape *res, TShape shape) {
+  struct handle_ref {
+    handle_ref(std::string path, float *device_ptr)
+        : path_(path), device_ptr_(device_ptr) {
+      cudaIpcMemHandle_t handle;
+      CUDA_CHECK_CALL(cudaIpcGetMemHandle(&handle, device_ptr),
+                      "failed to create a handle ref");
 
+      const auto cmd = fmt::format("rm -f {}", path);
+      system(cmd.c_str());                  // remove any debris
+      int ret = mkfifo(path.c_str(), 0600); // create fifo
+      if (ret != 0) {
+        throw std::runtime_error(fmt::format("mkfifo error: {}\n", ret));
+      }
+
+      system(fmt::format("rm -f {}", path).c_str());
+
+      auto fp = fopen(path.c_str(), "w");
+      if (fp == NULL) {
+        throw std::runtime_error(
+            fmt::format("failed to open fifo at {}", path));
+      }
+
+      auto fd = fileno(fp);
+      const auto flags = fcntl(fd, F_GETFL);
+      fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+
+      LOG(INFO) << "creating fifo at " << path;
+
+      unsigned char handle_buffer[sizeof(handle) + 1];
+      memset(handle_buffer, 0, sizeof(handle) + 1);
+      memcpy(handle_buffer, (unsigned char *)(&handle), sizeof(handle));
+
+      for (size_t ii = 0; ii < sizeof(handle); ii++) {
+        ret = fprintf(fp, "%c", handle_buffer[ii]);
+        if (ret != 1) {
+          throw std::runtime_error(fmt::format(
+              "failed to write handle buffer to {} at the ii={} iteration",
+              path, ii));
+        }
+      }
+
+      LOG(INFO) << "successfully wrote " << sizeof(handle) << " bytes to "
+                << path;
+
+      fp_ = fp;
+    }
+    std::string path() const { return path_; }
+    void close() {
+      if (fp_ == nullptr) {
+        return;
+      }
+      fclose(fp_);
+    }
+
+  private:
+    std::string path_{""};
+    float *device_ptr_{nullptr};
+    FILE *fp_{nullptr};
+  };
+  std::map<std::string /* id::name */, handle_ref> open_handles{};
+
+  std::string make_ipc_handle(std::string id, std::string name, NDArray array) {
+    const auto ipc_id = fmt::format("{}::{}", id, name);
+    const auto path =
+        fmt::format("{}/handle-{}.ipc", IPC_HANDLES_BASE_PATH, ipc_id);
+
+    const auto blob = array.data();
+    handle_ref handle(path, blob.dptr<float>());
+    open_handles.insert({ipc_id, handle});
+    return handle.path();
+  }
+
+  void close_ipc_handle(std::string id, std::string name) {
+    const auto ipc_id = fmt::format("{}::{}", id, name);
+    const auto it = open_handles.find(ipc_id);
+    if (it == open_handles.end()) {
+      LOG(INFO) << "the ipc with id = " << ipc_id << " was not found";
+      return;
+    }
+    it->second.close();
+    open_handles.erase(ipc_id);
+    return;
+  }
+
+  void to_shape(Shape *res, TShape shape) {
     res->set_rank(shape.ndim());
     for (const auto dim : shape) {
       res->add_dim(dim);
     }
   }
-  void to_layer(Layer *layer, std::string name, NDArray array) {
+  void to_layer(Layer *layer, std::string name, NDArray array,
+                int64_t ref_count) {
+    const auto id = sole::uuid1().pretty();
+    const auto blob = array.data();
+    const auto shape = layer->mutable_shape();
 
-    layer->set_id(sole::uuid1().pretty());
+    layer->set_id(id);
     layer->set_name(name);
 
-    const auto shape = layer->mutable_shape();
     to_shape(shape, array.shape());
+
+    layer->set_byte_count(blob.Size() * element_size);
+    layer->set_ipc_handle_path(make_ipc_handle(id, name, array));
+    layer->set_device_raw_ptr((int64_t)blob.dptr<float>());
+    layer->set_ref_count(ref_count);
   }
   void load_ndarray(::google::protobuf::RepeatedPtrField<Layer> *layers,
-                    const ModelRequest *request) {
+                    const ModelRequest *request, int64_t ref_count) {
 
     auto directory_path = request->directory_path();
     const auto model_name = request->name();
@@ -211,7 +262,7 @@ private:
     for (const auto array : arrays) {
       const auto layer_name = layer_names[ii++];
       auto layer = layers->Add();
-      to_layer(layer, layer_name, array);
+      to_layer(layer, layer_name, array, ref_count);
     }
   }
 
@@ -240,7 +291,7 @@ public:
       owned_model.set_id("owned-by-" + uuid);
       owned_model.set_model_id(model.id());
       owned_model.set_byte_count(0);
-      load_ndarray(owned_model.mutable_layers(), request);
+      load_ndarray(owned_model.mutable_layers(), request, /*ref_count=*/0);
 
       int64_t byte_count = 0;
       for (const auto it : owned_model.layers()) {
@@ -249,7 +300,7 @@ public:
       owned_model.set_byte_count(byte_count);
     }
 
-    const auto path = BASE_PATH + "/handle_"s + nextSuffix();
+    const auto path = IPC_HANDLES_BASE_PATH + "/handle_"s + nextSuffix();
 #ifdef IMPLEMENT_ND_ARRAYLOAD
     const auto fp = makefifo(path, data);
     it->second->add_file_ptrs((int64_t)fp);
@@ -356,8 +407,8 @@ int main() {
   std::cout << "in upd. using mxnet version = " << version
             << " on address  = " << server::address << "\n";
 
-  system(std::string("rm -fr "s + BASE_PATH).c_str());
-  system(std::string("mkdir -p "s + BASE_PATH).c_str());
+  system(std::string("rm -fr "s + IPC_HANDLES_BASE_PATH).c_str());
+  system(std::string("mkdir -p "s + IPC_HANDLES_BASE_PATH).c_str());
 
   RunServer();
 
