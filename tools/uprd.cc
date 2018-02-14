@@ -279,11 +279,8 @@ private:
 
     size_t ii = 0;
     for (const auto array : arrays) {
-      LOG(INFO) << fmt::format("271::{}", ii);
-
       const auto layer_name = layer_names[ii++];
       auto layer = layers->Add();
-      LOG(INFO) << fmt::format("271::{}", ii);
       to_layer(layer, layer_name, array, ref_count);
     }
   }
@@ -331,7 +328,6 @@ public:
     LOG(INFO) << "opening " << request->name();
 
     auto it = memory_db_.find(request->name());
-    float *data;
     if (it == memory_db_.end()) {
       const auto uuid = sole::uuid4().str();
 

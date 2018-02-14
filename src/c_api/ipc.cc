@@ -83,25 +83,50 @@ struct client {
     std::unique_ptr<Registry::Stub> stub_;
   };
 
-  static void Load(std::string model_name, 
-                   std::vector<NDArray> *data, std::vector<std::string> *keys) {
+  TShape to_shape(Shape shape) {
+    auto dim = shape.dim();
+    TShape res(dim.begin(), dim.end());
+    return res;
+  }
+
+  NDArray to_ndarray(Layer layer) {
+    const auto shape = to_shape(layer.shape());
+    const auto ctx = Context::GPU();
+
+    NDArray array(shape, ctx);
+
+    return array;
+  }
+  void dump_ndarray(std::vector<NDArray> *data, std::vector<std::string> *keys,
+                    const ModelHandle *reply) {
+    auto layers = reply->layer();
+
+    for (const auto layer : layers) {
+    }
+  }
+
+  static void Load(std::string model_name, std::vector<NDArray> *data,
+                   std::vector<std::string> *keys) {
 
     RegistryClient client(grpc::CreateChannel(
         server_address, grpc::InsecureChannelCredentials()));
     auto open_reply = client.Open(model_name); // The actual RPC call!
+    if (!open_reply) {
+      const auto msg = fmt::format("Error: {}", open_reply.error());
+      LOG(ERROR) << msg;
+    }
 
-    std::cout << "Client received open reply: " << open_reply.id() << "\n";
+    dump_ndarray(data, keys, open_reply);
+    std::cout << ")Client received open reply: " << open_reply.id() << "\n";
   }
 };
-
 
 std::string client::server_host_name = server::host_name;
 int client::server_port = server::port;
 std::string client::server_address = server::address;
 
-void Load(std::string model_name, 
-          std::vector<NDArray> *data, std::vector<std::string> *keys) {
-
+void Load(std::string model_name, std::vector<NDArray> *data,
+          std::vector<std::string> *keys) {
 
   LOG(INFO) << "UPR:: loading in Client mode";
 
@@ -109,4 +134,3 @@ void Load(std::string model_name,
   return;
 }
 } // namespace upr
-
