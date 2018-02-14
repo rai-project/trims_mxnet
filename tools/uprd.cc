@@ -12,16 +12,6 @@
 #include <grpc/support/log.h>
 #include <iostream>
 
-#include <fcntl.h>
-#include <stdexcept>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <thread>
-#include <unistd.h>
-
-#include <sys/stat.h>
-#include <sys/types.h>
-
 #include <cuda_runtime_api.h>
 
 using namespace upr;
@@ -30,50 +20,6 @@ using namespace std::string_literals;
 using namespace grpc;
 
 static const auto element_size = sizeof(float);
-static const auto IPC_HANDLES_BASE_PATH = "/tmp/persistent"s;
-static const auto CARML_HOME_BASE_DIR = "/home/abduld/carml/data/mxnet/"s;
-
-static std::map<std::string, std::string> model_directory_paths{
-    {"alexnet", CARML_HOME_BASE_DIR + "alexnet"},
-    {"vgg16", CARML_HOME_BASE_DIR + "vgg16"}};
-
-#define CUDA_CHECK_CALL(func, msg)                                             \
-  {                                                                            \
-    cudaError_t e = (func);                                                    \
-    CHECK(e == cudaSuccess || e == cudaErrorCudartUnloading)                   \
-        << "CUDA[" << msg << "]:: " << cudaGetErrorString(e);                  \
-    if (e != cudaSuccess) {                                                    \
-      throw std::runtime_error(                                                \
-          fmt::format("CUDA[{}]:: {}", msg, cudaGetErrorString(e)));           \
-    }                                                                          \
-  }
-
-static bool directory_exists(const std::string &path) {
-  struct stat sb;
-  if (stat(path.c_str(), &sb) == -1) {
-    int errsv = errno;
-    return false;
-  }
-
-  if ((sb.st_mode & S_IFMT) == S_IFDIR) {
-    return true;
-  }
-  return false;
-}
-
-static bool file_exists(const std::string &path) {
-
-  struct stat sb;
-  if (stat(path.c_str(), &sb) == -1) {
-    int errsv = errno;
-    return false;
-  }
-
-  if ((sb.st_mode & S_IFMT) == S_IFDIR) {
-    return false;
-  }
-  return true;
-}
 
 template <typename K, typename V> std::vector<K> keys(const std::map<K, V> &m) {
   std::vector<K> res;
@@ -90,12 +36,12 @@ private:
     handle_ref(std::string path, float *device_ptr)
         : path_(path), device_ptr_(device_ptr) {
       cudaIpcMemHandle_t handle;
-      LOG(INFO) << "before ipc get memhandle";
+      LOG(INFO) << "before ipc get memhandle for " << path;
 
       CUDA_CHECK_CALL(cudaIpcGetMemHandle(&handle, device_ptr),
                       "failed to create a handle ref");
 
-      LOG(INFO) << "after ipc get memhandle";
+      LOG(INFO) << "after ipc get memhandle for " << path;
       const auto cmd = fmt::format("rm -f {}", path);
       system(cmd.c_str());                  // remove any debris
       int ret = mkfifo(path.c_str(), 0600); // create fifo
@@ -156,10 +102,32 @@ private:
   };
   std::map<std::string /* id::name */, handle_ref> open_handles{};
 
+  std::string get_ipc_id(const std::string &id, const std::string &layer_name) {
+    auto name = layer_name;
+
+    static const std::string arg_prefix("arg:");
+    if (string_starts_with(name, arg_prefix)) {
+      name.erase(0, arg_prefix.size());
+    }
+    static const std::string aux_prefix("aux:");
+    if (string_starts_with(name, aux_prefix)) {
+      name.erase(0, aux_prefix.size());
+    }
+
+    const auto ipc_id = fmt::format("{}_{}", id, name);
+
+    return ipc_id;
+  }
+
+  std::string get_ipc_path(const std::string &id,
+                           const std::string &layer_name) {
+    const auto path = fmt::format("{}/handle_{}.ipc", IPC_HANDLES_BASE_PATH,
+                                  get_ipc_id(id, layer_name));
+    return path;
+  }
   std::string make_ipc_handle(std::string id, std::string name, float *data) {
-    const auto ipc_id = fmt::format("{}::{}", id, name);
-    const auto path =
-        fmt::format("{}/handle-{}.ipc", IPC_HANDLES_BASE_PATH, ipc_id);
+    const auto ipc_id = get_ipc_id(id, name);
+    const auto path = get_ipc_path(id, name);
     handle_ref handle(path, data);
     open_handles.insert({ipc_id, handle});
     return handle.path();
@@ -366,6 +334,8 @@ public:
     auto handle = it->second->mutable_shared_model()->Add();
     from_owned_modelhandle(handle, it->second->owned_model(),
                            it->second->ref_count());
+
+    LOG(INFO) << "finished satisfying open request";
 
     return grpc::Status::OK;
   }
