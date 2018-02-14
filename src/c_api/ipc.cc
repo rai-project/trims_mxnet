@@ -76,13 +76,14 @@ void *get_device_ptr(const Layer &layer) {
   }
 
   cudaIpcMemHandle_t handle = get_cuda_ipc_mem_handle(ipc_handle_path);
-
+  // LOG(INFO) << "open cuda mem handle = " << handle;
   void *device_ptr = nullptr;
   CUDA_CHECK_CALL(
       cudaIpcOpenMemHandle((void **)&device_ptr, handle,
                            cudaIpcMemLazyEnablePeerAccess),
       fmt::format("failed to open cuda ipc mem handle at {}", ipc_handle_path));
 
+  LOG(INFO) << "get device_ptr = " << device_ptr;
   return device_ptr;
 }
 

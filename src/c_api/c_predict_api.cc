@@ -136,8 +136,7 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
 
     LOG(INFO) << "UPR:: loading model...";
 
-    const auto model_name =
-        dmlc::GetEnv("UPR_MODEL_NAME", std::string("squeezenet"));
+    const auto model_name = upr::get_model_name();
     upr::Load(std::string(model_name), &data, &names);
     CHECK_EQ(names.size(), data.size()) << "Invalid param file format";
     for (size_t i = 0; i < names.size(); ++i) {

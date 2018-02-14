@@ -89,6 +89,11 @@ private:
 }; // class GPUPooledStorageManager
 
 void GPUPooledStorageManager::Alloc(Storage::Handle *handle) {
+  static const bool is_client = dmlc::GetEnv("UPR_CLINET", 0);
+  if (is_client) {
+    LOG(INFO) << "requesting to allocate " << handle->size + NDEV
+              << " bytes of memory on the gpu";
+  }
   std::lock_guard<std::mutex> lock(Storage::Get()->GetMutex(Context::kGPU));
   size_t size = handle->size + NDEV;
   auto &&reuse_it = memory_pool_.find(size);

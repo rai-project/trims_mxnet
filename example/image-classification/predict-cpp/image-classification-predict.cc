@@ -170,9 +170,10 @@ int main(int argc, char *argv[]) {
   }
 
   // Models path for your model, you have to modify it
-  std::string json_file = CARML_HOME_BASE_DIR + "squeezenetv1/model.symbol";
-  std::string param_file = CARML_HOME_BASE_DIR + "squeezenetv1/model.params";
-  std::string synset_file = CARML_HOME_BASE_DIR + "synset.txt";
+  std::string model_name = get_model_name();
+  std::string json_file = get_model_symbol_path();
+  std::string param_file = get_model_params_path();
+  std::string synset_file = get_synset_path();
 
   BufferFile json_data(json_file);
   BufferFile param_data(param_file);

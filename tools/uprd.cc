@@ -206,15 +206,7 @@ private:
     }
     if (directory_path == "" && model_name != "") {
       // we need to load the model from the map
-      const auto pth = model_directory_paths.find(model_name);
-      if (pth == model_directory_paths.end()) {
-        const auto msg = fmt::format(
-            "the model path for {} was not found in the model directory",
-            model_name);
-        LOG(ERROR) << msg;
-        throw std::runtime_error(msg);
-      }
-      directory_path = pth->second;
+      directory_path = get_model_directory_path(model_name);
       LOG(INFO) << fmt::format(
           "using {} as the base directory for the model_name = {}",
           directory_path, model_name);

@@ -22,10 +22,14 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include "fmt/format.h"
+
 #define BYTE 1
 #define KBYTE 1024 * BYTE
 #define MBYTE 1024 * KBYTE
 #define DATA_SIZE 4 * BYTE
+
+#define DEFAULT_MODEL "alexnet"
 
 #define CUDA_CHECK_CALL(func, msg)                                             \
   {                                                                            \
@@ -50,6 +54,38 @@ static std::map<std::string, std::string> model_directory_paths{
     {"squeezenetv1", CARML_HOME_BASE_DIR + "squeezenetv1"},
     {"squeezenetv1.1", CARML_HOME_BASE_DIR + "squeezenetv1.1"},
     {"vgg16", CARML_HOME_BASE_DIR + "vgg16"}};
+
+static std::string get_model_name() {
+  static const auto model_name =
+      dmlc::GetEnv("UPR_MODEL_NAME", std::string(DEFAULT_MODEL));
+  return model_name;
+}
+
+static std::string get_model_directory_path(std::string model_name = "") {
+  if (model_name == "") {
+    model_name = get_model_name();
+  }
+  const auto it = model_directory_paths.find(model_name);
+  if (it == model_directory_paths.end()) {
+    throw dmlc::Error(fmt::format(
+        "unable to find {} model in model_direction_paths", model_name));
+  }
+  return it->second;
+}
+
+static std::string get_model_params_path(std::string model_name = "") {
+  const std::string path = get_model_directory_path(model_name);
+  return path + "/model.params";
+}
+
+static std::string get_model_symbol_path(std::string model_name = "") {
+  const std::string path = get_model_directory_path(model_name);
+  return path + "/model.symbol";
+}
+
+static std::string get_synset_path() {
+  return CARML_HOME_BASE_DIR + "synset.txt";
+}
 
 struct server {
   static std::string host_name;
