@@ -175,9 +175,10 @@ int main(int argc, char *argv[]) {
   std::string synset_file = CARML_HOME_BASE_DIR + "synset.txt";
 
   BufferFile json_data(json_file);
+  BufferFile param_data(param_file);
 
   // Parameters
-  int dev_type = 1;            // 1: cpu, 2: gpu
+  int dev_type = 2;            // 1: cpu, 2: gpu
   int dev_id = 0;              // arbitrary.
   mx_uint num_input_nodes = 1; // 1 for feedforward
   const char *input_key[1] = {"data"};
@@ -200,10 +201,10 @@ int main(int argc, char *argv[]) {
 
   // Create Predictor
   MXPredCreate((const char *)json_data.GetBuffer(),
-               /* params buffer = */ nullptr, 0, dev_type, dev_id,
-               num_input_nodes, input_keys, input_shape_indptr,
-               input_shape_data, &pred_hnd);
-  assert(pred_hnd);
+               (const char *)param_data.GetBuffer(), param_data.GetLength(),
+               dev_type, dev_id, num_input_nodes, input_keys,
+               input_shape_indptr, input_shape_data, &pred_hnd);
+  CHECK(pred_hnd != nullptr) << " got error=" << MXGetLastError();
 
   int image_size = width * height * channels;
 

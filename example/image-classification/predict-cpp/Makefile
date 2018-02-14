@@ -21,10 +21,10 @@ CFLAGS+=-DMSHADOW_USE_CBLAS
 LDFLAGS+=$(MXNET_ROOT)/lib/libmxnet.so
 
 image-classification-predict: image-classification-predict.o
-	g++ -std=c++14 -O3 -o image-classification-predict image-classification-predict.o $(LDFLAGS)
+	g++ -std=c++14 -O0 -g -o image-classification-predict image-classification-predict.o $(LDFLAGS)
 
 image-classification-predict.o: image-classification-predict.cc
-	g++ -std=c++14 -O3 -c image-classification-predict.cc ${CFLAGS}
+	g++ -std=c++14 -O0 -g -c image-classification-predict.cc ${CFLAGS}
 	
 clean: 
 	rm image-classification-predict

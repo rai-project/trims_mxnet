@@ -42,7 +42,7 @@ cudaIpcMemHandle_t get_cuda_ipc_mem_handle(const std::string &ipc_handle_path) {
   if (fp == nullptr) {
     const auto msg = fmt::format("unable to open file at {}.", ipc_handle_path);
     LOG(FATAL) << msg;
-    throw std::runtime_error(msg);
+    throw dmlc::Error(msg);
   }
 
   for (size_t ii = 0; ii < sizeof(handle); ii++) {
@@ -54,7 +54,7 @@ cudaIpcMemHandle_t get_cuda_ipc_mem_handle(const std::string &ipc_handle_path) {
       const auto msg =
           fmt::format("failed to read {} at {}.", ipc_handle_path, ii);
       LOG(FATAL) << msg;
-      throw std::runtime_error(msg);
+      throw dmlc::Error(msg);
     }
   }
 
@@ -72,7 +72,7 @@ void *get_device_ptr(const Layer &layer) {
         "unable to get device ptr from {}. make sure the path exists",
         ipc_handle_path);
     LOG(FATAL) << msg;
-    throw std::runtime_error(msg);
+    throw dmlc::Error(msg);
   }
 
   cudaIpcMemHandle_t handle = get_cuda_ipc_mem_handle(ipc_handle_path);
@@ -95,6 +95,7 @@ NDArray to_ndarray(const Layer &layer) {
 
   auto device_ptr = get_device_ptr(layer);
 
+  LOG(INFO) << "ctx =" << ctx;
   TBlob blob(device_ptr, shape, dev_mask, dev_id);
   NDArray array(blob, dev_id);
 
@@ -107,10 +108,15 @@ to_ndarrays(const ModelHandle &reply) {
 
   const auto layers = reply.layer();
 
+  LOG(INFO) << "got " << layers.size()
+            << " layers form reply, before to_ndarray";
+
   for (const auto layer : layers) {
     keys.emplace_back(layer.name());
     arrays.emplace_back(to_ndarray(layer));
   }
+
+  LOG(INFO) << "finished nd_array conversion";
 
   return std::make_tuple(arrays, keys);
 }
@@ -130,9 +136,9 @@ struct client {
       const auto status = stub_->Info(&context, request, &reply);
 
       if (!status.ok()) {
-        throw std::runtime_error(
-            fmt::format("Error: [{}] {}. Info failed on client.",
-                        status.error_message(), status.error_details()));
+        throw dmlc::Error(fmt::format("Error: [{}] {}. Info failed on client.",
+                                      status.error_message(),
+                                      status.error_details()));
       }
       return reply;
     }
@@ -149,9 +155,9 @@ struct client {
       const auto status = stub_->Open(&context, request, &reply);
 
       if (!status.ok()) {
-        throw std::runtime_error(
-            fmt::format("Error: [{}] {}. Open failed on client.",
-                        status.error_message(), status.error_details()));
+        throw dmlc::Error(fmt::format("Error: [{}] {}. Open failed on client.",
+                                      status.error_message(),
+                                      status.error_details()));
       }
       return reply;
     }
@@ -169,9 +175,9 @@ struct client {
       const auto status = stub_->Close(&context, request, &reply);
 
       if (!status.ok()) {
-        throw std::runtime_error(
-            fmt::format("Error: [{}] {}. Close failed on client.",
-                        status.error_message(), status.error_details()));
+        throw dmlc::Error(fmt::format("Error: [{}] {}. Close failed on client.",
+                                      status.error_message(),
+                                      status.error_details()));
       }
       return;
     }
@@ -192,6 +198,7 @@ struct client {
 
     const auto arrays_keys = to_ndarrays(open_reply);
 
+    LOG(INFO) << "Loaded model " << model_name;
     *res_arrays = std::get<0>(arrays_keys);
     *res_keys = std::get<1>(arrays_keys);
   }

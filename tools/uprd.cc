@@ -150,7 +150,7 @@ private:
   }
 
   void close_ipc_handle(std::string id, std::string name) {
-    const auto ipc_id = fmt::format("{}::{}", id, name);
+    const auto ipc_id = get_ipc_id(id, name);
     const auto it = open_handles.find(ipc_id);
     if (it == open_handles.end()) {
       LOG(INFO) << "the ipc with id = " << ipc_id << " was not found";
@@ -344,8 +344,12 @@ public:
     auto handle = it->second->mutable_shared_model()->Add();
     from_owned_modelhandle(handle, it->second->owned_model(),
                            it->second->ref_count());
+    LOG(INFO) << "sending " << it->second->owned_model().layer().size()
+              << " layers to client";
 
     LOG(INFO) << "finished satisfying open request";
+
+    reply->CopyFrom(*handle);
 
     return grpc::Status::OK;
   }

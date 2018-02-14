@@ -41,6 +41,7 @@
 #define API_END()                                                              \
   }                                                                            \
   catch (dmlc::Error & _except_) {                                             \
+    LOG(INFO) << "error in mxnet api call :: " << _except_.what();             \
     return MXAPIHandleException(_except_);                                     \
   }                                                                            \
   return 0; // NOLINT(*)
