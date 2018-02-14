@@ -90,12 +90,16 @@ private:
     handle_ref(std::string path, float *device_ptr)
         : path_(path), device_ptr_(device_ptr) {
       cudaIpcMemHandle_t handle;
+      LOG(INFO) << "before ipc get memhandle";
+
       CUDA_CHECK_CALL(cudaIpcGetMemHandle(&handle, device_ptr),
                       "failed to create a handle ref");
 
+      LOG(INFO) << "after ipc get memhandle";
       const auto cmd = fmt::format("rm -f {}", path);
       system(cmd.c_str());                  // remove any debris
       int ret = mkfifo(path.c_str(), 0600); // create fifo
+      LOG(INFO) << "created fifo at " << path;
       if (ret != 0) {
         throw std::runtime_error(fmt::format("mkfifo error: {}\n", ret));
       }
@@ -103,6 +107,8 @@ private:
       system(fmt::format("rm -f {}", path).c_str());
 
       auto fp = fopen(path.c_str(), "w");
+
+      LOG(INFO) << "opened fifo at " << path;
       if (fp == NULL) {
         throw std::runtime_error(
             fmt::format("failed to open fifo at {}", path));
@@ -131,6 +137,9 @@ private:
                 << path;
 
       fp_ = fp;
+
+      fclose(fp_);
+      fp_ = nullptr;
     }
     std::string path() const { return path_; }
     void close() {
@@ -151,7 +160,6 @@ private:
     const auto ipc_id = fmt::format("{}::{}", id, name);
     const auto path =
         fmt::format("{}/handle-{}.ipc", IPC_HANDLES_BASE_PATH, ipc_id);
-
     handle_ref handle(path, data);
     open_handles.insert({ipc_id, handle});
     return handle.path();
@@ -181,12 +189,17 @@ private:
       res->add_dim(dim);
     }
   }
-  void to_layer(Layer *layer, std::string name, NDArray array,
+  void to_layer(Layer *layer, std::string name, NDArray cpu_array,
                 int64_t ref_count) {
-    const auto id = sole::uuid1().pretty();
+    const auto ctx = Context::GPU();
+    const auto id = sole::uuid4().str();
+
+    const auto array = cpu_array.Copy(ctx);
+
+    array.WaitToRead();
+
     const auto blob = array.data();
     const auto shape = layer->mutable_shape();
-
     layer->set_id(id);
     layer->set_name(name);
 
@@ -266,15 +279,18 @@ private:
 
     size_t ii = 0;
     for (const auto array : arrays) {
+      LOG(INFO) << fmt::format("271::{}", ii);
+
       const auto layer_name = layer_names[ii++];
       auto layer = layers->Add();
+      LOG(INFO) << fmt::format("271::{}", ii);
       to_layer(layer, layer_name, array, ref_count);
     }
   }
 
   void from_owned_layer(Layer *layer, const Layer &owned, int64_t ref_count) {
 
-    const auto id = sole::uuid1().pretty();
+    const auto id = sole::uuid4().str();
     const auto shape = layer->mutable_shape();
 
     layer->set_id(id);
@@ -294,7 +310,7 @@ private:
   void from_owned_modelhandle(ModelHandle *handle, const ModelHandle &owned,
                               int64_t ref_count) {
 
-    const auto uuid = sole::uuid1().pretty();
+    const auto uuid = sole::uuid4().str();
     handle->set_id(uuid);
     handle->set_model_id(owned.model_id());
     handle->set_byte_count(owned.byte_count());
@@ -312,11 +328,12 @@ public:
                     ModelHandle *reply) override {
     std::lock_guard<std::mutex> lock(db_mutex_);
 
+    LOG(INFO) << "opening " << request->name();
+
     auto it = memory_db_.find(request->name());
     float *data;
     if (it == memory_db_.end()) {
-
-      const auto uuid = sole::uuid1().pretty();
+      const auto uuid = sole::uuid4().str();
 
       Model model;
       model.set_id(uuid);
@@ -333,6 +350,7 @@ public:
       for (const auto it : owned_model->layer()) {
         byte_count += it.byte_count();
       }
+
       owned_model->set_byte_count(byte_count);
 
       memory_db_[request->name()] = std::make_unique<Model>(model);
@@ -347,6 +365,7 @@ public:
 
     // now we need to use the owned array to create
     // new memory handles
+    LOG(INFO) << "creating shared handle from owned memory";
     it->second->set_ref_count(it->second->ref_count() + 1);
     auto handle = it->second->mutable_shared_model()->Add();
     from_owned_modelhandle(handle, it->second->owned_model(),
@@ -438,7 +457,8 @@ void RunServer() {
   server->Wait();
 }
 
-int main() {
+int main(int argc, const char *argv[]) {
+  dmlc::InitLogging(argv[0]);
   int version = 0;
   const auto err = MXGetVersion(&version);
   if (err) {
