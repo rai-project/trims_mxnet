@@ -1,5 +1,14 @@
 #include "ipc.h"
 
+#include <dmlc/base.h>
+#include <dmlc/io.h>
+#include <dmlc/logging.h>
+#include <dmlc/memory_io.h>
+#include <dmlc/omp.h>
+#include <dmlc/recordio.h>
+#include <dmlc/type_traits.h>
+#include <nnvm/node.h>
+
 #include <grpc++/grpc++.h>
 #include <grpc/support/log.h>
 

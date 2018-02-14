@@ -161,3 +161,4 @@ python/.eggs
 
 bin/
 example/image-classification/predict-cpp/image-classification-predict
+*nvprof

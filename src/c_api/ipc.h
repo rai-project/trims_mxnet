@@ -1,12 +1,5 @@
 #pragma once
 
-#include <dmlc/base.h>
-#include <dmlc/io.h>
-#include <dmlc/logging.h>
-#include <dmlc/memory_io.h>
-#include <dmlc/omp.h>
-#include <dmlc/recordio.h>
-#include <dmlc/type_traits.h>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -18,7 +11,6 @@
 #include <mxnet/operator.h>
 #include <mxnet/rtc.h>
 #include <mxnet/storage.h>
-#include <nnvm/node.h>
 #include <string>
 #include <vector>
 
@@ -48,10 +40,9 @@
 
 namespace upr {
 
-using namespace std::string_literals;
-
-static const auto IPC_HANDLES_BASE_PATH = "/tmp/persistent"s;
-static const auto CARML_HOME_BASE_DIR = "/home/abduld/carml/data/mxnet/"s;
+static const auto IPC_HANDLES_BASE_PATH = std::string("/tmp/persistent");
+static const auto CARML_HOME_BASE_DIR =
+    std::string("/home/abduld/carml/data/mxnet/");
 
 static std::map<std::string, std::string> model_directory_paths{
     {"alexnet", CARML_HOME_BASE_DIR + "alexnet"},
@@ -69,7 +60,6 @@ struct server {
 static bool directory_exists(const std::string &path) {
   struct stat sb;
   if (stat(path.c_str(), &sb) == -1) {
-    int errsv = errno;
     return false;
   }
 
@@ -83,7 +73,6 @@ static bool file_exists(const std::string &path) {
 
   struct stat sb;
   if (stat(path.c_str(), &sb) == -1) {
-    int errsv = errno;
     return false;
   }
 

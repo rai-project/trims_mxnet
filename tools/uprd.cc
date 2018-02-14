@@ -1,5 +1,15 @@
 #include "fmt/format.h"
 #include "ipc.h"
+
+#include <dmlc/base.h>
+#include <dmlc/io.h>
+#include <dmlc/logging.h>
+#include <dmlc/memory_io.h>
+#include <dmlc/omp.h>
+#include <dmlc/recordio.h>
+#include <dmlc/type_traits.h>
+#include <nnvm/node.h>
+
 #include "mxnet/c_api.h"
 #include "mxnet/c_predict_api.h"
 #include "prettyprint.hpp"
@@ -36,16 +46,16 @@ private:
     handle_ref(std::string path, float *device_ptr)
         : path_(path), device_ptr_(device_ptr) {
       cudaIpcMemHandle_t handle;
-      LOG(INFO) << "before ipc get memhandle for " << path;
+      // LOG(INFO) << "before ipc get memhandle for " << path;
 
       CUDA_CHECK_CALL(cudaIpcGetMemHandle(&handle, device_ptr),
                       "failed to create a handle ref");
 
-      LOG(INFO) << "after ipc get memhandle for " << path;
+      // LOG(INFO) << "after ipc get memhandle for " << path;
       const auto cmd = fmt::format("rm -f {}", path);
       system(cmd.c_str());                  // remove any debris
       int ret = mkfifo(path.c_str(), 0600); // create fifo
-      LOG(INFO) << "created fifo at " << path;
+      // LOG(INFO) << "created fifo at " << path;
       if (ret != 0) {
         throw std::runtime_error(fmt::format("mkfifo error: {}\n", ret));
       }
@@ -54,7 +64,7 @@ private:
 
       auto fp = fopen(path.c_str(), "w");
 
-      LOG(INFO) << "opened fifo at " << path;
+      // LOG(INFO) << "opened fifo at " << path;
       if (fp == NULL) {
         throw std::runtime_error(
             fmt::format("failed to open fifo at {}", path));
@@ -64,7 +74,7 @@ private:
       const auto flags = fcntl(fd, F_GETFL);
       fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 
-      LOG(INFO) << "creating fifo at " << path;
+      // LOG(INFO) << "creating fifo at " << path;
 
       unsigned char handle_buffer[sizeof(handle) + 1];
       memset(handle_buffer, 0, sizeof(handle) + 1);
@@ -79,8 +89,8 @@ private:
         }
       }
 
-      LOG(INFO) << "successfully wrote " << sizeof(handle) << " bytes to "
-                << path;
+      // LOG(INFO) << "successfully wrote " << sizeof(handle) << " bytes to "
+      //           << path;
 
       fp_ = fp;
 
