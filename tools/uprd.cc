@@ -43,72 +43,22 @@ template <typename K, typename V> std::vector<K> keys(const std::map<K, V> &m) {
 class RegistryImpl final : public Registry::Service {
 private:
   struct handle_ref {
-    handle_ref(std::string path, float *device_ptr)
-        : path_(path), device_ptr_(device_ptr) {
-      cudaIpcMemHandle_t handle;
+    handle_ref(float *device_ptr) : device_ptr_(device_ptr) {
       // LOG(INFO) << "before ipc get memhandle for " << path;
 
       CUDA_CHECK_CALL(cudaIpcGetMemHandle(&handle, device_ptr),
                       "failed to create a handle ref");
-
-      // LOG(INFO) << "after ipc get memhandle for " << path;
-      const auto cmd = fmt::format("rm -f {}", path);
-      system(cmd.c_str());                  // remove any debris
-      int ret = mkfifo(path.c_str(), 0600); // create fifo
-      // LOG(INFO) << "created fifo at " << path;
-      if (ret != 0) {
-        throw std::runtime_error(fmt::format("mkfifo error: {}\n", ret));
-      }
-
-      system(fmt::format("rm -f {}", path).c_str());
-
-      auto fp = fopen(path.c_str(), "w");
-
-      // LOG(INFO) << "opened fifo at " << path;
-      if (fp == NULL) {
-        throw std::runtime_error(
-            fmt::format("failed to open fifo at {}", path));
-      }
-
-      auto fd = fileno(fp);
-      const auto flags = fcntl(fd, F_GETFL);
-      fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-
-      // LOG(INFO) << "creating fifo at " << path;
-
+    }
+    void base64() {
       unsigned char handle_buffer[sizeof(handle) + 1];
       memset(handle_buffer, 0, sizeof(handle) + 1);
       memcpy(handle_buffer, (unsigned char *)(&handle), sizeof(handle));
-
-      for (size_t ii = 0; ii < sizeof(handle); ii++) {
-        ret = fprintf(fp, "%c", handle_buffer[ii]);
-        if (ret != 1) {
-          throw std::runtime_error(fmt::format(
-              "failed to write handle buffer to {} at the ii={} iteration",
-              path, ii));
-        }
-      }
-
-      // LOG(INFO) << "successfully wrote " << sizeof(handle) << " bytes to "
-      //           << path;
-
-      fp_ = fp;
-
-      fclose(fp_);
-      fp_ = nullptr;
-    }
-    std::string path() const { return path_; }
-    void close() {
-      if (fp_ == nullptr) {
-        return;
-      }
-      fclose(fp_);
+      return utils::base64_encode(handle_buffer);
     }
 
   private:
-    std::string path_{""};
+    cudaIpcMemHandle_t handle_;
     float *device_ptr_{nullptr};
-    FILE *fp_{nullptr};
   };
   std::map<std::string /* id::name */, handle_ref> open_handles{};
 
@@ -129,18 +79,11 @@ private:
     return ipc_id;
   }
 
-  std::string get_ipc_path(const std::string &id,
-                           const std::string &layer_name) {
-    const auto path = fmt::format("{}/handle_{}.ipc", IPC_HANDLES_BASE_PATH,
-                                  get_ipc_id(id, layer_name));
-    return path;
-  }
   std::string make_ipc_handle(std::string id, std::string name, float *data) {
     const auto ipc_id = get_ipc_id(id, name);
-    const auto path = get_ipc_path(id, name);
-    handle_ref handle(path, data);
+    handle_ref handle(data);
     open_handles.insert({ipc_id, handle});
-    return handle.path();
+    return utils::base64_encode(handle.base64());
   }
 
   std::string make_ipc_handle(std::string id, std::string name, NDArray array) {
@@ -184,7 +127,7 @@ private:
     to_shape(shape, array.shape());
 
     layer->set_byte_count(blob.Size() * element_size);
-    layer->set_ipc_handle_path(make_ipc_handle(id, name, array));
+    layer->set_ipc_handle(make_ipc_handle(id, name, array));
     layer->set_device_raw_ptr((int64_t)blob.dptr<float>());
     layer->set_ref_count(ref_count);
   }
@@ -268,7 +211,7 @@ private:
       shape->add_dim(dim);
     }
     layer->set_byte_count(owned.byte_count());
-    layer->set_ipc_handle_path(
+    layer->set_ipc_handle(
         make_ipc_handle(id, owned.name(), (float *)owned.device_raw_ptr()));
     layer->set_device_raw_ptr(owned.device_raw_ptr());
     layer->set_ref_count(ref_count);
@@ -355,9 +298,9 @@ public:
       std::cout << "failed to info request. cannot find " << request->name()
                 << " in cache. "
                 << " cache = " << keys(memory_db_) << " \n";
-      return grpc::Status(grpc::NOT_FOUND,
-                          "unable to find handle with name "s +
-                              request->name() + " during info request");
+      return grpc::Status(grpc::NOT_FOUND, "unable to find handle with name "s +
+                                               request->name() +
+                                               " during info request");
     }
 
     reply->CopyFrom(*it->second);
@@ -372,9 +315,9 @@ public:
     auto it = memory_db_.find(request->model_id());
     if (it == memory_db_.end()) {
       std::cout << "failed to close request\n";
-      return grpc::Status(grpc::NOT_FOUND,
-                          "unable to find handle with name "s +
-                              request->model_id() + " during close request");
+      return grpc::Status(grpc::NOT_FOUND, "unable to find handle with name "s +
+                                               request->model_id() +
+                                               " during close request");
     }
 
 #ifdef REF_COUNT_ENABLED

@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include "./base64.h"
 #include "fmt/format.h"
 
 #define BYTE 1
@@ -130,4 +131,4 @@ inline bool string_starts_with(const std::basic_string<charT> &big,
 
 void Load(std::string model_name, std::vector<mxnet::NDArray> *data,
           std::vector<std::string> *keys);
-}
+} // namespace upr

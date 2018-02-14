@@ -33,55 +33,32 @@ TShape to_shape(Shape shape) {
   return res;
 }
 
-cudaIpcMemHandle_t get_cuda_ipc_mem_handle(const std::string &ipc_handle_path) {
+cudaIpcMemHandle_t get_cuda_ipc_mem_handle(const std::string &ipc_handle) {
+  const std::string buffer = utils::base64_decode(ipc_handle);
+
   cudaIpcMemHandle_t handle;
-  uint8_t buffer[sizeof(handle) + 1];
-  memset(buffer, 0, sizeof(handle) + 1);
-
-  FILE *fp = fopen(ipc_handle_path.c_str(), "r");
-  if (fp == nullptr) {
-    const auto msg = fmt::format("unable to open file at {}.", ipc_handle_path);
-    LOG(FATAL) << msg;
-    throw dmlc::Error(msg);
-  }
-
-  for (size_t ii = 0; ii < sizeof(handle); ii++) {
-    const auto ret = fscanf(fp, "%c", buffer + ii);
-    if (ret == EOF) {
-      LOG(INFO) << "got EOF while reading " << ipc_handle_path;
-    }
-    if (ret != 1) {
-      const auto msg =
-          fmt::format("failed to read {} at {}.", ipc_handle_path, ii);
-      LOG(FATAL) << msg;
-      throw dmlc::Error(msg);
-    }
-  }
-
-  memcpy((uint8_t *)&handle, buffer, sizeof(handle));
-
-  fclose(fp);
+  memcpy((uint8_t *)&handle, buffer.c_str(), sizeof(handle));
 
   return handle;
 }
 
 void *get_device_ptr(const Layer &layer) {
-  const auto ipc_handle_path = layer.ipc_handle_path();
-  if (!file_exists(ipc_handle_path)) {
+  const auto ipc_handle = layer.ipc_handle();
+  if (ipc_handle == "") {
     const auto msg = fmt::format(
-        "unable to get device ptr from {}. make sure the path exists",
-        ipc_handle_path);
+        "unable to get device ptr from {}. make sure handle is not empty",
+        ipc_handle);
     LOG(FATAL) << msg;
     throw dmlc::Error(msg);
   }
 
-  cudaIpcMemHandle_t handle = get_cuda_ipc_mem_handle(ipc_handle_path);
+  cudaIpcMemHandle_t handle = get_cuda_ipc_mem_handle(ipc_handle);
   // LOG(INFO) << "open cuda mem handle = " << handle;
   void *device_ptr = nullptr;
   CUDA_CHECK_CALL(
       cudaIpcOpenMemHandle((void **)&device_ptr, handle,
                            cudaIpcMemLazyEnablePeerAccess),
-      fmt::format("failed to open cuda ipc mem handle at {}", ipc_handle_path));
+      fmt::format("failed to open cuda ipc mem handle from {}", ipc_handle));
 
   LOG(INFO) << "get device_ptr = " << device_ptr;
   return device_ptr;
