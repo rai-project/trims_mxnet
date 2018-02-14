@@ -44,7 +44,7 @@ cudaIpcMemHandle_t get_cuda_ipc_mem_handle(const std::string &ipc_handle) {
 
 void *get_device_ptr(const Layer &layer) {
   const auto ipc_handle = layer.ipc_handle();
-  if (ipc_handle == "") {
+  if (ipc_handle == "" && utils::is_base64(ipc_handle)) {
     const auto msg = fmt::format(
         "unable to get device ptr from {}. make sure handle is not empty",
         ipc_handle);

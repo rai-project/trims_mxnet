@@ -30,16 +30,27 @@
 */
 
 #include <iostream>
+#include <string>
 
 namespace upr {
 namespace utils {
-
+namespace detail {
 static const std::string base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                         "abcdefghijklmnopqrstuvwxyz"
                                         "0123456789+/";
+}
 
 static inline bool is_base64(unsigned char c) {
   return (isalnum(c) || (c == '+') || (c == '/'));
+}
+static inline bool is_base64(const std::string &s) {
+  for (const auto c : s) {
+    if (is_base64(c)) {
+      continue;
+    }
+    return false;
+  }
+  return true;
 }
 
 static std::string base64_encode(unsigned char const *bytes_to_encode,
@@ -61,7 +72,7 @@ static std::string base64_encode(unsigned char const *bytes_to_encode,
       char_array_4[3] = char_array_3[2] & 0x3f;
 
       for (i = 0; (i < 4); i++)
-        ret += base64_chars[char_array_4[i]];
+        ret += detail::base64_chars[char_array_4[i]];
       i = 0;
     }
   }
@@ -77,7 +88,7 @@ static std::string base64_encode(unsigned char const *bytes_to_encode,
         ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
 
     for (j = 0; (j < i + 1); j++)
-      ret += base64_chars[char_array_4[j]];
+      ret += detail::base64_chars[char_array_4[j]];
 
     while ((i++ < 3))
       ret += '=';
@@ -100,7 +111,7 @@ static std::string base64_decode(std::string const &encoded_string) {
     in_++;
     if (i == 4) {
       for (i = 0; i < 4; i++)
-        char_array_4[i] = base64_chars.find(char_array_4[i]);
+        char_array_4[i] = detail::base64_chars.find(char_array_4[i]);
 
       char_array_3[0] =
           (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
@@ -116,7 +127,7 @@ static std::string base64_decode(std::string const &encoded_string) {
 
   if (i) {
     for (j = 0; j < i; j++)
-      char_array_4[j] = base64_chars.find(char_array_4[j]);
+      char_array_4[j] = detail::base64_chars.find(char_array_4[j]);
 
     char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
     char_array_3[1] =
