@@ -62,12 +62,12 @@ private:
   }
 
   void make_ipc_handle(Layer *layer, const std::string &id,
-                       const std::string &name, const float *data) {
+                       const std::string &name, float *device_ptr) {
     const auto ipc_id = get_ipc_id(id, name);
 
     cudaIpcMemHandle_t handle;
 
-    CUDA_CHECK_CALL(cudaIpcGetMemHandle(&handle, device_ptr),
+    CUDA_CHECK_CALL(cudaIpcGetMemHandle(&handle, (void*) device_ptr),
                     "failed to create a handle ref");
 
     open_handles.insert({ipc_id, handle});
@@ -75,13 +75,13 @@ private:
   }
 
   void make_ipc_handle(Layer *layer, const std::string &id,
-                       const std::string &name, const NDArray &array) {
+                       const std::string &name, NDArray &array) {
     const auto blob = array.data();
     auto data = blob.dptr<float>();
     make_ipc_handle(layer, id, name, data);
   }
 
-  void make_ipc_handle(Layer *layer, const NDArray &array) {
+  void make_ipc_handle(Layer *layer, NDArray &array) {
     make_ipc_handle(layer, layer->id(), layer->name(), array);
   }
 
@@ -105,12 +105,15 @@ private:
   }
   void to_layer(Layer *layer, std::string name, NDArray cpu_array,
                 int64_t ref_count) {
+    LOG(INFO) << "converting " << name << " ndarray to protobuf representation";
     const auto ctx = Context::GPU();
+    LOG(INFO) << "using " << ctx << " for target ndarray";
     const auto id = sole::uuid4().str();
 
-    const auto array = cpu_array.Copy(ctx);
-
+    LOG(INFO) << "copying cpu array to array at ctx="<<ctx;
+    auto array = cpu_array.Copy(ctx);
     array.WaitToRead();
+    LOG(INFO) << "done copying cpu array to array at ctx="<<ctx;
 
     const auto blob = array.data();
     const auto shape = layer->mutable_shape();
@@ -179,9 +182,13 @@ private:
       throw std::runtime_error(msg);
     }
 
+    LOG(INFO) << fmt::format("performing an ndarray load with params={} and symbol={} paths", params_path, symbol_path);
+
     std::vector<NDArray> arrays{};
     std::vector<std::string> layer_names{};
     NDArray::Load(fi, &arrays, &layer_names);
+
+    LOG(INFO) << "starting to convert " << arrays.size() << " ndarrays to protobuf representation";
 
     size_t ii = 0;
     for (const auto array : arrays) {
@@ -204,8 +211,7 @@ private:
       shape->add_dim(dim);
     }
     layer->set_byte_count(owned.byte_count());
-    layer->set_ipc_handle(
-        make_ipc_handle(id, owned.name(), (float *)owned.device_raw_ptr()));
+    make_ipc_handle(layer, id, owned.name(), (float *)owned.device_raw_ptr());
     layer->set_device_raw_ptr(owned.device_raw_ptr());
     layer->set_ref_count(ref_count);
   }
@@ -255,6 +261,7 @@ public:
 
       owned_model->set_byte_count(byte_count);
 
+      std::lock_guard<std::mutex> lock(db_mutex_);
       memory_db_[request->name()] = std::make_unique<Model>(model);
     }
 
@@ -372,11 +379,8 @@ int main(int argc, const char *argv[]) {
   if (err) {
     std::cerr << "error :: " << err << " while getting mxnet version\n";
   }
-  std::cout << "in upd. using mxnet version = " << version
-            << " on address  = " << server::address << "\n";
-
-  system(std::string("rm -fr "s + IPC_HANDLES_BASE_PATH).c_str());
-  system(std::string("mkdir -p "s + IPC_HANDLES_BASE_PATH).c_str());
+  LOG(INFO) << "in uprd. using mxnet version = " << version
+            << " running on address  = " << server::address << "\n";
 
   RunServer();
 

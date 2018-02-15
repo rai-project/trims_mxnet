@@ -64,6 +64,8 @@ static NDArray to_ndarray(const Layer &layer) {
   const auto dev_mask = ctx.dev_mask();
   const auto dev_id = ctx.dev_id;
 
+  LOG(INFO) << "getting device ptr using ctx=" << ctx;
+
   auto device_ptr = get_device_ptr(layer);
 
   TBlob blob(device_ptr, shape, dev_mask, dev_id);
