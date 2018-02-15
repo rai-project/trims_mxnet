@@ -42,25 +42,7 @@ template <typename K, typename V> std::vector<K> keys(const std::map<K, V> &m) {
 
 class RegistryImpl final : public Registry::Service {
 private:
-  struct handle_ref {
-    handle_ref(float *device_ptr) : device_ptr_(device_ptr) {
-      // LOG(INFO) << "before ipc get memhandle for " << path;
-
-      CUDA_CHECK_CALL(cudaIpcGetMemHandle(&handle, device_ptr),
-                      "failed to create a handle ref");
-    }
-    void base64() {
-      unsigned char handle_buffer[sizeof(handle) + 1];
-      memset(handle_buffer, 0, sizeof(handle) + 1);
-      memcpy(handle_buffer, (unsigned char *)(&handle), sizeof(handle));
-      return utils::base64_encode(handle_buffer);
-    }
-
-  private:
-    cudaIpcMemHandle_t handle_;
-    float *device_ptr_{nullptr};
-  };
-  std::map<std::string /* id::name */, handle_ref> open_handles{};
+  std::map<std::string /* id::name */, cudaIpcMemHandle_t> open_handles{};
 
   std::string get_ipc_id(const std::string &id, const std::string &layer_name) {
     auto name = layer_name;
@@ -79,17 +61,28 @@ private:
     return ipc_id;
   }
 
-  std::string make_ipc_handle(std::string id, std::string name, float *data) {
+  void make_ipc_handle(Layer *layer, const std::string &id,
+                       const std::string &name, const float *data) {
     const auto ipc_id = get_ipc_id(id, name);
-    handle_ref handle(data);
+
+    cudaIpcMemHandle_t handle;
+
+    CUDA_CHECK_CALL(cudaIpcGetMemHandle(&handle, device_ptr),
+                    "failed to create a handle ref");
+
     open_handles.insert({ipc_id, handle});
-    return utils::base64_encode(handle.base64());
+    layer->set_ipc_handle((void *)&handle, sizeof(handle));
   }
 
-  std::string make_ipc_handle(std::string id, std::string name, NDArray array) {
+  void make_ipc_handle(Layer *layer, const std::string &id,
+                       const std::string &name, const NDArray &array) {
     const auto blob = array.data();
     auto data = blob.dptr<float>();
-    return make_ipc_handle(id, name, data);
+    make_ipc_handle(layer, id, name, data);
+  }
+
+  void make_ipc_handle(Layer *layer, const NDArray &array) {
+    make_ipc_handle(layer, layer->id(), layer->name(), array);
   }
 
   void close_ipc_handle(std::string id, std::string name) {
@@ -99,7 +92,7 @@ private:
       LOG(INFO) << "the ipc with id = " << ipc_id << " was not found";
       return;
     }
-    it->second.close();
+    LOG(INFO) << "TODO:: the ipc with id = " << ipc_id << " needs to be closed";
     open_handles.erase(ipc_id);
     return;
   }
@@ -127,7 +120,7 @@ private:
     to_shape(shape, array.shape());
 
     layer->set_byte_count(blob.Size() * element_size);
-    layer->set_ipc_handle(make_ipc_handle(id, name, array));
+    make_ipc_handle(layer, array);
     layer->set_device_raw_ptr((int64_t)blob.dptr<float>());
     layer->set_ref_count(ref_count);
   }

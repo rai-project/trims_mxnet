@@ -280,7 +280,7 @@ void AddDescriptorsImpl() {
       "\n\tupr.proto\022\003upr\"\"\n\005Shape\022\014\n\004rank\030\001 \001(\005\022"
       "\013\n\003dim\030\002 \003(\005\"\217\001\n\005Layer\022\n\n\002id\030\001 \001(\t\022\014\n\004na"
       "me\030\002 \001(\t\022\031\n\005shape\030\003 \001(\0132\n.upr.Shape\022\022\n\nb"
-      "yte_count\030\004 \001(\003\022\022\n\nipc_handle\030\005 \001(\t\022\026\n\016d"
+      "yte_count\030\004 \001(\003\022\022\n\nipc_handle\030\005 \001(\014\022\026\n\016d"
       "evice_raw_ptr\030\006 \001(\003\022\021\n\tref_count\030\007 \001(\003\"Z"
       "\n\013ModelHandle\022\n\n\002id\030\001 \001(\t\022\020\n\010model_id\030\002 "
       "\001(\t\022\022\n\nbyte_count\030\003 \001(\003\022\031\n\005layer\030\004 \003(\0132\n"
@@ -859,16 +859,12 @@ bool Layer::MergePartialFromCodedStream(
         break;
       }
 
-      // string ipc_handle = 5;
+      // bytes ipc_handle = 5;
       case 5: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(42u /* 42 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
                 input, this->mutable_ipc_handle()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->ipc_handle().data(), static_cast<int>(this->ipc_handle().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "upr.Layer.ipc_handle"));
         } else {
           goto handle_unusual;
         }
@@ -960,13 +956,9 @@ void Layer::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteInt64(4, this->byte_count(), output);
   }
 
-  // string ipc_handle = 5;
+  // bytes ipc_handle = 5;
   if (this->ipc_handle().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->ipc_handle().data(), static_cast<int>(this->ipc_handle().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "upr.Layer.ipc_handle");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+    ::google::protobuf::internal::WireFormatLite::WriteBytesMaybeAliased(
       5, this->ipc_handle(), output);
   }
 
@@ -1028,14 +1020,10 @@ void Layer::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(4, this->byte_count(), target);
   }
 
-  // string ipc_handle = 5;
+  // bytes ipc_handle = 5;
   if (this->ipc_handle().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->ipc_handle().data(), static_cast<int>(this->ipc_handle().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "upr.Layer.ipc_handle");
     target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
         5, this->ipc_handle(), target);
   }
 
@@ -1080,10 +1068,10 @@ size_t Layer::ByteSizeLong() const {
         this->name());
   }
 
-  // string ipc_handle = 5;
+  // bytes ipc_handle = 5;
   if (this->ipc_handle().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
+      ::google::protobuf::internal::WireFormatLite::BytesSize(
         this->ipc_handle());
   }
 

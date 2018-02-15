@@ -355,7 +355,7 @@ class Layer : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
   void unsafe_arena_set_allocated_name(
       ::std::string* name);
 
-  // string ipc_handle = 5;
+  // bytes ipc_handle = 5;
   void clear_ipc_handle();
   static const int kIpcHandleFieldNumber = 5;
   const ::std::string& ipc_handle() const;
@@ -364,7 +364,7 @@ class Layer : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
   void set_ipc_handle(::std::string&& value);
   #endif
   void set_ipc_handle(const char* value);
-  void set_ipc_handle(const char* value, size_t size);
+  void set_ipc_handle(const void* value, size_t size);
   ::std::string* mutable_ipc_handle();
   ::std::string* release_ipc_handle();
   void set_allocated_ipc_handle(::std::string* ipc_handle);
@@ -1372,7 +1372,7 @@ inline void Layer::set_byte_count(::google::protobuf::int64 value) {
   // @@protoc_insertion_point(field_set:upr.Layer.byte_count)
 }
 
-// string ipc_handle = 5;
+// bytes ipc_handle = 5;
 inline void Layer::clear_ipc_handle() {
   ipc_handle_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
@@ -1400,7 +1400,7 @@ inline void Layer::set_ipc_handle(const char* value) {
               GetArenaNoVirtual());
   // @@protoc_insertion_point(field_set_char:upr.Layer.ipc_handle)
 }
-inline void Layer::set_ipc_handle(const char* value,
+inline void Layer::set_ipc_handle(const void* value,
     size_t size) {
   
   ipc_handle_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(

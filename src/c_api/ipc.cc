@@ -27,24 +27,15 @@ std::string server::host_name = "localhost"s;
 int server::port = dmlc::GetEnv("PORT", 50051);
 std::string server::address = fmt::format("{}:{}", host_name, port);
 
-TShape to_shape(Shape shape) {
+static TShape to_shape(Shape shape) {
   auto dim = shape.dim();
   TShape res(dim.begin(), dim.end());
   return res;
 }
 
-cudaIpcMemHandle_t get_cuda_ipc_mem_handle(const std::string &ipc_handle) {
-  const std::string buffer = utils::base64_decode(ipc_handle);
-
-  cudaIpcMemHandle_t handle;
-  memcpy((uint8_t *)&handle, buffer.c_str(), sizeof(handle));
-
-  return handle;
-}
-
-void *get_device_ptr(const Layer &layer) {
+static void *get_device_ptr(const Layer &layer) {
   const auto ipc_handle = layer.ipc_handle();
-  if (ipc_handle == "" && utils::is_base64(ipc_handle)) {
+  if (ipc_handle == "") {
     const auto msg = fmt::format(
         "unable to get device ptr from {}. make sure handle is not empty",
         ipc_handle);
@@ -52,7 +43,9 @@ void *get_device_ptr(const Layer &layer) {
     throw dmlc::Error(msg);
   }
 
-  cudaIpcMemHandle_t handle = get_cuda_ipc_mem_handle(ipc_handle);
+  cudaIpcMemHandle_t handle;
+  memcpy((uint8_t *)&handle, ipc_handle.c_str(), sizeof(handle));
+
   // LOG(INFO) << "open cuda mem handle = " << handle;
   void *device_ptr = nullptr;
   CUDA_CHECK_CALL(
@@ -64,7 +57,7 @@ void *get_device_ptr(const Layer &layer) {
   return device_ptr;
 }
 
-NDArray to_ndarray(const Layer &layer) {
+static NDArray to_ndarray(const Layer &layer) {
   const auto ctx = Context::GPU();
 
   const auto shape = to_shape(layer.shape());
@@ -73,13 +66,12 @@ NDArray to_ndarray(const Layer &layer) {
 
   auto device_ptr = get_device_ptr(layer);
 
-  LOG(INFO) << "ctx =" << ctx;
   TBlob blob(device_ptr, shape, dev_mask, dev_id);
   NDArray array(blob, dev_id);
 
   return array;
 }
-std::tuple<std::vector<NDArray>, std::vector<std::string>>
+static std::tuple<std::vector<NDArray>, std::vector<std::string>>
 to_ndarrays(const ModelHandle &reply) {
   std::vector<NDArray> arrays{};
   std::vector<std::string> keys{};

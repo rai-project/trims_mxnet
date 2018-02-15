@@ -22,8 +22,8 @@ message Layer {
   Shape shape = 3;
   // byte count for the layer
   int64 byte_count = 4;
-  // base64 encoding of cuda ipc handle
-  string ipc_handle = 5;
+  // encoding of cuda ipc handle
+  bytes ipc_handle = 5;
   // the raw cuda device ptr (as void *)
   int64 device_raw_ptr = 6;
   // the ref count for the layer (this is equal to the model ref_count)
