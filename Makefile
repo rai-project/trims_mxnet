@@ -70,14 +70,14 @@ include mshadow/make/mshadow.mk
 include $(DMLC_CORE)/make/dmlc.mk
 
 # all tge possible warning tread
-WARNFLAGS= -Wall -Wsign-compare
+WARNFLAGS= -Wall -Wsign-compare -Wno-unused-function -Wno-unused-variable
 CFLAGS = -DMSHADOW_FORCE_STREAM $(WARNFLAGS)
 
 CFLAGS += -DFMT_HEADER_ONLY=1
 
 ifeq ($(DEV), 1)
-	CFLAGS += -g -Werror
-	NVCCFLAGS += -Werror cross-execution-space-call
+	CFLAGS += -g -Werror 
+	NVCCFLAGS += -Werror cross-execution-space-call  
 endif
 
 # CFLAGS for debug
@@ -214,7 +214,7 @@ ifeq ($(USE_GPERFTOOLS), 1)
 		endif
 	endif
 	ifeq ($(USE_GPERFTOOLS), 1)
-		CFLAGS += -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free
+		CFLAGS += -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free 
 		LDFLAGS += $(FIND_LIBFILE)
 	endif
 endif
