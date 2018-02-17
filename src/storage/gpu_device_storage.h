@@ -60,9 +60,12 @@ inline void* GPUDeviceStorage::Alloc(size_t size) {
 #if MXNET_USE_NCCL
   std::lock_guard<std::mutex> l(Storage::Get()->GetMutex(Context::kGPU));
 #endif  // MXNET_USE_NCCL
+  LOG(INFO) << "allocating " << size << " bytes of memory using naive cuda storage";
   cudaError_t e = cudaMalloc(&ret, size);
-  if (e != cudaSuccess && e != cudaErrorCudartUnloading)
+  if (e != cudaSuccess && e != cudaErrorCudartUnloading) {
+      LOG(ERROR) << "failed to perform cuda malloc " << cudaGetErrorString(e);
     throw std::bad_alloc();
+  }
 #else   // MXNET_USE_CUDA
   LOG(FATAL) << "Please compile with CUDA enabled";
 #endif  // MXNET_USE_CUDA

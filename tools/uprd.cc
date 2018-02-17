@@ -71,7 +71,10 @@ private:
                     "failed to create a handle ref");
 
     open_handles.insert({ipc_id, handle});
-    layer->set_ipc_handle((void *)&handle, sizeof(handle));
+    //layer->set_ipc_handle((void *)&handle, sizeof(handle));
+    //layer->set_ipc_handle(utils::base64_encode((unsigned char const*)handle.reserved, CUDA_IPC_HANDLE_SIZE));
+    layer->set_ipc_handle(handle.reserved, CUDA_IPC_HANDLE_SIZE);
+    LOG(INFO) << "setting ipc handle " << utils::base64_encode(layer->ipc_handle()) << " for layer " << layer->name() << " with device_ptr = " << device_ptr << " and handle = " << handle;
   }
 
   void make_ipc_handle(Layer *layer, const std::string &id,
@@ -105,15 +108,12 @@ private:
   }
   void to_layer(Layer *layer, std::string name, NDArray cpu_array,
                 int64_t ref_count) {
-    LOG(INFO) << "converting " << name << " ndarray to protobuf representation";
+    LOG(INFO) << "converting " << name << " ndarray to protobuf representation with ref_count = " << ref_count;
     const auto ctx = Context::GPU();
-    LOG(INFO) << "using " << ctx << " for target ndarray";
     const auto id = sole::uuid4().str();
 
-    LOG(INFO) << "copying cpu array to array at ctx="<<ctx;
     auto array = cpu_array.Copy(ctx);
     array.WaitToRead();
-    LOG(INFO) << "done copying cpu array to array at ctx="<<ctx;
 
     const auto blob = array.data();
     const auto shape = layer->mutable_shape();
@@ -123,7 +123,12 @@ private:
     to_shape(shape, array.shape());
 
     layer->set_byte_count(blob.Size() * element_size);
+    if (ref_count == -1) { // special value for owned model
+    layer->set_ipc_handle("[owned]");
+    } else {
     make_ipc_handle(layer, array);
+    }
+    LOG(INFO) << "setting device_ptr = " << (int64_t)blob.dptr<float>(); 
     layer->set_device_raw_ptr((int64_t)blob.dptr<float>());
     layer->set_ref_count(ref_count);
   }
@@ -203,6 +208,8 @@ private:
     const auto id = sole::uuid4().str();
     const auto shape = layer->mutable_shape();
 
+    LOG(INFO) << "loading from owned layer for layer " << layer->name() << " with ref_count = " << ref_count;
+
     layer->set_id(id);
     layer->set_name(owned.name());
 
@@ -223,6 +230,8 @@ private:
     handle->set_id(uuid);
     handle->set_model_id(owned.model_id());
     handle->set_byte_count(owned.byte_count());
+
+    LOG(INFO) << "loading from owned model";
 
     auto layers = handle->mutable_layer();
 
@@ -252,7 +261,7 @@ public:
       owned_model->set_id("owned-by-" + uuid);
       owned_model->set_model_id(model.id());
       owned_model->set_byte_count(0);
-      load_ndarray(owned_model->mutable_layer(), request, /*ref_count=*/0);
+      load_ndarray(owned_model->mutable_layer(), request, /*ref_count=*/-1);
 
       int64_t byte_count = 0;
       for (const auto it : owned_model->layer()) {
@@ -261,10 +270,10 @@ public:
 
       owned_model->set_byte_count(byte_count);
 
-      std::lock_guard<std::mutex> lock(db_mutex_);
       memory_db_[request->name()] = std::make_unique<Model>(model);
     }
 
+    LOG(INFO) << "done with creating owned model";
     // std::cout << "keys = " << keys(memory_db_) << "\n";
 
     it = memory_db_.find(request->name());

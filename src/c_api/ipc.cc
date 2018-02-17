@@ -44,16 +44,36 @@ static void *get_device_ptr(const Layer &layer) {
   }
 
   cudaIpcMemHandle_t handle;
+  //memcpy((uint8_t *)&handle, ipc_handle.c_str(), sizeof(handle));
+  //memcpy((uint8_t *)&handle, utils::base64_decode(ipc_handle).c_str(), sizeof(handle));
   memcpy((uint8_t *)&handle, ipc_handle.c_str(), sizeof(handle));
 
+  LOG(INFO) << "get handle = " << handle <<  "get base64 handle = " << utils::base64_encode(ipc_handle);
+
   // LOG(INFO) << "open cuda mem handle = " << handle;
-  void *device_ptr = nullptr;
+  void *device_ptr;
+#if 1
   CUDA_CHECK_CALL(
       cudaIpcOpenMemHandle((void **)&device_ptr, handle,
                            cudaIpcMemLazyEnablePeerAccess),
-      fmt::format("failed to open cuda ipc mem handle from {}", ipc_handle));
+      fmt::format("failed to open cuda ipc mem handle from {}", utils::base64_encode(ipc_handle)));
+#else
 
+      cudaIpcOpenMemHandle((void **)&device_ptr, handle,
+                           cudaIpcMemLazyEnablePeerAccess),
+#endif
   LOG(INFO) << "get device_ptr = " << device_ptr;
+
+
+#if 1
+  LOG(INFO) << "doing cudamemcpy using the layer " << layer.name();
+  char buf[5];
+  memset(buf, 0, 5);
+  CUDA_CHECK_CALL(cudaMemcpy(buf, device_ptr, 5, cudaMemcpyDeviceToHost), "cuda memcpy failed");
+  for (int ii = 0; ii < 5; ii ++) {
+      LOG(INFO) << "for cuda memcpy at " << ii << " got the value " << (int) buf[ii];
+  }
+#endif
   return device_ptr;
 }
 
@@ -64,7 +84,7 @@ static NDArray to_ndarray(const Layer &layer) {
   const auto dev_mask = ctx.dev_mask();
   const auto dev_id = ctx.dev_id;
 
-  LOG(INFO) << "getting device ptr using ctx=" << ctx;
+  LOG(INFO) << "in layey=" << layer.name() << " getting device ptr using ctx = " << ctx;
 
   auto device_ptr = get_device_ptr(layer);
 

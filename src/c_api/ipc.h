@@ -13,6 +13,7 @@
 #include <mxnet/storage.h>
 #include <string>
 #include <vector>
+#include "driver_types.h"
 
 #include <fcntl.h>
 #include <stdexcept>
@@ -42,6 +43,15 @@
           fmt::format("CUDA[{}]:: {}", msg, cudaGetErrorString(e)));           \
     }                                                                          \
   }
+
+static std::ostream& operator<<(std::ostream& os, const cudaIpcMemHandle_t& handle)  
+{  
+    const auto reserved = handle.reserved;
+    for (int ii = 0 ; ii < CUDA_IPC_HANDLE_SIZE; ii++) {
+        os << (int) reserved[ii];
+    }
+            return os;  
+}  
 
 namespace upr {
 

@@ -240,10 +240,10 @@ int main(int argc, char *argv[]) {
   MXPredFree(pred_hnd);
 
   // // Synset path for your model, you have to modify it
-  // std::vector<std::string> synset = LoadSynset(synset_file);
+  std::vector<std::string> synset = LoadSynset(synset_file);
 
   // // Print Output Data
-  // PrintOutputResult(data, synset);
+  PrintOutputResult(data, synset);
 
   return 0;
 }

@@ -22,8 +22,8 @@
  * \file gpu_device_storage.h
  * \brief GPU storage implementation.
  */
-#ifndef MXNET_STORAGE_GPU_DEVICE_STORAGE_H_
-#define MXNET_STORAGE_GPU_DEVICE_STORAGE_H_
+#ifndef MXNET_STORAGE_SHARED_GPU_DEVICE_STORAGE_H_
+#define MXNET_STORAGE_SHARED_GPU_DEVICE_STORAGE_H_
 
 #include "mxnet/base.h"
 #include "mxnet/storage.h"
@@ -91,4 +91,4 @@ inline void GPUSharedMemoryStorage::Free(void* ptr) {
 }  // namespace storage
 }  // namespace mxnet
 
-#endif  // MXNET_STORAGE_GPU_DEVICE_STORAGE_H_
+#endif  // MXNET_STORAGE_SHARED_GPU_DEVICE_STORAGE_H_

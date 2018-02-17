@@ -23,6 +23,7 @@
 #include "../common/cuda_utils.h"
 #include "../common/lazy_alloc_array.h"
 #include "./cpu_device_storage.h"
+#include "./gpu_device_storage.h"
 #include "./cpu_shared_storage_manager.h"
 #include "./gpu_shared_storage_manager.h"
 #include "./naive_storage_manager.h"
@@ -118,7 +119,12 @@ void StorageImpl::Alloc(Storage::Handle *handle) {
 #if MXNET_USE_CUDA
           CUDA_CALL(cudaGetDeviceCount(&num_gpu_device));
           CHECK_GT(num_gpu_device, 0) << "GPU usage requires at least 1 GPU";
-          ptr = new storage::GPUPooledStorageManager();
+          static const auto is_client = dmlc::GetEnv("UPR_CLIENT", false);
+          if (is_client) {
+              ptr = new storage::GPUPooledStorageManager();
+          } else {
+            ptr = new storage::NaiveStorageManager<storage::GPUDeviceStorage>();
+          }
 #else
             LOG(FATAL) << "Compile with USE_CUDA=1 to enable GPU usage";
 #endif // MXNET_USE_CUDA

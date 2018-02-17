@@ -96,6 +96,9 @@ static std::string base64_encode(unsigned char const *bytes_to_encode,
 
   return ret;
 }
+static std::string base64_encode(const std::string & s) {
+    return base64_encode((unsigned char const *) s.c_str(), s.size());
+}
 
 static std::string base64_decode(std::string const &encoded_string) {
   int in_len = encoded_string.size();
