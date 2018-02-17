@@ -67,19 +67,24 @@ private:
 
     cudaIpcMemHandle_t handle;
 
-    LOG(INFO) << "getting ipc mem handle using device_ptr = " << (size_t) device_ptr;
-    const auto err = cudaIpcGetMemHandle(&handle, (void*) device_ptr);
+    LOG(INFO) << "getting ipc mem handle using device_ptr = "
+              << (size_t)device_ptr;
+    const auto err = cudaIpcGetMemHandle(&handle, (void *)device_ptr);
 
     LOG(INFO) << cudaGetErrorString(err);
-    CUDA_CHECK_CALL(cudaIpcGetMemHandle(&handle, (void*) device_ptr),
+    CUDA_CHECK_CALL(cudaIpcGetMemHandle(&handle, (void *)device_ptr),
                     "failed to create a handle ref");
     LOG(INFO) << "got ipc mem handle";
 
     open_handles.insert({ipc_id, handle});
-    //layer->set_ipc_handle((void *)&handle, sizeof(handle));
-    //layer->set_ipc_handle(utils::base64_encode((unsigned char const*)handle.reserved, CUDA_IPC_HANDLE_SIZE));
+    // layer->set_ipc_handle((void *)&handle, sizeof(handle));
+    // layer->set_ipc_handle(utils::base64_encode((unsigned char
+    // const*)handle.reserved, CUDA_IPC_HANDLE_SIZE));
     layer->set_ipc_handle(handle.reserved, CUDA_IPC_HANDLE_SIZE);
-    LOG(INFO) << "setting ipc handle " << utils::base64_encode(layer->ipc_handle()) << " for layer " << layer->name() << " with device_ptr = " << device_ptr << " and handle = " << handle;
+    LOG(INFO) << "setting ipc handle "
+              << utils::base64_encode(layer->ipc_handle()) << " for layer "
+              << layer->name() << " with device_ptr = " << device_ptr
+              << " and handle = " << handle;
   }
 
   void make_ipc_handle(Layer *layer, const std::string &id,
@@ -113,8 +118,10 @@ private:
   }
   void to_layer(Layer *layer, std::string name, NDArray cpu_array,
                 int64_t ref_count) {
-    LOG(INFO) << "converting " << name << " ndarray to protobuf representation with ref_count = " << ref_count;
-    const auto ctx = Context::GPU();
+    LOG(INFO) << "converting " << name
+              << " ndarray to protobuf representation with ref_count = "
+              << ref_count;
+    const auto ctx = get_ctx();
     const auto id = sole::uuid4().str();
 
     auto array = cpu_array.Copy(ctx);
@@ -129,11 +136,11 @@ private:
 
     layer->set_byte_count(blob.Size() * element_size);
     if (ref_count == -1) { // special value for owned model
-    layer->set_ipc_handle("[owned]");
+      layer->set_ipc_handle("[owned]");
     } else {
-    make_ipc_handle(layer, array);
+      make_ipc_handle(layer, array);
     }
-    LOG(INFO) << "setting device_ptr = " << (int64_t)blob.dptr<float>(); 
+    LOG(INFO) << "setting device_ptr = " << (int64_t)blob.dptr<float>();
     layer->set_device_raw_ptr((int64_t)blob.dptr<float>());
     layer->set_ref_count(ref_count);
   }
@@ -192,13 +199,16 @@ private:
       throw std::runtime_error(msg);
     }
 
-    LOG(INFO) << fmt::format("performing an ndarray load with params={} and symbol={} paths", params_path, symbol_path);
+    LOG(INFO) << fmt::format(
+        "performing an ndarray load with params={} and symbol={} paths",
+        params_path, symbol_path);
 
     std::vector<NDArray> arrays{};
     std::vector<std::string> layer_names{};
     NDArray::Load(fi, &arrays, &layer_names);
 
-    LOG(INFO) << "starting to convert " << arrays.size() << " ndarrays to protobuf representation";
+    LOG(INFO) << "starting to convert " << arrays.size()
+              << " ndarrays to protobuf representation";
 
     size_t ii = 0;
     for (const auto array : arrays) {
@@ -213,7 +223,8 @@ private:
     const auto id = sole::uuid4().str();
     const auto shape = layer->mutable_shape();
 
-    LOG(INFO) << "loading from owned layer for layer " << owned.name() << " with ref_count = " << ref_count;
+    LOG(INFO) << "loading from owned layer for layer " << owned.name()
+              << " with ref_count = " << ref_count;
 
     layer->set_id(id);
     layer->set_name(owned.name());
@@ -223,9 +234,11 @@ private:
       shape->add_dim(dim);
     }
     layer->set_byte_count(owned.byte_count());
-    LOG(INFO) << "creating ipc handle using device_ptr = " << owned.device_raw_ptr();
+    LOG(INFO) << "creating ipc handle using device_ptr = "
+              << owned.device_raw_ptr();
     make_ipc_handle(layer, id, owned.name(), (float *)owned.device_raw_ptr());
-    LOG(INFO) << "created ipc handle using device_ptr = " << owned.device_raw_ptr();
+    LOG(INFO) << "created ipc handle using device_ptr = "
+              << owned.device_raw_ptr();
     layer->set_device_raw_ptr(owned.device_raw_ptr());
     layer->set_ref_count(ref_count);
   }

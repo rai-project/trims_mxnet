@@ -26,10 +26,10 @@
 #define MXNET_ENGINE_PROFILER_H_
 
 #include <dmlc/concurrentqueue.h>
-#include <vector>
-#include <string>
-#include <mutex>
 #include <memory>
+#include <mutex>
+#include <string>
+#include <vector>
 
 namespace mxnet {
 namespace engine {
@@ -39,7 +39,7 @@ namespace engine {
  */
 struct OprExecStat {
   /*! \brief operation name */
-  char opr_name[32];
+  char opr_name[256];
   /*!
    * \brief operation execution start relative timestamp
    *        time unit is microsecond (10^-6 s)
@@ -68,15 +68,18 @@ struct DevStat {
   /*! \brief device name */
   std::string dev_name_;
   /*! \brief operation execution statistics on this device */
-  std::shared_ptr<dmlc::moodycamel::ConcurrentQueue<OprExecStat *>> opr_exec_stats_ =
-    std::make_shared<dmlc::moodycamel::ConcurrentQueue<OprExecStat *>>();
+  std::shared_ptr<dmlc::moodycamel::ConcurrentQueue<OprExecStat *>>
+      opr_exec_stats_ =
+          std::make_shared<dmlc::moodycamel::ConcurrentQueue<OprExecStat *>>();
 
   /*!
    * \brief Destructor, clean up allocated objects
-   *        TODO(cjolivier01) Investigate queueing unique_ptr<>'s if it won't hurt performance
+   *        TODO(cjolivier01) Investigate queueing unique_ptr<>'s if it won't
+   * hurt performance
    */
   ~DevStat() {
-    std::shared_ptr<dmlc::moodycamel::ConcurrentQueue<OprExecStat *>> es = opr_exec_stats_;
+    std::shared_ptr<dmlc::moodycamel::ConcurrentQueue<OprExecStat *>> es =
+        opr_exec_stats_;
     if (es) {
       OprExecStat *opr_stat = nullptr;
       while (es->try_dequeue(opr_stat)) {
@@ -86,62 +89,47 @@ struct DevStat {
   }
 };
 
-
 /*!
  * \brief profiler that records the operation execution information
  *        and saves the profile statistics.
  */
 class Profiler {
- public:
-  enum ProfilerMode {
-      kOnlySymbolic = 0,
-      kAllOperator  = 1
-  };
-  enum ProfilerState {
-      kNotRunning = 0,
-      kRunning = 1
-  };
+public:
+  enum ProfilerMode { kOnlySymbolic = 0, kAllOperator = 1 };
+  enum ProfilerState { kNotRunning = 0, kRunning = 1 };
   /*! \brief set state of profiler */
   void SetState(ProfilerState state);
   /*! \return state of profiler */
-  inline ProfilerState GetState() const {
-    return this->state_;
-  }
+  inline ProfilerState GetState() const { return this->state_; }
   /*! \brief set configure of profiler */
   void SetConfig(ProfilerMode mode, std::string output_filename);
   /*! \return mode of profiler */
-  inline ProfilerMode GetMode() const {
-    return this->mode_;
-  }
+  inline ProfilerMode GetMode() const { return this->mode_; }
   /*! \return whether the profiler is enabled to output */
-  inline bool IsEnableOutput() const {
-    return this->enable_output_;
-  }
+  inline bool IsEnableOutput() const { return this->enable_output_; }
   /*! \brief dump the profile file */
   void DumpProfile();
   /*! \return the profiler init time, time unit is microsecond (10^-6) s */
-  inline uint64_t GetInitTime() const {
-    return init_time_;
-  }
+  inline uint64_t GetInitTime() const { return init_time_; }
   /*! \brief add one operation execution record in
    *   corresponding device statistics */
-  OprExecStat* AddOprStat(int dev_type, uint32_t dev_id);
+  OprExecStat *AddOprStat(int dev_type, uint32_t dev_id);
   /*! \return Profiler singleton */
-  static Profiler* Get();
+  static Profiler *Get();
 
- protected:
+protected:
   /*! \brief make constructor protected. */
   Profiler();
 
- private:
+private:
   /*! \brief generate device information following chrome profile file format */
-  void EmitPid(std::ostream *os, const std::string& name, uint32_t pid);
+  void EmitPid(std::ostream *os, const std::string &name, uint32_t pid);
   /*! \brief generate event information following chrome profile file format */
-  void EmitEvent(std::ostream *os, const std::string& name,
-          const std::string& category, const std::string& ph,
-          uint64_t ts, uint32_t pid, uint32_t tid);
+  void EmitEvent(std::ostream *os, const std::string &name,
+                 const std::string &category, const std::string &ph,
+                 uint64_t ts, uint32_t pid, uint32_t tid);
   /*! \brief Profiler instance */
-  static Profiler* instance_;
+  static Profiler *instance_;
   /*! \brief internal mutex of the profiler */
   std::mutex m_;
   /*! \brief indicate whether the profiler is running */
@@ -153,7 +141,7 @@ class Profiler {
   /*! \brief filename to output profile file */
   std::string filename_;
   /*! \brief profile statistics consist of multiple device statistics */
-  DevStat* profile_stat;
+  DevStat *profile_stat;
   /*! \brief cpu number on the machine */
   unsigned int cpu_num_;
   /*! \brief gpu number on the machine */
@@ -165,10 +153,10 @@ class Profiler {
 /*! \return current clock time, time unit is microsecond (10^-6 s) */
 inline uint64_t NowInUsec();
 /*! \brief set operation execution start timestamp */
-void SetOprStart(OprExecStat* opr_stat);
+void SetOprStart(OprExecStat *opr_stat);
 /*! \brief set operation execution end timestamp */
-void SetOprEnd(OprExecStat* opr_stat);
+void SetOprEnd(OprExecStat *opr_stat);
 
-}  // namespace engine
-}  // namespace mxnet
-#endif  // MXNET_ENGINE_PROFILER_H_
+} // namespace engine
+} // namespace mxnet
+#endif // MXNET_ENGINE_PROFILER_H_

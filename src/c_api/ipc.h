@@ -1,5 +1,6 @@
 #pragma once
 
+#include "driver_types.h"
 #include <iostream>
 #include <map>
 #include <memory>
@@ -13,7 +14,6 @@
 #include <mxnet/storage.h>
 #include <string>
 #include <vector>
-#include "driver_types.h"
 
 #include <fcntl.h>
 #include <stdexcept>
@@ -24,6 +24,7 @@
 #include <sys/types.h>
 
 #include "./base64.h"
+#include "./defer.h"
 #include "fmt/format.h"
 
 #define BYTE 1
@@ -39,19 +40,19 @@
     CHECK(e == cudaSuccess || e == cudaErrorCudartUnloading)                   \
         << "CUDA[" << msg << "]:: " << cudaGetErrorString(e);                  \
     if (e != cudaSuccess) {                                                    \
-      throw dmlc::Error(                                                \
+      throw dmlc::Error(                                                       \
           fmt::format("CUDA[{}]:: {}", msg, cudaGetErrorString(e)));           \
     }                                                                          \
   }
 
-static std::ostream& operator<<(std::ostream& os, const cudaIpcMemHandle_t& handle)  
-{  
-    const auto reserved = handle.reserved;
-    for (int ii = 0 ; ii < CUDA_IPC_HANDLE_SIZE; ii++) {
-        os << (int) reserved[ii];
-    }
-            return os;  
-}  
+static std::ostream &operator<<(std::ostream &os,
+                                const cudaIpcMemHandle_t &handle) {
+  const auto reserved = handle.reserved;
+  for (int ii = 0; ii < CUDA_IPC_HANDLE_SIZE; ii++) {
+    os << (int)reserved[ii];
+  }
+  return os;
+}
 
 namespace upr {
 
@@ -65,6 +66,35 @@ static std::map<std::string, std::string> model_directory_paths{
     {"squeezenetv1", CARML_HOME_BASE_DIR + "squeezenetv1"},
     {"squeezenetv1.1", CARML_HOME_BASE_DIR + "squeezenetv1.1"},
     {"vgg16", CARML_HOME_BASE_DIR + "vgg16"}};
+
+static Context get_ctx() {
+  static const auto ctx = Context::GPU();
+  return ctx;
+}
+
+static OprExecStat *start_span(const std::string &name) {
+#if MXNET_USE_PROFILER
+  const auto ctx = get_ctx();
+  auto opr_stat = Profiler::Get()->AddOprStat(ctx.dev_type, ctx.dev_id);
+  uint64_t tid = std::hash<std::thread::id>()(std::this_thread::get_id());
+  opr_stat->thread_id = tid;
+  strncpy(opr_stat->opr_name, name.c_str(), name.size());
+  SetOprStart(opr_stat);
+  return opr_stat;
+#else
+  return nullptr;
+#endif
+}
+
+static void stop_span(OprExecStat *stat) {
+  if (stat == nullptr) {
+    return;
+  }
+
+#if MXNET_USE_PROFILER
+  SetOprEnd(stat);
+#endif
+}
 
 static std::string get_model_name() {
   static const auto model_name =

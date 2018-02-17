@@ -44,47 +44,51 @@ static void *get_device_ptr(const Layer &layer) {
   }
 
   cudaIpcMemHandle_t handle;
-  //memcpy((uint8_t *)&handle, ipc_handle.c_str(), sizeof(handle));
-  //memcpy((uint8_t *)&handle, utils::base64_decode(ipc_handle).c_str(), sizeof(handle));
+  // memcpy((uint8_t *)&handle, ipc_handle.c_str(), sizeof(handle));
+  // memcpy((uint8_t *)&handle, utils::base64_decode(ipc_handle).c_str(),
+  // sizeof(handle));
   memcpy((uint8_t *)&handle, ipc_handle.c_str(), sizeof(handle));
 
-  LOG(INFO) << "get handle = " << handle <<  "get base64 handle = " << utils::base64_encode(ipc_handle);
+  LOG(INFO) << "get handle = " << handle
+            << "get base64 handle = " << utils::base64_encode(ipc_handle);
 
   // LOG(INFO) << "open cuda mem handle = " << handle;
   void *device_ptr;
 #if 1
-  CUDA_CHECK_CALL(
-      cudaIpcOpenMemHandle((void **)&device_ptr, handle,
-                           cudaIpcMemLazyEnablePeerAccess),
-      fmt::format("failed to open cuda ipc mem handle from {}", utils::base64_encode(ipc_handle)));
+  CUDA_CHECK_CALL(cudaIpcOpenMemHandle((void **)&device_ptr, handle,
+                                       cudaIpcMemLazyEnablePeerAccess),
+                  fmt::format("failed to open cuda ipc mem handle from {}",
+                              utils::base64_encode(ipc_handle)));
 #else
 
-      cudaIpcOpenMemHandle((void **)&device_ptr, handle,
-                           cudaIpcMemLazyEnablePeerAccess),
+  cudaIpcOpenMemHandle((void **)&device_ptr, handle,
+                       cudaIpcMemLazyEnablePeerAccess),
 #endif
   LOG(INFO) << "get device_ptr = " << device_ptr;
-
 
 #if 1
   LOG(INFO) << "doing cudamemcpy using the layer " << layer.name();
   char buf[5];
   memset(buf, 0, 5);
-  CUDA_CHECK_CALL(cudaMemcpy(buf, device_ptr, 5, cudaMemcpyDeviceToHost), "cuda memcpy failed");
-  for (int ii = 0; ii < 5; ii ++) {
-      LOG(INFO) << "for cuda memcpy at " << ii << " got the value " << (int) buf[ii];
+  CUDA_CHECK_CALL(cudaMemcpy(buf, device_ptr, 5, cudaMemcpyDeviceToHost),
+                  "cuda memcpy failed");
+  for (int ii = 0; ii < 5; ii++) {
+    LOG(INFO) << "for cuda memcpy at " << ii << " got the value "
+              << (int)buf[ii];
   }
 #endif
   return device_ptr;
 }
 
 static NDArray to_ndarray(const Layer &layer) {
-  const auto ctx = Context::GPU();
+  const auto ctx = get_ctx();
 
   const auto shape = to_shape(layer.shape());
   const auto dev_mask = ctx.dev_mask();
   const auto dev_id = ctx.dev_id;
 
-  LOG(INFO) << "in layey=" << layer.name() << " getting device ptr using ctx = " << ctx;
+  LOG(INFO) << "in layey=" << layer.name()
+            << " getting device ptr using ctx = " << ctx;
 
   auto device_ptr = get_device_ptr(layer);
 
@@ -125,6 +129,10 @@ struct client {
     Model Info(const ModelRequest &request) {
       Model reply;
       ClientContext context;
+
+      auto span = start_span("grpc info");
+      defer(stop_span(span));
+
       const auto status = stub_->Info(&context, request, &reply);
 
       if (!status.ok()) {
@@ -144,6 +152,10 @@ struct client {
     ModelHandle Open(const ModelRequest &request) {
       ModelHandle reply;
       ClientContext context;
+
+      auto span = start_span("grpc open");
+      defer(stop_span(span));
+
       const auto status = stub_->Open(&context, request, &reply);
 
       if (!status.ok()) {
@@ -164,6 +176,9 @@ struct client {
       Void reply;
       ClientContext context;
 
+      auto span = start_span("grpc close");
+      defer(stop_span(span));
+
       const auto status = stub_->Close(&context, request, &reply);
 
       if (!status.ok()) {
@@ -180,6 +195,8 @@ struct client {
 
   static void Load(std::string model_name, std::vector<NDArray> *res_arrays,
                    std::vector<std::string> *res_keys) {
+    auto span_loading = start_span("loading nd_array");
+    defer(stop_span(span_loading));
 
     RegistryClient client(grpc::CreateChannel(
         server_address, grpc::InsecureChannelCredentials()));
@@ -188,6 +205,8 @@ struct client {
 
     LOG(INFO) << "Client received open reply: " << open_reply.id();
 
+    auto span_converting = start_span("convering to nd_array");
+    defer(stop_span(span_converting));
     const auto arrays_keys = to_ndarrays(open_reply);
 
     LOG(INFO) << "Loaded model " << model_name;
