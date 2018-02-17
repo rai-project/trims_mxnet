@@ -156,6 +156,9 @@ void PrintOutputResult(const std::vector<float> &data,
 
 int main(int argc, char *argv[]) {
 
+    cudaSetDevice(0);
+    void * dummy_ptr;
+    cudaMalloc(&dummy_ptr, 10);
   std::string test_file = argc == 1 ? "banana.png" : std::string(argv[1]);
 
   if (!file_exists(test_file)) {
@@ -200,6 +203,12 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
+  const std::string filename{"profile"};
+  MXSetProfilerConfig(1, filename.c_str());
+
+  // Stope profiling
+  MXSetProfilerState(1);
+
   // Create Predictor
   MXPredCreate((const char *)json_data.GetBuffer(),
                (const char *)param_data.GetBuffer(), param_data.GetLength(),
@@ -238,6 +247,9 @@ int main(int argc, char *argv[]) {
 
   // Release Predictor
   MXPredFree(pred_hnd);
+
+  // Stope profiling
+  MXSetProfilerState(0);
 
   // // Synset path for your model, you have to modify it
   std::vector<std::string> synset = LoadSynset(synset_file);

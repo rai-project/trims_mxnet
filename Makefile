@@ -90,7 +90,7 @@ CGRPCFLAGS = `pkg-config --cflags protobuf grpc`
 LDGRPCFLAGS = `pkg-config --libs protobuf grpc++ grpc`
 # CGRPCFLAGS = -pthread -I/home/linuxbrew/.linuxbrew/Cellar/protobuf/3.5.1/include -I/home/linuxbrew/.linuxbrew/Cellar/grpc/1.9.0/include
 # LDGRPCFLAGS = -L/home/linuxbrew/.linuxbrew/Cellar/protobuf/3.5.1/lib -L/home/linuxbrew/.linuxbrew/Cellar/grpc/1.9.0/lib -lprotobuf -pthread -lpthread -lgrpc++ -lgrpc
-CFLAGS += $(CGRPCFLAGS) -I$(ROOTDIR)/3rdparty -I$(ROOTDIR)/mshadow/ -I$(ROOTDIR)/dmlc-core/include -fPIC -I$(NNVM_PATH)/include -I$(DLPACK_PATH)/include -Iinclude $(MSHADOW_CFLAGS)
+CFLAGS += $(CGRPCFLAGS) -I$(ROOTDIR)/3rdparty -I$(ROOTDIR)/mshadow/ -I$(ROOTDIR)/dmlc-core/include -fPIC -I$(NNVM_PATH)/include -I$(DLPACK_PATH)/include -Iinclude $(MSHADOW_CFLAGS) -Isrc/
 LDFLAGS = -pthread $(MSHADOW_LDFLAGS) $(DMLC_LDFLAGS) $(LDGRPCFLAGS)
 ifeq ($(DEBUG), 1)
 	NVCCFLAGS += -DFMT_HEADER_ONLY=1 -std=c++14 -Xcompiler -D_FORCE_INLINES -g -G -O0 -ccbin $(CXX) $(MSHADOW_NVCCFLAGS)
@@ -456,7 +456,7 @@ bin/uprd: tools/uprd.cc lib/libmxnet.so
 
 $(BIN) :
 	@mkdir -p $(@D)
-	$(CXX) $(CFLAGS) -std=c++14  -o $@ $(filter %.cpp %.o %.c %.a %.cc, $^) $(LDFLAGS) lib/libmxnet.so -I include -I src/c_api
+	$(CXX) $(CFLAGS) -std=c++14  -o $@ $(filter %.cpp %.o %.c %.a %.cc, $^) $(LDFLAGS) lib/libmxnet.so -I include -I src/c_api -I src/
 
 # CPP Package
 ifeq ($(USE_CPP_PACKAGE), 1)

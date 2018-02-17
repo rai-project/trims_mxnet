@@ -52,6 +52,10 @@ static void *get_device_ptr(const Layer &layer) {
   LOG(INFO) << "get handle = " << handle
             << "get base64 handle = " << utils::base64_encode(ipc_handle);
 
+
+    auto span= start_span("performing cudaIpcOpenMemHandle for "s + layer.name() );
+    defer(stop_span(span));
+
   // LOG(INFO) << "open cuda mem handle = " << handle;
   void *device_ptr;
 #if 1
@@ -66,7 +70,7 @@ static void *get_device_ptr(const Layer &layer) {
 #endif
   LOG(INFO) << "get device_ptr = " << device_ptr;
 
-#if 1
+#if 0
   LOG(INFO) << "doing cudamemcpy using the layer " << layer.name();
   char buf[5];
   memset(buf, 0, 5);
@@ -83,6 +87,9 @@ static void *get_device_ptr(const Layer &layer) {
 static NDArray to_ndarray(const Layer &layer) {
   const auto ctx = get_ctx();
 
+    auto span= start_span("convering "s + layer.name() +  " to  nd_array"s);
+    defer(stop_span(span));
+
   const auto shape = to_shape(layer.shape());
   const auto dev_mask = ctx.dev_mask();
   const auto dev_id = ctx.dev_id;
@@ -91,6 +98,9 @@ static NDArray to_ndarray(const Layer &layer) {
             << " getting device ptr using ctx = " << ctx;
 
   auto device_ptr = get_device_ptr(layer);
+
+    auto span_creating = start_span("creating nd_array for "s + layer.name() );
+    defer(stop_span(span_creating));
 
   TBlob blob(device_ptr, shape, dev_mask, dev_id);
   NDArray array(blob, dev_id);

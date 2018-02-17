@@ -7,6 +7,7 @@
 #include <mxnet/base.h>
 #include <mxnet/c_api.h>
 #include <mxnet/io.h>
+#include <mxnet/engine.h>
 #include <mxnet/kvstore.h>
 #include <mxnet/ndarray.h>
 #include <mxnet/operator.h>
@@ -23,6 +24,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include "./../engine/profiler.h"
 #include "./base64.h"
 #include "./defer.h"
 #include "fmt/format.h"
@@ -55,6 +57,7 @@ static std::ostream &operator<<(std::ostream &os,
 }
 
 namespace upr {
+using namespace mxnet;
 
 static const auto IPC_HANDLES_BASE_PATH = std::string("/tmp/persistent");
 static const auto CARML_HOME_BASE_DIR =
@@ -72,27 +75,28 @@ static Context get_ctx() {
   return ctx;
 }
 
-static OprExecStat *start_span(const std::string &name) {
+static engine::OprExecStat *start_span(const std::string &name) {
 #if MXNET_USE_PROFILER
   const auto ctx = get_ctx();
-  auto opr_stat = Profiler::Get()->AddOprStat(ctx.dev_type, ctx.dev_id);
+  auto opr_stat = engine::Profiler::Get()->AddOprStat(ctx.dev_type, ctx.dev_id);
   uint64_t tid = std::hash<std::thread::id>()(std::this_thread::get_id());
   opr_stat->thread_id = tid;
   strncpy(opr_stat->opr_name, name.c_str(), name.size());
-  SetOprStart(opr_stat);
+  opr_stat->opr_name[name.size()] = '\0';
+  engine::SetOprStart(opr_stat);
   return opr_stat;
 #else
   return nullptr;
 #endif
 }
 
-static void stop_span(OprExecStat *stat) {
+static void stop_span(engine::OprExecStat *stat) {
   if (stat == nullptr) {
     return;
   }
 
 #if MXNET_USE_PROFILER
-  SetOprEnd(stat);
+  engine::SetOprEnd(stat);
 #endif
 }
 
