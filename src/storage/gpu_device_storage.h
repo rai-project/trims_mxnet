@@ -60,8 +60,8 @@ inline void* GPUDeviceStorage::Alloc(size_t size) {
 #if MXNET_USE_NCCL
   std::lock_guard<std::mutex> l(Storage::Get()->GetMutex(Context::kGPU));
 #endif  // MXNET_USE_NCCL
-  LOG(INFO) << "allocating " << size << " bytes of memory using naive cuda storage";
   cudaError_t e = cudaMalloc(&ret, size);
+  LOG(INFO) << "allocating " << size << " bytes of memory using naive cuda storage. device_ptr = " << (size_t) ret;
   if (e != cudaSuccess && e != cudaErrorCudartUnloading) {
       LOG(ERROR) << "failed to perform cuda malloc " << cudaGetErrorString(e);
     throw std::bad_alloc();
@@ -78,6 +78,8 @@ inline void GPUDeviceStorage::Free(void* ptr) {
   std::lock_guard<std::mutex> l(Storage::Get()->GetMutex(Context::kGPU));
 #endif  // MXNET_USE_NCCL
   // throw special exception for caller to catch.
+  return ;
+  LOG(INFO) << "freeing " << (size_t) ptr << " using naive cuda storage.";
   cudaError_t err = cudaFree(ptr);
   // ignore unloading error, as memory has already been recycled
   if (err != cudaSuccess && err != cudaErrorCudartUnloading) {

@@ -67,8 +67,13 @@ private:
 
     cudaIpcMemHandle_t handle;
 
+    LOG(INFO) << "getting ipc mem handle using device_ptr = " << (size_t) device_ptr;
+    const auto err = cudaIpcGetMemHandle(&handle, (void*) device_ptr);
+
+    LOG(INFO) << cudaGetErrorString(err);
     CUDA_CHECK_CALL(cudaIpcGetMemHandle(&handle, (void*) device_ptr),
                     "failed to create a handle ref");
+    LOG(INFO) << "got ipc mem handle";
 
     open_handles.insert({ipc_id, handle});
     //layer->set_ipc_handle((void *)&handle, sizeof(handle));
@@ -208,7 +213,7 @@ private:
     const auto id = sole::uuid4().str();
     const auto shape = layer->mutable_shape();
 
-    LOG(INFO) << "loading from owned layer for layer " << layer->name() << " with ref_count = " << ref_count;
+    LOG(INFO) << "loading from owned layer for layer " << owned.name() << " with ref_count = " << ref_count;
 
     layer->set_id(id);
     layer->set_name(owned.name());
@@ -218,7 +223,9 @@ private:
       shape->add_dim(dim);
     }
     layer->set_byte_count(owned.byte_count());
+    LOG(INFO) << "creating ipc handle using device_ptr = " << owned.device_raw_ptr();
     make_ipc_handle(layer, id, owned.name(), (float *)owned.device_raw_ptr());
+    LOG(INFO) << "created ipc handle using device_ptr = " << owned.device_raw_ptr();
     layer->set_device_raw_ptr(owned.device_raw_ptr());
     layer->set_ref_count(ref_count);
   }
@@ -237,6 +244,7 @@ private:
 
     for (const auto owned_layer : owned.layer()) {
       auto trgt_layer = layers->Add();
+      LOG(INFO) << "HERE ONCE";
       from_owned_layer(trgt_layer, owned_layer, ref_count);
     }
   }

@@ -39,7 +39,7 @@
     CHECK(e == cudaSuccess || e == cudaErrorCudartUnloading)                   \
         << "CUDA[" << msg << "]:: " << cudaGetErrorString(e);                  \
     if (e != cudaSuccess) {                                                    \
-      throw std::runtime_error(                                                \
+      throw dmlc::Error(                                                \
           fmt::format("CUDA[{}]:: {}", msg, cudaGetErrorString(e)));           \
     }                                                                          \
   }
