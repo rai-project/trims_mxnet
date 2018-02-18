@@ -70,10 +70,27 @@ static std::map<std::string, std::string> model_directory_paths{
     {"squeezenetv1.1", CARML_HOME_BASE_DIR + "squeezenetv1.1"},
     {"vgg16", CARML_HOME_BASE_DIR + "vgg16"}};
 
+
+/**
+ * @brief Ensures the CUDA runtime has fully initialized
+ *
+ * @note The CUDA runtime uses lazy initialization, so that until you perform
+ * certain actions, the CUDA driver is not used to create a context, nothing
+ * is done on the device etc. This function forces this initialization to
+ * happen immediately, while not having any other effect.
+ */
+static inline void force_runtime_initialization()
+{
+	// nVIDIA's Robin Thoni (https://www.rthoni.com/) guarantees
+	// the following code "does the trick"
+	CUDA_CHECK_CALL(cudaFree(nullptr), "Forcing CUDA runtime initialization");
+}
+
 static Context get_ctx() {
   static const auto ctx = Context::GPU();
   return ctx;
 }
+
 
 static engine::OprExecStat *start_span(const std::string &name) {
 #if MXNET_USE_PROFILER

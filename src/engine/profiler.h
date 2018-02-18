@@ -26,6 +26,7 @@
 #define MXNET_ENGINE_PROFILER_H_
 
 #include <dmlc/concurrentqueue.h>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -59,6 +60,8 @@ struct OprExecStat {
   uint32_t dev_type;
   /*! \brief device id */
   uint32_t dev_id;
+
+  std::map<std::string, std::string> metadata;
 };
 
 /*!

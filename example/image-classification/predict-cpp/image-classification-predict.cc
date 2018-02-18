@@ -156,9 +156,9 @@ void PrintOutputResult(const std::vector<float> &data,
 
 int main(int argc, char *argv[]) {
 
-    cudaSetDevice(0);
-    void * dummy_ptr;
-    cudaMalloc(&dummy_ptr, 10);
+  cudaSetDevice(0);
+  force_runtime_initialization();
+
   std::string test_file = argc == 1 ? "banana.png" : std::string(argv[1]);
 
   if (!file_exists(test_file)) {
