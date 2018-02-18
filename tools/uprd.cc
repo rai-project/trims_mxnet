@@ -12,7 +12,6 @@
 
 #include "mxnet/c_api.h"
 #include "mxnet/c_predict_api.h"
-#include "prettyprint.hpp"
 #include "sole/sole.hpp"
 #include "upr.grpc.pb.h"
 #include "upr.pb.h"
