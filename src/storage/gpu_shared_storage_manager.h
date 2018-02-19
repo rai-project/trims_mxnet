@@ -22,8 +22,8 @@
  * \file gpu_device_storage.h
  * \brief GPU storage implementation.
  */
-#ifndef MXNET_STORAGE_GPU_DEVICE_STORAGE_H_
-#define MXNET_STORAGE_GPU_DEVICE_STORAGE_H_
+#ifndef MXNET_STORAGE_SHARED_GPU_DEVICE_STORAGE_H_
+#define MXNET_STORAGE_SHARED_GPU_DEVICE_STORAGE_H_
 
 #include "mxnet/base.h"
 #include "mxnet/storage.h"
@@ -33,13 +33,22 @@
 #endif  // MXNET_USE_CUDA
 #include <new>
 
+
+#define CUDA_CALL(func)                                            \
+  {                                                                \
+    cudaError_t e = (func);                                        \
+    CHECK(e == cudaSuccess || e == cudaErrorCudartUnloading)       \
+        << "CUDA: " << cudaGetErrorString(e);                      \
+  }
+
+
 namespace mxnet {
 namespace storage {
 
 /*!
  * \brief GPU storage implementation.
  */
-class GPUDeviceStorage {
+class GPUSharedMemoryStorage {
  public:
   /*!
    * \brief Allocation.
@@ -54,32 +63,21 @@ class GPUDeviceStorage {
   inline static void Free(void* ptr);
 };  // class GPUDeviceStorage
 
-inline void* GPUDeviceStorage::Alloc(size_t size) {
+inline void* GPUSharedMemoryStorage::Alloc(size_t size) {
   void* ret = nullptr;
 #if MXNET_USE_CUDA
-#if MXNET_USE_NCCL
-  std::lock_guard<std::mutex> l(Storage::Get()->GetMutex(Context::kGPU));
-#endif  // MXNET_USE_NCCL
   cudaError_t e = cudaMalloc(&ret, size);
-  LOG(INFO) << "allocating " << size << " bytes of memory using naive cuda storage. device_ptr = " << (size_t) ret;
-  if (e != cudaSuccess && e != cudaErrorCudartUnloading) {
-      LOG(ERROR) << "failed to perform cuda malloc " << cudaGetErrorString(e);
+  if (e != cudaSuccess && e != cudaErrorCudartUnloading)
     throw std::bad_alloc();
-  }
 #else   // MXNET_USE_CUDA
   LOG(FATAL) << "Please compile with CUDA enabled";
 #endif  // MXNET_USE_CUDA
   return ret;
 }
 
-inline void GPUDeviceStorage::Free(void* ptr) {
+inline void GPUSharedMemoryStorage::Free(void* ptr) {
 #if MXNET_USE_CUDA
-#if MXNET_USE_NCCL
-  std::lock_guard<std::mutex> l(Storage::Get()->GetMutex(Context::kGPU));
-#endif  // MXNET_USE_NCCL
   // throw special exception for caller to catch.
-  return ;
-  LOG(INFO) << "freeing " << (size_t) ptr << " using naive cuda storage.";
   cudaError_t err = cudaFree(ptr);
   // ignore unloading error, as memory has already been recycled
   if (err != cudaSuccess && err != cudaErrorCudartUnloading) {
@@ -93,4 +91,4 @@ inline void GPUDeviceStorage::Free(void* ptr) {
 }  // namespace storage
 }  // namespace mxnet
 
-#endif  // MXNET_STORAGE_GPU_DEVICE_STORAGE_H_
+#endif  // MXNET_STORAGE_SHARED_GPU_DEVICE_STORAGE_H_

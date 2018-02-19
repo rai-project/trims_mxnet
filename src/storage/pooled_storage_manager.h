@@ -26,17 +26,16 @@
 #define MXNET_STORAGE_POOLED_STORAGE_MANAGER_H_
 
 #if MXNET_USE_CUDA
-  #include <cuda_runtime.h>
-#endif  // MXNET_USE_CUDA
+#include <cuda_runtime.h>
+#endif // MXNET_USE_CUDA
+#include "../common/cuda_utils.h"
+#include "./storage_manager.h"
+#include <mutex>
 #include <mxnet/base.h>
 #include <mxnet/storage.h>
+#include <new>
 #include <unordered_map>
 #include <vector>
-#include <mutex>
-#include <new>
-#include "./storage_manager.h"
-#include "../common/cuda_utils.h"
-
 
 namespace mxnet {
 namespace storage {
@@ -46,7 +45,7 @@ namespace storage {
  * \brief Storage manager with a memory pool on gpu.
  */
 class GPUPooledStorageManager final : public StorageManager {
- public:
+public:
   /*!
    * \brief Default constructor.
    */
@@ -56,11 +55,9 @@ class GPUPooledStorageManager final : public StorageManager {
   /*!
    * \brief Default destructor.
    */
-  ~GPUPooledStorageManager() {
-    ReleaseAll();
-  }
+  ~GPUPooledStorageManager() { ReleaseAll(); }
 
-  void Alloc(Storage::Handle* handle) override;
+  void Alloc(Storage::Handle *handle) override;
   void Free(Storage::Handle handle) override;
 
   void DirectFree(Storage::Handle handle) override {
@@ -78,7 +75,7 @@ class GPUPooledStorageManager final : public StorageManager {
     used_memory_ -= size;
   }
 
- private:
+private:
   void ReleaseAll();
   // used memory
   size_t used_memory_ = 0;
@@ -87,29 +84,34 @@ class GPUPooledStorageManager final : public StorageManager {
   // number of devices
   const int NDEV = 32;
   // memory pool
-  std::unordered_map<size_t, std::vector<void*>> memory_pool_;
+  std::unordered_map<size_t, std::vector<void *>> memory_pool_;
   DISALLOW_COPY_AND_ASSIGN(GPUPooledStorageManager);
-};  // class GPUPooledStorageManager
+}; // class GPUPooledStorageManager
 
-void GPUPooledStorageManager::Alloc(Storage::Handle* handle) {
+void GPUPooledStorageManager::Alloc(Storage::Handle *handle) {
+  static const bool is_client = dmlc::GetEnv("UPR_CLINET", 0);
+    LOG(INFO) << "requesting to allocate " << handle->size + NDEV
+              << " bytes of memory on the gpu using a pooling allocator";
   std::lock_guard<std::mutex> lock(Storage::Get()->GetMutex(Context::kGPU));
   size_t size = handle->size + NDEV;
-  auto&& reuse_it = memory_pool_.find(size);
+  auto &&reuse_it = memory_pool_.find(size);
   if (reuse_it == memory_pool_.end() || reuse_it->second.size() == 0) {
     size_t free, total;
     cudaMemGetInfo(&free, &total);
     if (free <= total * reserve_ / 100 || size > free - total * reserve_ / 100)
       ReleaseAll();
 
-    void* ret = nullptr;
+    void *ret = nullptr;
     cudaError_t e = cudaMalloc(&ret, size);
     if (e != cudaSuccess && e != cudaErrorCudartUnloading) {
-      LOG(FATAL) << "cudaMalloc failed: " << cudaGetErrorString(e);
+      LOG(FATAL) << "cudaMalloc failed: " << cudaGetErrorString(e)
+                 << ". requesting to allocate " << size
+                 << " bytes of gpu memory";
     }
     used_memory_ += size;
     handle->dptr = ret;
   } else {
-    auto&& reuse_pool = reuse_it->second;
+    auto &&reuse_pool = reuse_it->second;
     auto ret = reuse_pool.back();
     reuse_pool.pop_back();
     handle->dptr = ret;
@@ -119,13 +121,13 @@ void GPUPooledStorageManager::Alloc(Storage::Handle* handle) {
 void GPUPooledStorageManager::Free(Storage::Handle handle) {
   std::lock_guard<std::mutex> lock(Storage::Get()->GetMutex(Context::kGPU));
   size_t size = handle.size + NDEV;
-  auto&& reuse_pool = memory_pool_[size];
+  auto &&reuse_pool = memory_pool_[size];
   reuse_pool.push_back(handle.dptr);
 }
 
 void GPUPooledStorageManager::ReleaseAll() {
-  for (auto&& i : memory_pool_) {
-    for (auto&& j : i.second) {
+  for (auto &&i : memory_pool_) {
+    for (auto &&j : i.second) {
       Storage::Handle handle;
       handle.dptr = j;
       handle.size = i.first - NDEV;
@@ -135,9 +137,9 @@ void GPUPooledStorageManager::ReleaseAll() {
   memory_pool_.clear();
 }
 
-#endif  // MXNET_USE_CUDA
+#endif // MXNET_USE_CUDA
 
-}  // namespace storage
-}  // namespace mxnet
+} // namespace storage
+} // namespace mxnet
 
-#endif  // MXNET_STORAGE_POOLED_STORAGE_MANAGER_H_
+#endif // MXNET_STORAGE_POOLED_STORAGE_MANAGER_H_

@@ -70,12 +70,14 @@ include mshadow/make/mshadow.mk
 include $(DMLC_CORE)/make/dmlc.mk
 
 # all tge possible warning tread
-WARNFLAGS= -Wall -Wsign-compare
+WARNFLAGS= -Wall -Wsign-compare -Wno-unused-function -Wno-unused-variable
 CFLAGS = -DMSHADOW_FORCE_STREAM $(WARNFLAGS)
 
+CFLAGS += -DFMT_HEADER_ONLY=1
+
 ifeq ($(DEV), 1)
-	CFLAGS += -g -Werror
-	NVCCFLAGS += -Werror cross-execution-space-call
+	CFLAGS += -g -Werror 
+	NVCCFLAGS += -Werror cross-execution-space-call  
 endif
 
 # CFLAGS for debug
@@ -84,12 +86,16 @@ ifeq ($(DEBUG), 1)
 else
 	CFLAGS += -O3 -DNDEBUG=1
 endif
-CFLAGS += -I$(ROOTDIR)/mshadow/ -I$(ROOTDIR)/dmlc-core/include -fPIC -I$(NNVM_PATH)/include -I$(DLPACK_PATH)/include -Iinclude $(MSHADOW_CFLAGS)
-LDFLAGS = -pthread $(MSHADOW_LDFLAGS) $(DMLC_LDFLAGS)
+CGRPCFLAGS = `pkg-config --cflags protobuf grpc`
+LDGRPCFLAGS = `pkg-config --libs protobuf grpc++ grpc`
+# CGRPCFLAGS = -pthread -I/home/linuxbrew/.linuxbrew/Cellar/protobuf/3.5.1/include -I/home/linuxbrew/.linuxbrew/Cellar/grpc/1.9.0/include
+# LDGRPCFLAGS = -L/home/linuxbrew/.linuxbrew/Cellar/protobuf/3.5.1/lib -L/home/linuxbrew/.linuxbrew/Cellar/grpc/1.9.0/lib -lprotobuf -pthread -lpthread -lgrpc++ -lgrpc
+CFLAGS += $(CGRPCFLAGS) -I$(ROOTDIR)/3rdparty -I$(ROOTDIR)/mshadow/ -I$(ROOTDIR)/dmlc-core/include -fPIC -I$(NNVM_PATH)/include -I$(DLPACK_PATH)/include -Iinclude $(MSHADOW_CFLAGS) -Isrc/
+LDFLAGS = -pthread $(MSHADOW_LDFLAGS) $(DMLC_LDFLAGS) $(LDGRPCFLAGS) -lnvToolsExt
 ifeq ($(DEBUG), 1)
-	NVCCFLAGS += -std=c++11 -Xcompiler -D_FORCE_INLINES -g -G -O0 -ccbin $(CXX) $(MSHADOW_NVCCFLAGS)
+	NVCCFLAGS += -DFMT_HEADER_ONLY=1 -std=c++14 -Xcompiler -D_FORCE_INLINES -g -G -O0 -ccbin $(CXX) $(MSHADOW_NVCCFLAGS)
 else
-	NVCCFLAGS += -std=c++11 -Xcompiler -D_FORCE_INLINES -O3 -ccbin $(CXX) $(MSHADOW_NVCCFLAGS)
+	NVCCFLAGS += -DFMT_HEADER_ONLY=1 -std=c++14 -Xcompiler -D_FORCE_INLINES -O3 -ccbin $(CXX) $(MSHADOW_NVCCFLAGS)
 endif
 
 # CFLAGS for profiler
@@ -115,10 +121,12 @@ endif
 ifeq ($(USE_OPENCV), 1)
 	CFLAGS += -DMXNET_USE_OPENCV=1 $(shell pkg-config --cflags opencv)
 	LDFLAGS += $(filter-out -lopencv_ts, $(shell pkg-config --libs opencv))
-	BIN += bin/im2rec
 else
 	CFLAGS+= -DMXNET_USE_OPENCV=0
 endif
+
+
+BIN += bin/uprd
 
 ifeq ($(USE_OPENMP), 1)
 	ifneq ($(UNAME_S), Darwin)
@@ -206,7 +214,7 @@ ifeq ($(USE_GPERFTOOLS), 1)
 		endif
 	endif
 	ifeq ($(USE_GPERFTOOLS), 1)
-		CFLAGS += -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free
+		CFLAGS += -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free 
 		LDFLAGS += $(FIND_LIBFILE)
 	endif
 endif
@@ -391,7 +399,7 @@ ALLX_DEP= $(ALL_DEP)
 
 build/src/%.o: src/%.cc
 	@mkdir -p $(@D)
-	$(CXX) -std=c++11 -c $(CFLAGS) -MMD -c $< -o $@
+	$(CXX) -std=c++14 -c $(CFLAGS) -MMD -c $< -o $@
 
 build/src/%_gpu.o: src/%.cu
 	@mkdir -p $(@D)
@@ -444,11 +452,11 @@ NNVM_SRC = $(wildcard $(NNVM_PATH)/src/*/*/*.cc $(NNVM_PATH)/src/*/*.cc $(NNVM_P
 $(NNVM_PATH)/lib/libnnvm.a: $(NNVM_INC) $(NNVM_SRC)
 	+ cd $(NNVM_PATH); $(MAKE) lib/libnnvm.a DMLC_CORE_PATH=$(DMLC_CORE); cd $(ROOTDIR)
 
-bin/im2rec: tools/im2rec.cc $(ALLX_DEP)
+bin/uprd: tools/uprd.cc lib/libmxnet.so 
 
 $(BIN) :
 	@mkdir -p $(@D)
-	$(CXX) $(CFLAGS) -std=c++11  -o $@ $(filter %.cpp %.o %.c %.a %.cc, $^) $(LDFLAGS)
+	$(CXX) $(CFLAGS) -std=c++14  -o $@ $(filter %.cpp %.o %.c %.a %.cc, $^) $(LDFLAGS) lib/libmxnet.so -I include -I src/c_api -I src/
 
 # CPP Package
 ifeq ($(USE_CPP_PACKAGE), 1)
@@ -520,6 +528,7 @@ rpkg:
 	Rscript -e "require(roxygen2); roxygen2::roxygenise('R-package')"
 	R CMD INSTALL R-package
 	rm -rf R-package/src/image_recordio.h
+
 
 rpkgtest:
 	Rscript -e "require(testthat);res<-test_dir('R-package/tests/testthat');if(!testthat:::all_passed(res)){stop('Test failures', call. = FALSE)}"
