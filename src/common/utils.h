@@ -367,9 +367,7 @@ inline std::string dev_type_string(const int dev_type) {
     return "cpu_pinned";
   case Context::kCPUShared:
     return "cpu_shared";
-  case Context::kGPUShared:
-    return "gpu_shared";
-  }
+ }
   return "unknown";
 }
 

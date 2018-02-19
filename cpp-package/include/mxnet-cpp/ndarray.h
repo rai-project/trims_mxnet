@@ -38,7 +38,7 @@
 namespace mxnet {
 namespace cpp {
 
-enum DeviceType { kCPU = 1, kGPU = 2, kCPUPinned = 3, kGPUShared = 11 };
+enum DeviceType { kCPU = 1, kGPU = 2, kCPUPinned = 3 };
 
 /*!
  * \brief Context interface

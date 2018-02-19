@@ -111,10 +111,6 @@ OprExecStat *Profiler::AddOprStat(int dev_type, uint32_t dev_id) {
   case Context::kCPUPinned:
     idx = cpu_num_ + gpu_num_;
     break;
-  case Context::kGPUShared:
-    idx = cpu_num_ + gpu_num_ + dev_id;
-    LOG(INFO) << "context idx = " << idx;
-    break;
   default:
     LOG(FATAL) << "Unknown dev_type: " << dev_type;
     return NULL;

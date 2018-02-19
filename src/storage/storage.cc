@@ -60,8 +60,7 @@ private:
     case Context::kCPUShared:
       break;
     case Context::kGPU:
-    case Context::kCPUPinned:
-    case Context::kGPUShared: {
+    case Context::kCPUPinned: {
 #if MXNET_USE_CUDA
       if (num_gpu_device > 0) {
         CUDA_CALL(cudaSetDevice(ctx.real_dev_id()));
@@ -127,24 +126,6 @@ void StorageImpl::Alloc(Storage::Handle *handle) {
           }
 #else
             LOG(FATAL) << "Compile with USE_CUDA=1 to enable GPU usage";
-#endif // MXNET_USE_CUDA
-          break;
-        }
-        case Context::kGPUShared: {
-#if MXNET_USE_CUDA
-          num_gpu_device = 0;
-          cudaError_t e = cudaGetDeviceCount(&num_gpu_device);
-          if (e != cudaSuccess) {
-            num_gpu_device = 0;
-          }
-          if (num_gpu_device > 0) {
-            ptr = new storage::NaiveStorageManager<
-                storage::GPUSharedMemoryStorage>();
-          } else {
-            assert(false && "no cuda devices found");
-          }
-#else
-#error "invalid context. Please compile with MXNET_USE_CUDA=1"
 #endif // MXNET_USE_CUDA
           break;
         }

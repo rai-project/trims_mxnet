@@ -147,7 +147,6 @@ struct Context {
     kGPU = gpu::kDevMask,
     kCPUPinned = 3,
     kCPUShared = 5,
-    kGPUShared = 11,
   };
   /*! \brief the device type we run the op on */
   DeviceType dev_type;
@@ -349,8 +348,6 @@ inline std::ostream &operator<<(std::ostream &out, const Context &ctx) {
     out << "cpu_pinned(";
   } else if (ctx.dev_type == Context::kCPUShared) {
     out << "cpu_shared(";
-  } else if (ctx.dev_type == Context::kGPUShared) {
-    out << "gpu_shared(";
   } else {
     out << "unknown(";
   }
