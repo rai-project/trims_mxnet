@@ -95,6 +95,7 @@ void Profiler::SetConfig(ProfilerMode mode, std::string output_filename) {
 
 OprExecStat *Profiler::AddOprStat(int dev_type, uint32_t dev_id) {
   std::unique_ptr<OprExecStat> opr_stat(new OprExecStat);
+  opr_stat->category = 0;
   opr_stat->dev_type = dev_type;
   opr_stat->dev_id = dev_id;
   opr_stat->opr_name[sizeof(opr_stat->opr_name) - 1] = '\0';
@@ -213,11 +214,32 @@ inline uint64_t NowInUsec() {
 #endif
 }
 
+void AddOprMetadata(OprExecStat *opr_stat, const std::string & key, const std::string & value) {
+    opr_stat->metadata.insert({key, value});
+}
+
+void SetOprCategory(OprExecStat *opr_stat, int category) {
+    opr_stat->category = category;
+}
+
 void SetOprStart(OprExecStat *opr_stat) {
   if (!opr_stat) {
     LOG(WARNING) << "SetOpStart: nullptr";
     return;
   }
+
+  const auto name = opr_stat->opr_name;
+    int color_id = opr_stat->category;                                                        
+    color_id = color_id % num_colors;                                          
+    nvtxEventAttributes_t eventAttrib = {0};                                   
+    eventAttrib.version = NVTX_VERSION;                                        
+    eventAttrib.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE;                          
+    eventAttrib.colorType = NVTX_COLOR_ARGB;                                   
+    eventAttrib.color = colors[color_id];                                      
+    eventAttrib.messageType = NVTX_MESSAGE_TYPE_ASCII;                         
+    eventAttrib.message.ascii = name;                                          
+
+  opr_stat->range_id = nvtxRangeStartEx(&eventAttrib);
   opr_stat->opr_start_rel_micros = NowInUsec() - Profiler::Get()->GetInitTime();
 }
 
@@ -227,6 +249,7 @@ void SetOprEnd(OprExecStat *opr_stat) {
     return;
   }
   opr_stat->opr_end_rel_micros = NowInUsec() - Profiler::Get()->GetInitTime();
+  nvtxRangeEnd(opr_stat->range_id);
 }
 
 } // namespace engine

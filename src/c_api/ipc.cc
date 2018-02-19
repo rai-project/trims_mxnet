@@ -53,7 +53,7 @@ static void *get_device_ptr(const Layer &layer) {
             << "get base64 handle = " << utils::base64_encode(ipc_handle);
 
 
-    auto span= start_span("performing cudaIpcOpenMemHandle for "s + layer.name() );
+    auto span= start_span("performing cudaIpcOpenMemHandle for "s + layer.name() , span_category_ipc);
     defer(stop_span(span));
 
   // LOG(INFO) << "open cuda mem handle = " << handle;
@@ -87,7 +87,7 @@ static void *get_device_ptr(const Layer &layer) {
 static NDArray to_ndarray(const Layer &layer) {
   const auto ctx = get_ctx();
 
-    auto span= start_span("convering "s + layer.name() +  " to  nd_array"s);
+    auto span= start_span("convering "s + layer.name() +  " to  nd_array"s, span_category_serialization);
     defer(stop_span(span));
 
   const auto shape = to_shape(layer.shape());
@@ -99,7 +99,7 @@ static NDArray to_ndarray(const Layer &layer) {
 
   auto device_ptr = get_device_ptr(layer);
 
-    auto span_creating = start_span("creating nd_array for "s + layer.name() );
+    auto span_creating = start_span("creating nd_array for "s + layer.name() , span_category_serialization);
     defer(stop_span(span_creating));
 
   TBlob blob(device_ptr, shape, dev_mask, dev_id);
@@ -140,7 +140,7 @@ struct client {
       Model reply;
       ClientContext context;
 
-      auto span = start_span("grpc info");
+      auto span = start_span("grpc info", span_category_grpc);
       defer(stop_span(span));
 
       const auto status = stub_->Info(&context, request, &reply);
@@ -163,7 +163,7 @@ struct client {
       ModelHandle reply;
       ClientContext context;
 
-      auto span = start_span("grpc open");
+      auto span = start_span("grpc open", span_category_grpc);
       defer(stop_span(span));
 
       const auto status = stub_->Open(&context, request, &reply);
@@ -186,7 +186,7 @@ struct client {
       Void reply;
       ClientContext context;
 
-      auto span = start_span("grpc close");
+      auto span = start_span("grpc close", span_category_grpc);
       defer(stop_span(span));
 
       const auto status = stub_->Close(&context, request, &reply);
@@ -205,7 +205,7 @@ struct client {
 
   static void Load(std::string model_name, std::vector<NDArray> *res_arrays,
                    std::vector<std::string> *res_keys) {
-    auto span_loading = start_span("loading nd_array");
+    auto span_loading = start_span("loading nd_array", span_category_load);
     defer(stop_span(span_loading));
 
     RegistryClient client(grpc::CreateChannel(
@@ -215,7 +215,7 @@ struct client {
 
     LOG(INFO) << "Client received open reply: " << open_reply.id();
 
-    auto span_converting = start_span("convering to nd_array");
+    auto span_converting = start_span("convering to nd_array", span_category_serialization);
     defer(stop_span(span_converting));
     const auto arrays_keys = to_ndarrays(open_reply);
 

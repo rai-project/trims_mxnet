@@ -71,6 +71,7 @@ static std::map<std::string, std::string> model_directory_paths{
     {"squeezenetv1.1", CARML_HOME_BASE_DIR + "squeezenetv1.1"},
     {"vgg16", CARML_HOME_BASE_DIR + "vgg16"}};
 
+
 /**
  * @brief Ensures the CUDA runtime has fully initialized
  *
@@ -90,7 +91,13 @@ static Context get_ctx() {
   return ctx;
 }
 
-static engine::OprExecStat *start_span(const std::string &name) {
+static int span_category_init = 5;
+static int span_category_load = 6;
+static int span_category_serialization = 7;
+static int span_category_ipc = 8;
+static int span_category_grpc = 9;
+
+static engine::OprExecStat *start_span(const std::string &name, int category = 0) {
 #if MXNET_USE_PROFILER
   const auto ctx = get_ctx();
   auto opr_stat = engine::Profiler::Get()->AddOprStat(ctx.dev_type, ctx.dev_id);
@@ -98,6 +105,7 @@ static engine::OprExecStat *start_span(const std::string &name) {
   opr_stat->thread_id = tid;
   strncpy(opr_stat->opr_name, name.c_str(), name.size());
   opr_stat->opr_name[name.size()] = '\0';
+  engine::SetOprCategory(opr_stat, category);
   engine::SetOprStart(opr_stat);
   return opr_stat;
 #else

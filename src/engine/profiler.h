@@ -32,6 +32,8 @@
 #include <string>
 #include <vector>
 
+#include "./nvtools.h"
+
 namespace mxnet {
 namespace engine {
 
@@ -39,6 +41,7 @@ namespace engine {
  * \brief Operation execution statistics
  */
 struct OprExecStat {
+  int category;
   /*! \brief operation name */
   char opr_name[256];
   /*!
@@ -61,6 +64,7 @@ struct OprExecStat {
   /*! \brief device id */
   uint32_t dev_id;
 
+  nvtxRangeId_t range_id;
   std::map<std::string, std::string> metadata;
 };
 
@@ -155,6 +159,8 @@ private:
 
 /*! \return current clock time, time unit is microsecond (10^-6 s) */
 inline uint64_t NowInUsec();
+void AddOprMetadata(OprExecStat *opr_stat, const std::string & key, const std::string & value);
+void SetOprCategory(OprExecStat *opr_stat, int category);
 /*! \brief set operation execution start timestamp */
 void SetOprStart(OprExecStat *opr_stat);
 /*! \brief set operation execution end timestamp */
