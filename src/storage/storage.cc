@@ -60,7 +60,14 @@ private:
     case Context::kCPUShared:
       break;
     case Context::kGPU:
-    case Context::kCPUPinned:
+    case Context::kCPUPinned: {
+#if MXNET_USE_CUDA
+        if (num_gpu_device > 0) {
+            CUDA_CALL(cudaSetDevice(ctx.real_dev_id()));
+        }
+#endif // MXNET_USE_CUDA
+        break;
+    }
     default:
       LOG(FATAL) << "Unimplemented device";
     }
