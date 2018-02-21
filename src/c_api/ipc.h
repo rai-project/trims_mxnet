@@ -60,9 +60,10 @@ static std::ostream &operator<<(std::ostream &os,
 namespace upr {
 using namespace mxnet;
 
+static const auto HOME = dmlc::GetEnv("HOME", std::string("/home/abduld"));
 static const auto IPC_HANDLES_BASE_PATH = std::string("/tmp/persistent");
 static const auto CARML_HOME_BASE_DIR =
-    std::string("/home/abduld/carml/data/mxnet/");
+    HOME + std::string("/carml/data/mxnet/");
 
 static std::map<std::string, std::string> model_directory_paths{
     {"alexnet", CARML_HOME_BASE_DIR + "alexnet"},

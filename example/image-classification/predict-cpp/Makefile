@@ -8,7 +8,7 @@ CFLAGS=-std=c++14
 # LDFLAGS=-L${OPENBLAS_ROOT}/lib -lopenblas
 
 # Added for opencv
-CFLAGS+= `pkg-config --cflags opencv`
+CFLAGS+=`pkg-config --cflags opencv`
 LDFLAGS+=`pkg-config --libs opencv`
 
 # Added for mxnet
@@ -20,16 +20,21 @@ CFLAGS+=-I$(MXNET_ROOT)/dlpack/include -I$(MXNET_ROOT)/dmlc-core/include
 CFLAGS+=-I$(MXNET_ROOT)/3rdparty
 CFLAGS+=-I/usr/local/cuda
 CFLAGS+=-DMSHADOW_USE_CBLAS
+CFLAGS+=-DUSE_SSE=0
+CFLAGS+=-DMSHADOW_USE_SSE=0
+CFLAGS+=-DFMT_HEADER_ONLY=1
+CFLAGS+=-DUSE_OPENMP=0
 LDFLAGS+=$(MXNET_ROOT)/lib/libmxnet.so
 
 image-classification-predict: image-classification-predict.o
 	nvcc -O0 -g -o image-classification-predict image-classification-predict.o $(LDFLAGS)
 
 image-classification-predict.o: image-classification-predict.cc
-	nvcc -O0 -g -c image-classification-predict.cc ${CFLAGS}
+	echo "CFLAGS = " $CFLAGS
+	nvcc -O0 -g -c image-classification-predict.cc $(CFLAGS)
 	
 clean: 
-	rm image-classification-predict
+	rm -f image-classification-predict
 	rm -f *.d *.o
 
 lint:
