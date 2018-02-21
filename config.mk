@@ -223,10 +223,13 @@ USE_PROFILER=1
 
 
 # whether compile with options for MXNet developer
-DEV = 1
+DEV = 0
 
 # whether compile with debug
+<<<<<<< HEAD
 DEBUG = 1
 
+DEBUG = 0
+USE_GLOG=1
 USE_OPERATOR_TUNING = 0
-USE_GLOG=0
+USE_OPENMP = 0

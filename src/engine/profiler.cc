@@ -63,8 +63,8 @@ Profiler::Profiler()
   profile_stat[cpu_num_ + gpu_num_].dev_name_ = "cpu pinned/";
 
   mode_ = (ProfilerMode)dmlc::GetEnv("MXNET_PROFILER_MODE",
-                                     static_cast<int>(kOnlySymbolic));
-  if (dmlc::GetEnv("MXNET_PROFILER_AUTOSTART", 0)) {
+                                     static_cast<int>(kAllOperator));
+  if (dmlc::GetEnv("MXNET_PROFILER_AUTOSTART", 1)) {
     this->state_ = ProfilerState::kRunning;
     this->enable_output_ = true;
   }
@@ -235,17 +235,13 @@ void SetOprStart(OprExecStat *opr_stat) {
     eventAttrib.messageType = NVTX_MESSAGE_TYPE_ASCII;                         
     eventAttrib.message.ascii = name;                                          
 
-  opr_stat->range_id = nvtxRangeStartEx(&eventAttrib);
   opr_stat->opr_start_rel_micros = NowInUsec() - Profiler::Get()->GetInitTime();
+  opr_stat->range_id = nvtxRangeStartEx(&eventAttrib);
 }
 
 void SetOprEnd(OprExecStat *opr_stat) {
-  if (!opr_stat) {
-    LOG(WARNING) << "SetOpEnd: nullptr";
-    return;
-  }
-  opr_stat->opr_end_rel_micros = NowInUsec() - Profiler::Get()->GetInitTime();
   nvtxRangeEnd(opr_stat->range_id);
+  opr_stat->opr_end_rel_micros = NowInUsec() - Profiler::Get()->GetInitTime();
 }
 
 } // namespace engine
