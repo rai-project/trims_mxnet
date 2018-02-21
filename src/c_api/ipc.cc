@@ -120,7 +120,6 @@ to_ndarrays(const ModelHandle &reply) {
   for (const auto layer : layers) {
     keys.emplace_back(layer.name());
     arrays.emplace_back(to_ndarray(layer));
-    break;
   }
 
   LOG(INFO) << "finished nd_array conversion";
