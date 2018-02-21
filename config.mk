@@ -227,3 +227,6 @@ DEV = 1
 
 # whether compile with debug
 DEBUG = 1
+
+USE_OPERATOR_TUNING = 0
+USE_GLOG=0
