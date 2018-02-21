@@ -402,7 +402,6 @@ void RunServer() {
 }
 
 int main(int argc, const char *argv[]) {
-std::cout << "fda" << "\n";
   dmlc::InitLogging(argv[0]);
   int version = 0;
   const auto err = MXGetVersion(&version);
