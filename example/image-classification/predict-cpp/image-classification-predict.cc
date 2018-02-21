@@ -142,7 +142,7 @@ void PrintOutputResult(const std::vector<float> &data,
   int best_idx = 0;
 
   for (int i = 0; i < static_cast<int>(data.size()); i++) {
-    printf("Accuracy[%d] = %.8f\n", i, data[i]);
+    /* printf("Accuracy[%d] = %.8f\n", i, data[i]); */
 
     if (data[i] > best_accuracy) {
       best_accuracy = data[i];
@@ -178,6 +178,8 @@ int main(int argc, char *argv[]) {
   std::string param_file = get_model_params_path();
   std::string synset_file = get_synset_path();
 
+  printf("Predict using model %s\n", model_name.c_str());
+
   BufferFile json_data(json_file);
   BufferFile param_data(param_file);
 
@@ -206,7 +208,7 @@ int main(int argc, char *argv[]) {
   const std::string filename{"profile"};
   MXSetProfilerConfig(1, filename.c_str());
 
-  // Stope profiling
+  // Start profiling
   MXSetProfilerState(1);
 
   // Create Predictor
@@ -248,7 +250,7 @@ int main(int argc, char *argv[]) {
   // Release Predictor
   MXPredFree(pred_hnd);
 
-  // Stope profiling
+  // Stop profiling
   MXSetProfilerState(0);
 
   // // Synset path for your model, you have to modify it
