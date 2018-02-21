@@ -91,7 +91,7 @@ LDGRPCFLAGS = `pkg-config --libs protobuf grpc++ grpc`
 # CGRPCFLAGS = -pthread -I/home/linuxbrew/.linuxbrew/Cellar/protobuf/3.5.1/include -I/home/linuxbrew/.linuxbrew/Cellar/grpc/1.9.0/include
 # LDGRPCFLAGS = -L/home/linuxbrew/.linuxbrew/Cellar/protobuf/3.5.1/lib -L/home/linuxbrew/.linuxbrew/Cellar/grpc/1.9.0/lib -lprotobuf -pthread -lpthread -lgrpc++ -lgrpc
 CFLAGS += $(CGRPCFLAGS) -I$(ROOTDIR)/3rdparty -I$(ROOTDIR)/mshadow/ -I$(ROOTDIR)/dmlc-core/include -fPIC -I$(NNVM_PATH)/include -I$(DLPACK_PATH)/include -Iinclude $(MSHADOW_CFLAGS) -Isrc/
-LDFLAGS = -pthread $(MSHADOW_LDFLAGS) $(DMLC_LDFLAGS) $(LDGRPCFLAGS) -lnvToolsExt
+LDFLAGS = -pthread $(MSHADOW_LDFLAGS) $(DMLC_LDFLAGS) $(LDGRPCFLAGS) -lnvToolsExt -lbfd
 ifeq ($(DEBUG), 1)
 	NVCCFLAGS += -DFMT_HEADER_ONLY=1 -std=c++14 -Xcompiler -D_FORCE_INLINES -g -G -O0 -ccbin $(CXX) $(MSHADOW_NVCCFLAGS)
 else

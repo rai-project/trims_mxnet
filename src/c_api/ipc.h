@@ -30,6 +30,18 @@
 #include "fmt/format.h"
 #include "prettyprint.hpp"
 
+// - apt-get install binutils-dev ...
+// - g++/clang++ -lbfd ...
+#define BACKWARD_HAS_BFD 1
+
+#include "backward.hpp"
+
+namespace backward {
+
+backward::SignalHandling sh;
+
+} // namespace backward
+
 #define BYTE 1
 #define KBYTE 1024 * BYTE
 #define MBYTE 1024 * KBYTE
@@ -61,6 +73,7 @@ namespace upr {
 using namespace mxnet;
 
 static const auto HOME = dmlc::GetEnv("HOME", std::string("/home/abduld"));
+static const auto is_client = dmlc::GetEnv("UPR_CLIENT", false);
 static const auto IPC_HANDLES_BASE_PATH = std::string("/tmp/persistent");
 static const auto CARML_HOME_BASE_DIR =
     HOME + std::string("/carml/data/mxnet/");
