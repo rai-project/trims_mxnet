@@ -66,7 +66,7 @@ static void *get_device_ptr(const Layer &layer) {
   return device_ptr;
 }
 
-static void to_ndarray(std::vector<NDArray> * darrays, const Layer &layer) {
+static void to_ndarray(std::vector<NDArray> *arrays, const Layer &layer) {
   const auto ctx = get_ctx();
 
     auto span= start_span("convering "s + layer.name() +  " to  nd_array"s, span_category_serialization);
@@ -85,15 +85,13 @@ static void to_ndarray(std::vector<NDArray> * darrays, const Layer &layer) {
     defer(stop_span(span_creating));
 
   TBlob blob(device_ptr, shape, dev_mask, dev_id);
-  arrays->emplace_back(array(blob, dev_id));
+  /* NDArray array(blob, dev_id); */
+  arrays->emplace_back(blob, dev_id);
 
   return ;
 }
 static void
-to_ndarrays(std::vector<NDArray> arrays, std::vector<std::string> keys, const ModelHandle &reply) {
-  std::vector<NDArray> arrays{};
-  std::vector<std::string> keys{};
-
+to_ndarrays(std::vector<NDArray> *arrays, std::vector<std::string> *keys, const ModelHandle &reply) {
   const auto layers = reply.layer();
 
   LOG(INFO) << "got " << layers.size()
@@ -106,7 +104,7 @@ to_ndarrays(std::vector<NDArray> arrays, std::vector<std::string> keys, const Mo
 
   LOG(INFO) << "finished nd_array conversion";
 
-  return std::make_tuple(arrays, keys);
+  return ;
 }
 
 struct client {
