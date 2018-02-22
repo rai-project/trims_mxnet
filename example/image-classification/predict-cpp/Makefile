@@ -9,7 +9,7 @@ CFLAGS=-std=c++14
 
 # Added for opencv
 CFLAGS+=`pkg-config --cflags opencv`
-LDFLAGS+=`pkg-config --libs opencv`
+LDFLAGS+=`pkg-config --libs opencv` -lglog
 
 # Added for mxnet
 export MXNET_ROOT=`pwd`/../../../../mxnet-mirror
@@ -30,7 +30,7 @@ image-classification-predict: image-classification-predict.o
 	nvcc -O0 -g -o image-classification-predict image-classification-predict.o $(LDFLAGS)
 
 image-classification-predict.o: image-classification-predict.cc
-	echo "CFLAGS = " $CFLAGS
+	echo "CFLAGS = " $(CFLAGS)
 	nvcc -O0 -g -c image-classification-predict.cc $(CFLAGS)
 	
 clean: 
