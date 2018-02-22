@@ -20,10 +20,10 @@ CFLAGS+=-DMSHADOW_USE_CBLAS
 LDFLAGS+=$(MXNET_ROOT)/lib/libmxnet.so
 
 test: test.o
-	nvcc -O0 -g -o test test.o $(LDFLAGS)
+	nvcc -O3 -o test test.o $(LDFLAGS)
 
 test.o: test.cc
-	nvcc -O0 -g -c test.cc ${CFLAGS}
+	nvcc -O3 -c test.cc ${CFLAGS}
 	
 clean: 
 	rm test

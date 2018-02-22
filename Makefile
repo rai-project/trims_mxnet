@@ -104,9 +104,7 @@ ifeq ($(USE_PROFILER), 1)
 endif
 
 # CFLAGS for segfault logger
-ifeq ($(USE_SIGNAL_HANDLER), 1)
-	CFLAGS += -DMXNET_USE_SIGNAL_HANDLER=1
-endif
+CFLAGS += -DMXNET_USE_SIGNAL_HANDLER=1 -DDMLC_LOG_STACK_TRACE=1
 
 # Caffe Plugin
 ifdef CAFFE_PATH
