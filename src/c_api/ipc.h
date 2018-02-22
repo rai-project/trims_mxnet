@@ -36,12 +36,6 @@
 
 #include "backward.hpp"
 
-namespace backward {
-
-backward::SignalHandling sh;
-
-} // namespace backward
-
 #define BYTE 1
 #define KBYTE 1024 * BYTE
 #define MBYTE 1024 * KBYTE
