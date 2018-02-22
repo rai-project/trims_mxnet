@@ -224,7 +224,7 @@ void SetOprStart(OprExecStat *opr_stat) {
     return;
   }
 
-#ifdef MXNET_USE_CUDA
+#if MXNET_USE_CUDA
   const auto name = opr_stat->opr_name;
     int color_id = opr_stat->category;                                                        
     color_id = color_id % num_colors;                                          
@@ -238,13 +238,13 @@ void SetOprStart(OprExecStat *opr_stat) {
 #endif
 
   opr_stat->opr_start_rel_micros = NowInUsec() - Profiler::Get()->GetInitTime();
-#ifdef MXNET_USE_CUDA
+#if MXNET_USE_CUDA
   opr_stat->range_id = nvtxRangeStartEx(&eventAttrib);
 #endif
 }
 
 void SetOprEnd(OprExecStat *opr_stat) {
-#ifdef MXNET_USE_CUDA
+#if MXNET_USE_CUDA
   nvtxRangeEnd(opr_stat->range_id);
 #endif
   opr_stat->opr_end_rel_micros = NowInUsec() - Profiler::Get()->GetInitTime();
