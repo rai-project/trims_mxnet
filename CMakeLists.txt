@@ -13,8 +13,8 @@ mxnet_option(USE_OLDCMAKECUDA           "Build with old cmake cuda" OFF)
 if(USE_CUDA)
   add_definitions(-DMSHADOW_USE_CUDA=1)
   IF(FIRST_CUDA AND (NOT USE_OLDCMAKECUDA))
-    set(__cuda_toolset "7.5" "8.0" "9.0")
-    set(CUDA_TOOLSET "9.0" CACHE STRING "Select CUDA Version.")
+    set(__cuda_toolset "7.5" "8.0" "9.1")
+    set(CUDA_TOOLSET "9.1" CACHE STRING "Select CUDA Version.")
     set_property( CACHE CUDA_TOOLSET PROPERTY STRINGS "" ${__cuda_toolset} )
     set(CMAKE_GENERATOR_TOOLSET "cuda=${CUDA_TOOLSET},host=x64")
     project(mxnet C CXX CUDA)
@@ -570,10 +570,8 @@ if(USE_PLUGINS_WARPCTC)
 endif()
 
 
-if(USE_OPENCV)
-  add_executable(im2rec "tools/im2rec.cc")
-  target_link_libraries(im2rec ${BEGIN_WHOLE_ARCHIVE} mxnet ${END_WHOLE_ARCHIVE} ${mxnet_LINKER_LIBS} ${OpenCV_LIBS} dmlc)
-endif()
+add_executable(uprd "tools/uprd.cc")
+target_link_libraries(uprd ${BEGIN_WHOLE_ARCHIVE} mxnet ${END_WHOLE_ARCHIVE} ${mxnet_LINKER_LIBS} ${OpenCV_LIBS} dmlc)
 
 target_link_libraries(mxnet PUBLIC dmlc)
 
