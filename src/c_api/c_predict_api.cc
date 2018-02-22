@@ -137,7 +137,11 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
     LOG(INFO) << "UPR:: loading model...";
 
     const auto model_name = upr::get_model_name();
+#ifdef MXNET_USE_CUDA
     upr::Load(std::string(model_name), &data, &names);
+#else
+   LOG(FATAL) << "enable USE_CUDA in the makefile to use the upr path";
+#endif
     CHECK_EQ(names.size(), data.size()) << "Invalid param file format";
     for (size_t i = 0; i < names.size(); ++i) {
       if (!strncmp(names[i].c_str(), "aux:", 4)) {
