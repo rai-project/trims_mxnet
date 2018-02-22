@@ -93,7 +93,7 @@ class NDArray {
    */
   NDArray(const TShape &shape, Context ctx,
           bool delay_alloc = false, int dtype = mshadow::default_type_flag)
-      : ptr_(std::make_shared<Chunk>(shape, ctx, delay_alloc, dtype)),
+      : ptr_(new Chunk(shape, ctx, delay_alloc, dtype)),
         shape_(shape), dtype_(dtype), storage_type_(kDefaultStorage),
         entry_({nullptr, 0, 0}) {
 #if MKL_EXPERIMENTAL == 1
@@ -140,7 +140,7 @@ class NDArray {
           LOG(FATAL) << "Unknown storage type " << stype;
         }
       }
-      ptr_ = std::make_shared<Chunk>(stype, storage_shape, ctx, delay_alloc,
+      ptr_ = new Chunk(stype, storage_shape, ctx, delay_alloc,
                                      dtype, aux_types, aux_shapes);
 #if MKL_EXPERIMENTAL == 1
       Mkl_mem_ = std::make_shared<MKLMemHolder>();
@@ -154,7 +154,7 @@ class NDArray {
    * \param dev_id the device id this tensor sits at
    */
   NDArray(const TBlob &data, int dev_id)
-      : ptr_(std::make_shared<Chunk>(data, dev_id)), shape_(data.shape_),
+      : ptr_(new Chunk(data, dev_id)), shape_(data.shape_),
         dtype_(data.type_flag_), storage_type_(kDefaultStorage),
         entry_({nullptr, 0, 0}) {
 #if MKL_EXPERIMENTAL == 1
@@ -163,7 +163,7 @@ class NDArray {
   }
   /*! \brief create ndarray from shared memory */
   NDArray(int shared_pid, int shared_id, const TShape& shape, int dtype)
-      : ptr_(std::make_shared<Chunk>(shared_pid, shared_id, shape, dtype)), shape_(shape),
+      : ptr_(new Chunk(shared_pid, shared_id, shape, dtype)), shape_(shape),
         dtype_(dtype), storage_type_(kDefaultStorage), entry_({nullptr, 0, 0}) {
 #if MKL_EXPERIMENTAL == 1
     Mkl_mem_ = std::make_shared<MKLMemHolder>();
@@ -182,7 +182,7 @@ class NDArray {
    */
   NDArray(const NDArrayStorageType stype, const TShape &shape,
           const TBlob &data, const std::vector<TBlob> &aux_data, int dev_id)
-      : ptr_(std::make_shared<Chunk>(stype, data, aux_data, dev_id)), shape_(shape),
+      : ptr_(new Chunk(stype, data, aux_data, dev_id)), shape_(shape),
         dtype_(data.type_flag_), storage_type_(stype), entry_({nullptr, 0, 0}) {
 #if MKL_EXPERIMENTAL == 1
     Mkl_mem_ = std::make_shared<MKLMemHolder>();
@@ -299,7 +299,7 @@ class NDArray {
   }
   /*! \return whether this ndarray is not initialized */
   inline bool is_none() const {
-    return ptr_.get() == nullptr;
+    return ptr_ == nullptr;
   }
   /*! \return updated grad state in entry_ */
   bool fresh_out_grad() const;
@@ -902,7 +902,7 @@ class NDArray {
   std::shared_ptr<MKLMemHolder> Mkl_mem_;
 #endif
   /*! \brief internal data of NDArray */
-  std::shared_ptr<Chunk> ptr_{nullptr};
+  Chunk * ptr_{nullptr};
   /*! \brief shape of current NDArray */
   TShape shape_;
   /*! \brief byte offset in chunk */

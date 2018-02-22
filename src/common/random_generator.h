@@ -156,7 +156,7 @@ class RandGenerator<gpu, DType> {
   }
 
   static void FreeState(RandGenerator<gpu, DType> *inst) {
-    CUDA_CALL(cudaFree(inst->states_));
+    // CUDA_CALL(cudaFree(inst->states_));
   }
 
   void Seed(mshadow::Stream<gpu> *s, uint32_t seed);

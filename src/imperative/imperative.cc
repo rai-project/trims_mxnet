@@ -344,11 +344,17 @@ void Imperative::RunGraph(
     for (const auto& j : node.inputs) {
       size_t eid = idx.entry_id(j);
       --ref_count[eid];
-      if (ref_count[eid] == 0) arrays[eid]->ptr_.reset();
+      if (ref_count[eid] == 0) {
+        LOG(INFO) << "refcount for " << eid << " is zero for input node. deleting it...";
+        delete arrays[eid]->ptr_;
+      }
     }
     for (size_t j = 0; j < ndoutputs.size(); ++j) {
       size_t eid = idx.entry_id(i, j);
-      if (ref_count[eid] == 0) arrays[eid]->ptr_.reset();
+      if (ref_count[eid] == 0) {
+        LOG(INFO) << "refcount for " << eid << " is zero for ouput node. deleting it...";
+        delete arrays[eid]->ptr_;
+      }
     }
   }
 }
