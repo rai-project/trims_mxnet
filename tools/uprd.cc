@@ -400,7 +400,6 @@ void RunServer() {
 }
 
 int main(int argc, const char *argv[]) {
-  dmlc::InitLogging(argv[0]);
   int version = 0;
   const auto err = MXGetVersion(&version);
   if (err) {
