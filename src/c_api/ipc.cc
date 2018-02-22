@@ -45,9 +45,6 @@ static void *get_device_ptr(const Layer &layer) {
   }
 
   cudaIpcMemHandle_t handle;
-  // memcpy((uint8_t *)&handle, ipc_handle.c_str(), sizeof(handle));
-  // memcpy((uint8_t *)&handle, utils::base64_decode(ipc_handle).c_str(),
-  // sizeof(handle));
   memcpy((uint8_t *)&handle, ipc_handle.c_str(), sizeof(handle));
 
   LOG(INFO) << "get handle = " << handle
@@ -59,33 +56,17 @@ static void *get_device_ptr(const Layer &layer) {
 
   // LOG(INFO) << "open cuda mem handle = " << handle;
   void *device_ptr;
-#if 1
   CUDA_CHECK_CALL(cudaIpcOpenMemHandle((void **)&device_ptr, handle,
                                        cudaIpcMemLazyEnablePeerAccess),
                   fmt::format("failed to open cuda ipc mem handle from {}",
                               utils::base64_encode(ipc_handle)));
-#else
-
-  cudaIpcOpenMemHandle((void **)&device_ptr, handle,
-                       cudaIpcMemLazyEnablePeerAccess),
-#endif
+                              
   LOG(INFO) << "get device_ptr = " << device_ptr;
 
-#if 0
-  LOG(INFO) << "doing cudamemcpy using the layer " << layer.name();
-  char buf[5];
-  memset(buf, 0, 5);
-  CUDA_CHECK_CALL(cudaMemcpy(buf, device_ptr, 5, cudaMemcpyDeviceToHost),
-                  "cuda memcpy failed");
-  for (int ii = 0; ii < 5; ii++) {
-    LOG(INFO) << "for cuda memcpy at " << ii << " got the value "
-              << (int)buf[ii];
-  }
-#endif
   return device_ptr;
 }
 
-static NDArray to_ndarray(const Layer &layer) {
+static void to_ndarray(std::vector<NDArray> * darrays, const Layer &layer) {
   const auto ctx = get_ctx();
 
     auto span= start_span("convering "s + layer.name() +  " to  nd_array"s, span_category_serialization);
@@ -104,12 +85,12 @@ static NDArray to_ndarray(const Layer &layer) {
     defer(stop_span(span_creating));
 
   TBlob blob(device_ptr, shape, dev_mask, dev_id);
-  NDArray array(blob, dev_id, /* disable_alloc = */ true);
+  arrays->emplace_back(array(blob, dev_id));
 
-  return array;
+  return ;
 }
-static std::tuple<std::vector<NDArray>, std::vector<std::string>>
-to_ndarrays(const ModelHandle &reply) {
+static void
+to_ndarrays(std::vector<NDArray> arrays, std::vector<std::string> keys, const ModelHandle &reply) {
   std::vector<NDArray> arrays{};
   std::vector<std::string> keys{};
 
@@ -119,8 +100,8 @@ to_ndarrays(const ModelHandle &reply) {
             << " layers form reply, before to_ndarray";
 
   for (const auto layer : layers) {
-    keys.emplace_back(layer.name());
-    arrays.emplace_back(to_ndarray(layer));
+    keys->emplace_back(layer.name());
+    to_ndarray(arrays, layer);
   }
 
   LOG(INFO) << "finished nd_array conversion";
@@ -218,11 +199,10 @@ struct client {
 
     auto span_converting = start_span("convering to nd_array", span_category_serialization);
     defer(stop_span(span_converting));
-    const auto arrays_keys = to_ndarrays(open_reply);
+
+    to_ndarrays(res_arrays, res_keys, open_reply);
 
     LOG(INFO) << "Loaded model " << model_name;
-    *res_arrays = std::get<0>(arrays_keys);
-    *res_keys = std::get<1>(arrays_keys);
   }
 };
 
