@@ -17,12 +17,6 @@
 
 #include "fmt/format.h"
 
-namespace backward {
-
-backward::SignalHandling sh;
-
-} // namespace backward
-
 
 using namespace mxnet;
 using namespace std::string_literals;

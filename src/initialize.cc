@@ -27,11 +27,30 @@
 #include <mxnet/engine.h>
 #include "engine/profiler.h"
 
+// - apt-get install binutils-dev ...
+// - g++/clang++ -lbfd ...
+#define BACKWARD_HAS_BFD 1
+
+#include "backward.hpp"
+
+namespace backward {
+
+backward::SignalHandling sh;
+
+} // namespace backward
+
+
 namespace mxnet {
 #if MXNET_USE_SIGNAL_HANDLER && DMLC_LOG_STACK_TRACE
 static void SegfaultLogger(int sig) {
-  fprintf(stderr, "\nSegmentation fault: %d\n\n", sig);
-  fprintf(stderr, "%s", dmlc::StackTrace().c_str());
+  using namespace backward;
+  StackTrace st; st.load_here(32);
+  std::cerr << "\nSegmentation fault: " << sig << "\n\n";
+  Printer p;
+  p.object = true;
+  p.color_mode = ColorMode::always;
+  p.address = true;
+  p.print(st, stderr);
   exit(-1);
 }
 #endif
