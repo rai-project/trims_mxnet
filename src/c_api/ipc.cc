@@ -85,7 +85,6 @@ static void to_ndarray(std::vector<NDArray> *arrays, const Layer &layer) {
     defer(stop_span(span_creating));
 
   TBlob blob(device_ptr, shape, dev_mask, dev_id);
-  /* NDArray array(blob, dev_id); */
   arrays->emplace_back(blob, dev_id);
 
   return ;

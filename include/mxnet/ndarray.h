@@ -92,8 +92,8 @@ class NDArray {
    * \param dtype data type of this ndarray
    */
   NDArray(const TShape &shape, Context ctx,
-          bool delay_alloc = false, int dtype = mshadow::default_type_flag, bool disable_alloc = false)
-      : ptr_(std::make_shared<Chunk>(shape, ctx, delay_alloc, dtype, disable_alloc)),
+          bool delay_alloc = false, int dtype = mshadow::default_type_flag)
+      : ptr_(std::make_shared<Chunk>(shape, ctx, delay_alloc, dtype)),
         shape_(shape), dtype_(dtype), storage_type_(kDefaultStorage),
         entry_({nullptr, 0, 0}) {
 #if MKL_EXPERIMENTAL == 1
@@ -105,7 +105,7 @@ class NDArray {
   NDArray(const NDArrayStorageType stype, const TShape &shape, Context ctx,
           bool delay_alloc = true, int dtype = mshadow::default_type_flag,
           std::vector<int> aux_types = {}, std::vector<TShape> aux_shapes = {},
-          TShape storage_shape = TShape(mshadow::Shape1(0)), bool disable_alloc = false)
+          TShape storage_shape = TShape(mshadow::Shape1(0)))
       : shape_(shape), dtype_(dtype), storage_type_(stype),
         entry_({nullptr, 0, 0}) {
       // Assign default aux types if not given
@@ -141,7 +141,7 @@ class NDArray {
         }
       }
       ptr_ = std::make_shared<Chunk>(stype, storage_shape, ctx, delay_alloc,
-                                     dtype, aux_types, aux_shapes, disable_alloc);
+                                     dtype, aux_types, aux_shapes);
 #if MKL_EXPERIMENTAL == 1
       Mkl_mem_ = std::make_shared<MKLMemHolder>();
 #endif
@@ -153,8 +153,8 @@ class NDArray {
    * \param data the memory content of static data
    * \param dev_id the device id this tensor sits at
    */
-  NDArray(const TBlob &data, int dev_id, bool disable_alloc = false)
-      : ptr_(std::make_shared<Chunk>(data, dev_id, disable_alloc)), shape_(data.shape_),
+  NDArray(const TBlob &data, int dev_id)
+      : ptr_(std::make_shared<Chunk>(data, dev_id)), shape_(data.shape_),
         dtype_(data.type_flag_), storage_type_(kDefaultStorage),
         entry_({nullptr, 0, 0}) {
 #if MKL_EXPERIMENTAL == 1
@@ -656,8 +656,6 @@ class NDArray {
     /*! \brief whether data allocation is delayed. This doesn't indicate whether aux data
                allocation is delayed. */
     bool delay_alloc;
-    /*! \brief whether data allocation is disabled */
-    bool disable_alloc{false};
     // the type of the storage. The storage_type is never kUndefinedStorage once the chunk
     // is constructed.
     NDArrayStorageType storage_type = kDefaultStorage;
@@ -674,21 +672,21 @@ class NDArray {
     std::vector<TShape> aux_shapes;
 
     /*! \brief default cosntructor */
-    Chunk() : static_data(true), delay_alloc(false), disable_alloc(false) {}
+    Chunk() : static_data(true), delay_alloc(false) {}
 
     /*! \brief construct a new chunk */
-    Chunk(TShape shape, Context ctx_, bool delay_alloc_, int dtype, bool disable_alloc_ = false)
-        : static_data(false), delay_alloc(delay_alloc_), ctx(ctx_), disable_alloc(disable_alloc_) {
+    Chunk(TShape shape, Context ctx_, bool delay_alloc_, int dtype)
+        : static_data(false), delay_alloc(true), ctx(ctx_) {
       auto size = shape.Size();
       storage_shape = shape;
       var = Engine::Get()->NewVariable();
       shandle.size = size * mshadow::mshadow_sizeof(dtype);
       shandle.ctx = ctx_;
-      if (!delay_alloc_ ) this->CheckAndAlloc();
+      if (!delay_alloc_) this->CheckAndAlloc();
     }
 
-    Chunk(const TBlob &data, int dev_id, bool disable_alloc_ = false)
-        : static_data(true), delay_alloc(false), disable_alloc(disable_alloc_) {
+    Chunk(const TBlob &data, int dev_id)
+        : static_data(true), delay_alloc(false) {
       CHECK(storage_type == kDefaultStorage);
       var = Engine::Get()->NewVariable();
       if (data.dev_mask() == cpu::kDevMask) {
@@ -705,7 +703,7 @@ class NDArray {
     }
 
     Chunk(int shared_pid, int shared_id, const TShape& shape, int dtype)
-        : static_data(false), delay_alloc(false), disable_alloc(false) {
+        : static_data(false), delay_alloc(false) {
       var = Engine::Get()->NewVariable();
       ctx = Context::CPUShared(0);
       shandle.size = shape.Size() * mshadow::mshadow_sizeof(dtype);;
@@ -718,10 +716,10 @@ class NDArray {
     // Constructor for a non-default storage chunk
     Chunk(NDArrayStorageType storage_type_, const TShape &storage_shape_, Context ctx_,
           bool delay_alloc_, int dtype, const std::vector<int> &aux_types_,
-          const std::vector<TShape> &aux_shapes_, bool disable_alloc_)
-        : static_data(false), delay_alloc(true), storage_type(storage_type_),
+          const std::vector<TShape> &aux_shapes_)
+        : static_data(false), delay_alloc(delay_alloc_), storage_type(storage_type_),
           aux_types(aux_types_), ctx(ctx_), storage_shape(storage_shape_),
-          aux_shapes(aux_shapes_), disable_alloc(disable_alloc_) {
+          aux_shapes(aux_shapes_) {
       shandle.ctx = ctx;
       var = Engine::Get()->NewVariable();
       // aux_handles always reflect the correct number of aux data
@@ -731,14 +729,14 @@ class NDArray {
         // aux_handles[i] will not be updated and take only default value.
         aux_handles[i].ctx = ctx;
       }
-      if (!delay_alloc ) {
+      if (!delay_alloc) {
         CheckAndAllocData(storage_shape, dtype);
       }
     }
 
     Chunk(const NDArrayStorageType storage_type_, const TBlob &data,
           const std::vector<TBlob> &aux_data, int dev_id)
-        : static_data(true), delay_alloc(false), storage_type(storage_type_), disable_alloc(false) {
+        : static_data(true), delay_alloc(false), storage_type(storage_type_) {
       using namespace mshadow;
       CHECK_NE(storage_type, kDefaultStorage);
       // init var
@@ -781,9 +779,6 @@ class NDArray {
 
     /*! \brief check if delay alloc is on, do alloc if not yet done */
     inline void CheckAndAlloc(void) {
-      if (disable_alloc) {
-return ;
-}
       if (delay_alloc) {
         shandle = Storage::Get()->Alloc(shandle.size, shandle.ctx);
         delay_alloc = false;
@@ -795,9 +790,6 @@ return ;
     void CheckAndAlloc(uint64_t dbytes) {
       CHECK_EQ(kDefaultStorage, storage_type)
               << "CheckAndAlloc(dbytes) is not intended for kDefaultStorage";
-      if (disable_alloc) {
-        return ;
-      }
       if (delay_alloc) {
         shandle = Storage::Get()->Alloc(dbytes, shandle.ctx);
         delay_alloc = false;
@@ -844,7 +836,6 @@ return ;
       storage_shape = shape;
       // delay_alloc is only set when data storage handle is present
       delay_alloc = false;
-disable_alloc = false;
     }
     // create storage handle for aux data based on shape
     // this function assumes ctx, aux shapes and aux types are set
@@ -872,7 +863,7 @@ disable_alloc = false;
     }
     /*! \brief destructor */
     ~Chunk() {
-      bool skip_free = static_data || delay_alloc || disable_alloc;
+      bool skip_free = static_data || delay_alloc;
       Storage::Handle h = this->shandle;
       std::vector<Storage::Handle> aux_h = this->aux_handles;
       Engine::Get()->DeleteVariable([h, aux_h, skip_free](RunContext s) {
