@@ -76,9 +76,7 @@ private:
     LOG(INFO) << "got ipc mem handle";
 
     open_handles.insert({ipc_id, handle});
-    // layer->set_ipc_handle((void *)&handle, sizeof(handle));
-    // layer->set_ipc_handle(utils::base64_encode((unsigned char
-    // const*)handle.reserved, CUDA_IPC_HANDLE_SIZE));
+    
     layer->set_ipc_handle(handle.reserved, CUDA_IPC_HANDLE_SIZE);
     LOG(INFO) << "setting ipc handle "
               << utils::base64_encode(layer->ipc_handle()) << " for layer "
