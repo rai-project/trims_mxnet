@@ -64,7 +64,9 @@ struct OprExecStat {
   /*! \brief device id */
   uint32_t dev_id;
 
+#if MXNET_USE_CUDA
   nvtxRangeId_t range_id;
+#endif
   std::map<std::string, std::string> metadata;
 };
 

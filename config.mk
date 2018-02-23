@@ -215,7 +215,7 @@ USE_CPP_PACKAGE = 0
 USE_BLAS=openblas
 USE_OPENCV=1
 USE_CPP_PACKAGE=0
-ADD_CFLAGS=-I/usr/include/openblas -I/usr/local/opt/openblas/include -I/usr/local/cuda/include -fpermissive -Wno-reorder # -Wno-strict-aliasing -Wno-sign-compare -ftrack-macro-expansion=0 -Wno-misleading-indentation
+ADD_CFLAGS=-DMXNET_USE_CUDA -I/usr/include/openblas -I/usr/local/opt/openblas/include -I/usr/local/cuda/include -fpermissive -Wno-reorder # -Wno-strict-aliasing -Wno-sign-compare -ftrack-macro-expansion=0 -Wno-misleading-indentation
 USE_CUDA=1
 USE_CUDNN=1
 ADD_LDFLAGS=-L/usr/local/cuda/lib64

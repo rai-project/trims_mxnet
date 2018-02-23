@@ -1,4 +1,5 @@
 #pragma once
+#ifdef MXNET_USE_CUDA
 
 #include "driver_types.h"
 #include <iostream>
@@ -207,3 +208,4 @@ inline bool string_starts_with(const std::basic_string<charT> &big,
 void Load(std::string model_name, std::vector<mxnet::NDArray> *data,
           std::vector<std::string> *keys);
 } // namespace upr
+#endif // MXNET_USE_CUDA

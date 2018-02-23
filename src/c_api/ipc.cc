@@ -1,3 +1,4 @@
+#ifdef MXNET_USE_CUDA
 #include "ipc.h"
 
 #include <dmlc/base.h>
@@ -216,3 +217,4 @@ void Load(std::string model_name, std::vector<NDArray> *data,
   return;
 }
 } // namespace upr
+#endif // MXNET_USE_CUDA

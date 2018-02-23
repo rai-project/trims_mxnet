@@ -12,7 +12,9 @@
 
 #define PRINT_CLOCK(msg, t1, t0) std::cerr << msg << TIME_DIFF(t1, t0) << endl;
 
+#ifdef MXNET_USE_CUDA
 #include "nvToolsExt.h"
+#endif
 
 static const uint32_t colors[] = {0xFFFFFF00,  // Yellow
                                   0xFFFF00FF,  // Fuchsia

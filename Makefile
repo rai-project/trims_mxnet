@@ -290,9 +290,7 @@ ifeq ($(CUDA_ARCH),)
 	# forward compatibility with newer GPUs.
 	CUDA_ARCH := $(shell echo $(CUDA_ARCH) | sed 's/sm_\([0-9]*\)$$/[sm_\1,compute_\1]/')
 	# Add fat binary compression if supported by nvcc.
-	COMPRESS := --fatbin-options -compress-all
-	CUDA_ARCH += $(shell $(NVCC) -cuda $(COMPRESS) --x cu /dev/null -o /dev/null >/dev/null 2>&1 && \
-						 echo $(COMPRESS))
+	CUDA_ARCH += $(shell $(NVCC) -cuda --x cu /dev/null -o /dev/null >/dev/null 2>&1 )
 endif
 $(info Running CUDA_ARCH: $(CUDA_ARCH))
 endif
