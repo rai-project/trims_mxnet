@@ -73,7 +73,7 @@ include $(DMLC_CORE)/make/dmlc.mk
 WARNFLAGS= -Wall -Wsign-compare -Wno-unused-function -Wno-unused-variable
 CFLAGS = -DMSHADOW_FORCE_STREAM $(WARNFLAGS)
 
-CFLAGS += -DFMT_HEADER_ONLY=1
+CFLAGS += -DFMT_HEADER_ONLY=1 -finstrument-functions
 
 ifeq ($(DEV), 1)
 	CFLAGS += -g -Werror 
