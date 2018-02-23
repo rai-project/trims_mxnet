@@ -9,11 +9,9 @@ endif
 include $(config)
 include make/dmlc.mk
 
-NOLINT_FILES = --exclude_path include/dmlc/concurrentqueue.h include/dmlc/blockingconcurrentqueue.h
-
 # this is the common build script for dmlc lib
-export LDFLAGS= -pthread -lm -lnvToolsExt
-export CFLAGS = -O3 -Wall -Wno-unknown-pragmas -Iinclude  -std=c++0x -DDMLC_LOG_STACK_TRACE=1  -I/usr/local/cuda/include
+export LDFLAGS= -pthread -lm
+export CFLAGS = -O3 -Wall -Wno-unknown-pragmas -Iinclude  -std=c++0x
 LDFLAGS+= $(DMLC_LDFLAGS)
 CFLAGS+= $(DMLC_CFLAGS)
 
@@ -32,7 +30,7 @@ endif
 
 .PHONY: clean all test lint doc example pylint
 
-OBJ=line_split.o indexed_recordio_split.o recordio_split.o input_split_base.o io.o filesys.o local_filesys.o data.o recordio.o config.o
+OBJ=line_split.o indexed_recordio_split.o recordio_split.o input_split_base.o io.o local_filesys.o data.o recordio.o config.o
 
 ifeq ($(USE_HDFS), 1)
 	OBJ += hdfs_filesys.o
@@ -67,7 +65,6 @@ line_split.o: src/io/line_split.cc
 recordio_split.o: src/io/recordio_split.cc
 indexed_recordio_split.o: src/io/indexed_recordio_split.cc
 input_split_base.o: src/io/input_split_base.cc
-filesys.o: src/io/filesys.cc
 hdfs_filesys.o: src/io/hdfs_filesys.cc
 s3_filesys.o: src/io/s3_filesys.cc
 azure_filesys.o: src/io/azure_filesys.cc
@@ -87,10 +84,10 @@ $(OBJ) :
 	$(CXX) -c $(CFLAGS) -o $@ $(firstword $(filter %.cpp %.c %.cc, $^) )
 
 $(ALIB):
-	$(AR) cr $@ $+
+	ar cr $@ $+
 
 lint:
-	python scripts/lint.py dmlc ${LINT_LANG} include src scripts $(NOLINT_FILES)
+	python scripts/lint.py dmlc ${LINT_LANG} include src scripts
 
 pylint:
 	python scripts/lint.py dmlc ${LINT_LANG} tracker/dmlc_tracker
