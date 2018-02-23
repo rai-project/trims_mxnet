@@ -27,7 +27,8 @@ CFLAGS+=-DUSE_OPENMP=0
 CFLAGS+=-DNO_OPENMP=1
 CFLAGS+=-DUSE_CUDA=1
 CFLAGS+=-DMXNET_USE_CUDA=1
-LDFLAGS+=$(MXNET_ROOT)/lib/libmxnet.so
+CFLAGS+= -Xcompiler -finstrument-functions 
+LDFLAGS+=$(MXNET_ROOT)/lib/libmxnet.so -Xcompiler -finstrument-functions 
 
 image-classification-predict: image-classification-predict.o
 	nvcc -O3 -g -o image-classification-predict image-classification-predict.o $(LDFLAGS)
