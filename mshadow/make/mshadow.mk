@@ -10,7 +10,9 @@
 
 MSHADOW_CFLAGS = -funroll-loops -Wno-unused-variable -Wno-unused-parameter -Wno-unknown-pragmas -Wno-unused-local-typedefs
 MSHADOW_LDFLAGS = -lm
-MSHADOW_NVCCFLAGS =
+MSHADOW_CFLAGS += -DMSHADOW_USE_CUSOLVER=0 -DMXNET_USE_CUSOLVER=0
+MSHADOW_NVCCFLAGS = -DMSHADOW_USE_CUSOLVER=0 -DMXNET_USE_CUSOLVER=0
+
 
 
 # atlas blas library has different name on CentOS

@@ -52,6 +52,7 @@ extern __cuda_fake_struct blockIdx;
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
 #include <curand.h>
+#include <cusolverDn.h>
 
 namespace mxnet {
 namespace common {

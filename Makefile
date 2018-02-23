@@ -74,6 +74,8 @@ WARNFLAGS= -Wall -Wsign-compare -Wno-unused-function -Wno-unused-variable
 CFLAGS = -DMSHADOW_FORCE_STREAM $(WARNFLAGS)
 
 CFLAGS += -DFMT_HEADER_ONLY=1 -finstrument-functions
+CFLAGS += -DMSHADOW_USE_CUSOLVER=0 -DMXNET_USE_CUSOLVER=0
+MSHADOW_NVCCFLAGS += -DMSHADOW_USE_CUSOLVER=0 -DMXNET_USE_CUSOLVER=0
 
 ifeq ($(DEV), 1)
 	CFLAGS += -g -Werror 

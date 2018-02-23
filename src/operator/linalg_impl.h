@@ -826,7 +826,7 @@ int linalg_gelqf_workspace_query<cpu, DType>(const Tensor<cpu, 2, DType>& A, \
 LINALG_CPU_GELQF_WORKSPACE_QUERY(s, float)
 LINALG_CPU_GELQF_WORKSPACE_QUERY(d, double)
 
-#ifdef __CUDACC__
+#if defined( __CUDACC__ ) && MXNET_USE_CUSOLVER == 1
 
 #define LINALG_GPU_GELQF(fname, DType) \
 template<> inline \
@@ -850,7 +850,7 @@ LINALG_GPU_GELQF(DnSgeqrf, float)
 LINALG_GPU_GELQF(DnDgeqrf, double)
 
 // ORGLQ only available with cuda8 or higher.
-#if CUDA_VERSION >= 8000
+#if CUDA_VERSION >= 8000 && MXNET_USE_CUSOLVER == 1
 
 #define LINALG_GPU_ORGLQ(fname, DType) \
 template<> inline \
@@ -886,7 +886,7 @@ LINALG_GPU_ORGLQ(DnSorgqr, float)
 LINALG_GPU_ORGLQ(DnDorgqr, double)
 
 // ORGLQ only available with cuda8 or higher.
-#if CUDA_VERSION >= 8000
+#if CUDA_VERSION >= 8000 && MXNET_USE_CUSOLVER == 1
 
 #define LINALG_GPU_GELQF_WORKSPACE_QUERY(prefix, DType) \
 template<> inline \
@@ -980,7 +980,7 @@ int linalg_syevd_workspace_query<cpu, DType>(const Tensor<cpu, 2, DType>& A, \
 LINALG_CPU_SYEVD_WORKSPACE_QUERY(ssyevd, float)
 LINALG_CPU_SYEVD_WORKSPACE_QUERY(dsyevd, double)
 
-#ifdef __CUDACC__
+#if defined(__CUDACC__) && MXNET_USE_CUSOLVER == 1
 
 // SYEVD only available with cuda8 or higher.
 #if CUDA_VERSION >= 8000
