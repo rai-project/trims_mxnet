@@ -12,8 +12,8 @@ include make/dmlc.mk
 NOLINT_FILES = --exclude_path include/dmlc/concurrentqueue.h include/dmlc/blockingconcurrentqueue.h
 
 # this is the common build script for dmlc lib
-export LDFLAGS= -pthread -lm
-export CFLAGS = -O3 -Wall -Wno-unknown-pragmas -Iinclude  -std=c++0x -DDMLC_LOG_STACK_TRACE=1 
+export LDFLAGS= -pthread -lm -lnvToolsExt
+export CFLAGS = -O3 -Wall -Wno-unknown-pragmas -Iinclude  -std=c++0x -DDMLC_LOG_STACK_TRACE=1  -I/usr/local/cuda
 LDFLAGS+= $(DMLC_LDFLAGS)
 CFLAGS+= $(DMLC_CFLAGS)
 
