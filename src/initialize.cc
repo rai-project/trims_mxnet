@@ -26,6 +26,7 @@
 #include <dmlc/logging.h>
 #include <mxnet/engine.h>
 #include "engine/profiler.h"
+#include "./inst_nvtx.inc"
 
 // - apt-get install binutils-dev ...
 // - g++/clang++ -lbfd ...
