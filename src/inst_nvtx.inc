@@ -32,9 +32,6 @@
 
 const char* const default_name = "Unknown";
 
-const uint32_t colors[] = { 0x0000ff00, 0x000000ff, 0x00ffff00, 0x00ff00ff, 0x0000ffff, 0x00ff0000, 0x00ffffff };
-const int num_colors = sizeof(colors)/sizeof(uint32_t);
-static int color_id = 0;
 
 extern "C" void __cyg_profile_func_enter(void *this_fn, void *call_site) __attribute__((no_instrument_function));
 extern "C" void __cyg_profile_func_exit(void *this_fn, void *call_site) __attribute__((no_instrument_function));
@@ -63,6 +60,9 @@ extern "C" void __cyg_profile_func_exit(void *this_fn, void *call_site)
 
 void rangePush(const char* const name )
 {
+static const uint32_t colors[] = { 0x0000ff00, 0x000000ff, 0x00ffff00, 0x00ff00ff, 0x0000ffff, 0x00ff0000, 0x00ffffff };
+static const int num_colors = sizeof(colors)/sizeof(uint32_t);
+static int color_id = 0;
 	nvtxEventAttributes_t eventAttrib = {0};
 	eventAttrib.version = NVTX_VERSION;
 	eventAttrib.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE;
