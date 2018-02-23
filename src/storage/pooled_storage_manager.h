@@ -37,6 +37,25 @@
 #include <unordered_map>
 #include <vector>
 
+#include "nvToolsExt.h"
+#ifndef PUSH_RANGE
+#define PUSH_RANGE(name,cid) { \
+                  int color_id = cid; \
+          static const uint32_t colors[] = { 0x0000ff00, 0x000000ff, 0x00ffff00,             0x00ff00ff,      0x0000ffff, 0x00ff0000, 0x00ffffff }; \                                     const int num_colors = sizeof(colors)/sizeof(uint32_t); \
+                  color_id = color_id%num_colors;\
+                  nvtxEventAttributes_t eventAttrib = {0}; \
+                  eventAttrib.version = NVTX_VERSION; \
+                  eventAttrib.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE; \
+                  eventAttrib.colorType = NVTX_COLOR_ARGB; \
+                  eventAttrib.color = colors[color_id]; \
+                  eventAttrib.messageType = NVTX_MESSAGE_TYPE_ASCII; \
+                  eventAttrib.message.ascii = name; \
+                  nvtxRangePushEx(&eventAttrib); \
+          }
+#define POP_RANGE() nvtxRangePop();
+#endif
+
+
 namespace mxnet {
 namespace storage {
 
@@ -66,12 +85,15 @@ public:
   }
 
   void DirectFreeNoLock(Storage::Handle handle) {
-    cudaError_t err = cudaFree(handle.dptr);
-    size_t size = handle.size + NDEV;
+
+PUSH_RANGE("DirectFreeNoLock in pooled storage manager", 0);
+      cudaError_t err = cudaFree(handle.dptr);
+      size_t size = handle.size + NDEV;
     // ignore unloading error, as memory has already been recycled
     if (err != cudaSuccess && err != cudaErrorCudartUnloading) {
       LOG(FATAL) << "CUDA: " << cudaGetErrorString(err);
     }
+POP_RANGE();
     used_memory_ -= size;
   }
 

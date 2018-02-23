@@ -14,6 +14,26 @@
 #include "./cuda/tensor_gpu-inl.cuh"
 #endif  // #ifdef __CUDACC__
 
+#include "nvToolsExt.h"
+
+#ifndef PUSH_RANGE
+#define PUSH_RANGE(name,cid) { \
+        int color_id = cid; \
+static const uint32_t colors[] = { 0x0000ff00, 0x000000ff, 0x00ffff00, 0x00ff00ff, 0x0000ffff, 0x00ff0000, 0x00ffffff }; \
+static const int num_colors = sizeof(colors)/sizeof(uint32_t); \
+        color_id = color_id%num_colors;\
+        nvtxEventAttributes_t eventAttrib = {0}; \
+        eventAttrib.version = NVTX_VERSION; \
+        eventAttrib.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE; \
+        eventAttrib.colorType = NVTX_COLOR_ARGB; \
+        eventAttrib.color = colors[color_id]; \
+        eventAttrib.messageType = NVTX_MESSAGE_TYPE_ASCII; \
+        eventAttrib.message.ascii = name; \
+        nvtxRangePushEx(&eventAttrib); \
+}
+#define POP_RANGE() nvtxRangePop();
+#endif
+
 namespace mshadow {
  /*!
 * \brief CPU/GPU: Get a batched view of the src array. dst[i] = src + i * stride
@@ -544,7 +564,9 @@ struct BLASEngine<gpu, float> {
                                             &beta, workspace + 2 * batch_count, ldc, batch_count);
     CHECK_EQ(err, CUBLAS_STATUS_SUCCESS) << "Cublas: SgemmBatched fail";
     if (alloc_workspace) {
-      cudaFree(workspace);
+      PUSH_RANGE("batched gemm 566 in mshadow dot_engine-inl", 4)
+        cudaFree(workspace);
+      POP_RANGE();
     }
 #elif defined(__CUDACC__) && CUDA_VERSION >= 8000
     cublasStatus_t err = cublasSgemmStridedBatched(Stream<gpu>::GetBlasHandle(stream),
@@ -661,7 +683,9 @@ struct BLASEngine<gpu, double> {
                                             &beta, workspace + 2 * batch_count, ldc, batch_count);
     CHECK_EQ(err, CUBLAS_STATUS_SUCCESS) << "Cublas: DgemmBatched fail";
     if (alloc_workspace) {
+      PUSH_RANGE("batched gemm 685 in mshadow dot_engine-inl", 4)
       cudaFree(workspace);
+      POP_RANGE();
     }
 #elif defined(__CUDACC__) && CUDA_VERSION >= 8000
     cublasStatus_t err = cublasDgemmStridedBatched(Stream<gpu>::GetBlasHandle(stream),

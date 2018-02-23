@@ -9,6 +9,27 @@
 #include "./base.h"
 #include "./tensor.h"
 
+#include "nvToolsExt.h"
+
+
+#ifndef PUSH_RANGE
+#define PUSH_RANGE(name,cid) { \
+        int color_id = cid; \
+static const uint32_t colors[] = { 0x0000ff00, 0x000000ff, 0x00ffff00, 0x00ff00ff, 0x0000ffff, 0x00ff0000, 0x00ffffff }; \
+static const int num_colors = sizeof(colors)/sizeof(uint32_t); \
+        color_id = color_id%num_colors;\
+        nvtxEventAttributes_t eventAttrib = {0}; \
+        eventAttrib.version = NVTX_VERSION; \
+        eventAttrib.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE; \
+        eventAttrib.colorType = NVTX_COLOR_ARGB; \
+        eventAttrib.color = colors[color_id]; \
+        eventAttrib.messageType = NVTX_MESSAGE_TYPE_ASCII; \
+        eventAttrib.message.ascii = name; \
+        nvtxRangePushEx(&eventAttrib); \
+}
+#define POP_RANGE() nvtxRangePop();
+#endif 
+
 namespace mshadow {
 #if MSHADOW_USE_CUDA
 template<>
@@ -51,7 +72,9 @@ inline void AllocSpace(Tensor<gpu, dim, DType> *obj, bool pad) {
 }
 template<int dim, typename DType>
 inline void FreeSpace(Tensor<gpu, dim, DType> *obj) {
+  PUSH_RANGE("FreeSpace in mshadow tensor_gpu-inl", 5)
   MSHADOW_CUDA_CALL(cudaFree(obj->dptr_));
+  POP_RANGE();
   obj->dptr_ = NULL;
 }
 template<typename A, typename B, int dim, typename DType>
