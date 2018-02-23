@@ -25,6 +25,8 @@ CFLAGS+=-DMSHADOW_USE_SSE=0
 CFLAGS+=-DFMT_HEADER_ONLY=1
 CFLAGS+=-DUSE_OPENMP=0
 CFLAGS+=-DNO_OPENMP=1
+CFLAGS+=-DUSE_CUDA=1
+CFLAGS+=-DMXNET_USE_CUDA=1
 LDFLAGS+=$(MXNET_ROOT)/lib/libmxnet.so
 
 image-classification-predict: image-classification-predict.o
@@ -36,7 +38,7 @@ image-classification-predict.o: image-classification-predict.cc
 	
 clean: 
 	rm -f image-classification-predict
-	rm -f *.d *.o
+	rm -f *.d *.o *nvprof
 
 lint:
 	python ../../../dmlc-core/scripts/lint.py mxnet "cpp" ./
