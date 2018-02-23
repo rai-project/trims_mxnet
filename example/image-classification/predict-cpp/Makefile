@@ -24,14 +24,15 @@ CFLAGS+=-DUSE_SSE=0
 CFLAGS+=-DMSHADOW_USE_SSE=0
 CFLAGS+=-DFMT_HEADER_ONLY=1
 CFLAGS+=-DUSE_OPENMP=0
+CFLAGS+=-DNO_OPENMP=1
 LDFLAGS+=$(MXNET_ROOT)/lib/libmxnet.so
 
 image-classification-predict: image-classification-predict.o
-	nvcc -O0 -g -o image-classification-predict image-classification-predict.o $(LDFLAGS)
+	nvcc -O3 -g -o image-classification-predict image-classification-predict.o $(LDFLAGS)
 
 image-classification-predict.o: image-classification-predict.cc
 	echo "CFLAGS = " $(CFLAGS)
-	nvcc -O0 -g -c image-classification-predict.cc $(CFLAGS)
+	nvcc -O3 -g -c image-classification-predict.cc $(CFLAGS)
 	
 clean: 
 	rm -f image-classification-predict
