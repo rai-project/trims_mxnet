@@ -25,15 +25,8 @@ else
 	UNAME_S := $(shell uname -s)
 endif
 
-ifndef config
-ifdef CXXNET_CONFIG
-	config = $(CXXNET_CONFIG)
-else ifneq ("$(wildcard ./config.mk)","")
-	config = config.mk
-else
-	config = make/config.mk
-endif
-endif
+config = config.mk
+
 
 ifndef DMLC_CORE
 	DMLC_CORE = $(ROOTDIR)/dmlc-core
@@ -75,7 +68,7 @@ CFLAGS = -DMSHADOW_FORCE_STREAM $(WARNFLAGS)
 
 CFLAGS += -DFMT_HEADER_ONLY=1 -finstrument-functions
 CFLAGS += -DMSHADOW_USE_CUSOLVER=0 -DMXNET_USE_CUSOLVER=0
-MSHADOW_NVCCFLAGS += -DMSHADOW_USE_CUSOLVER=0 -DMXNET_USE_CUSOLVER=0
+MSHADOW_NVCCFLAGS += -DMSHADOW_USE_CUSOLVER=0 -DMXNET_USE_CUSOLVER=0 
 
 ifeq ($(DEV), 1)
 	CFLAGS += -g -Werror 
