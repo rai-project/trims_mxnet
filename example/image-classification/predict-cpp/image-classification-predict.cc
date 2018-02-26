@@ -205,6 +205,13 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
+  int image_size = width * height * channels;
+
+  // Read Image Data
+  std::vector<mx_float> image_data = std::vector<mx_float>(image_size);
+
+  GetImageFile(test_file, image_data.data(), channels, cv::Size(width, height));
+
   const std::string filename{"profile"};
   MXSetProfilerConfig(1, filename.c_str());
 
@@ -217,13 +224,6 @@ int main(int argc, char *argv[]) {
                dev_type, dev_id, num_input_nodes, input_keys,
                input_shape_indptr, input_shape_data, &pred_hnd);
   CHECK(pred_hnd != nullptr) << " got error=" << MXGetLastError();
-
-  int image_size = width * height * channels;
-
-  // Read Image Data
-  std::vector<mx_float> image_data = std::vector<mx_float>(image_size);
-
-  GetImageFile(test_file, image_data.data(), channels, cv::Size(width, height));
 
   // Set Input Image
   MXPredSetInput(pred_hnd, "data", image_data.data(), image_size);

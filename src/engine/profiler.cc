@@ -83,8 +83,10 @@ void Profiler::SetState(ProfilerState state) {
   std::lock_guard<std::mutex> lock{this->m_};
   this->state_ = state;
   // once running, output will be enabled.
-  if (state == kRunning)
+  if (state == kRunning) {
     this->enable_output_ = true;
+    this->init_time_ = NowInUsec();
+  }
 }
 
 void Profiler::SetConfig(ProfilerMode mode, std::string output_filename) {
@@ -210,12 +212,13 @@ inline uint64_t NowInUsec() {
 #endif
 }
 
-void AddOprMetadata(OprExecStat *opr_stat, const std::string & key, const std::string & value) {
-    opr_stat->metadata.insert({key, value});
+void AddOprMetadata(OprExecStat *opr_stat, const std::string &key,
+                    const std::string &value) {
+  opr_stat->metadata.insert({key, value});
 }
 
 void SetOprCategory(OprExecStat *opr_stat, int category) {
-    opr_stat->category = category;
+  opr_stat->category = category;
 }
 
 void SetOprStart(OprExecStat *opr_stat) {
@@ -227,15 +230,15 @@ void SetOprStart(OprExecStat *opr_stat) {
 #if MXNET_USE_CUDA
 #if MXNET_USE_NVTX
   const auto name = opr_stat->opr_name;
-  int color_id = opr_stat->category;                                                        
-  color_id = color_id % num_colors;                                          
-  nvtxEventAttributes_t eventAttrib = {0};                                   
-  eventAttrib.version = NVTX_VERSION;                                        
-  eventAttrib.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE;                          
-  eventAttrib.colorType = NVTX_COLOR_ARGB;                                   
-  eventAttrib.color = colors[color_id];                                      
-  eventAttrib.messageType = NVTX_MESSAGE_TYPE_ASCII;                         
-  eventAttrib.message.ascii = name;                                          
+  int color_id = opr_stat->category;
+  color_id = color_id % num_colors;
+  nvtxEventAttributes_t eventAttrib = {0};
+  eventAttrib.version = NVTX_VERSION;
+  eventAttrib.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE;
+  eventAttrib.colorType = NVTX_COLOR_ARGB;
+  eventAttrib.color = colors[color_id];
+  eventAttrib.messageType = NVTX_MESSAGE_TYPE_ASCII;
+  eventAttrib.message.ascii = name;
   opr_stat->range_id = nvtxRangeStartEx(&eventAttrib);
 #endif
 #endif
