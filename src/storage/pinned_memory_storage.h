@@ -32,6 +32,8 @@
 #include "../common/cuda_utils.h"
 
 #include "nvToolsExt.h"
+
+#if MXNET_USE_NVTX
 #ifndef PUSH_RANGE
 #define PUSH_RANGE(name,cid) { \
                   int color_id = cid; \
@@ -47,8 +49,11 @@
                   nvtxRangePushEx(&eventAttrib); \
           }
 #define POP_RANGE() nvtxRangePop();
+#endif 
+#else
+#define PUSH_RANGE(name, cid) 
+#define POP_RANGE()
 #endif
-
 
 namespace mxnet {
 namespace storage {

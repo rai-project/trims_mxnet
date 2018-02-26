@@ -16,6 +16,7 @@
 
 #include "nvToolsExt.h"
 
+#if MXNET_USE_NVTX
 #ifndef PUSH_RANGE
 #define PUSH_RANGE(name,cid) { \
         int color_id = cid; \
@@ -32,6 +33,10 @@ static const int num_colors = sizeof(colors)/sizeof(uint32_t); \
         nvtxRangePushEx(&eventAttrib); \
 }
 #define POP_RANGE() nvtxRangePop();
+#endif 
+#else
+#define PUSH_RANGE(name, cid) 
+#define POP_RANGE()
 #endif
 
 namespace mshadow {
