@@ -227,24 +227,20 @@ void SetOprStart(OprExecStat *opr_stat) {
 #if MXNET_USE_CUDA
 #if MXNET_USE_NVTX
   const auto name = opr_stat->opr_name;
-    int color_id = opr_stat->category;                                                        
-    color_id = color_id % num_colors;                                          
-    nvtxEventAttributes_t eventAttrib = {0};                                   
-    eventAttrib.version = NVTX_VERSION;                                        
-    eventAttrib.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE;                          
-    eventAttrib.colorType = NVTX_COLOR_ARGB;                                   
-    eventAttrib.color = colors[color_id];                                      
-    eventAttrib.messageType = NVTX_MESSAGE_TYPE_ASCII;                         
-    eventAttrib.message.ascii = name;                                          
+  int color_id = opr_stat->category;                                                        
+  color_id = color_id % num_colors;                                          
+  nvtxEventAttributes_t eventAttrib = {0};                                   
+  eventAttrib.version = NVTX_VERSION;                                        
+  eventAttrib.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE;                          
+  eventAttrib.colorType = NVTX_COLOR_ARGB;                                   
+  eventAttrib.color = colors[color_id];                                      
+  eventAttrib.messageType = NVTX_MESSAGE_TYPE_ASCII;                         
+  eventAttrib.message.ascii = name;                                          
+  opr_stat->range_id = nvtxRangeStartEx(&eventAttrib);
 #endif
 #endif
 
   opr_stat->opr_start_rel_micros = NowInUsec() - Profiler::Get()->GetInitTime();
-#if MXNET_USE_CUDA
-#if MXNET_USE_NVTX
-  opr_stat->range_id = nvtxRangeStartEx(&eventAttrib);
-#endif
-#endif
 }
 
 void SetOprEnd(OprExecStat *opr_stat) {
