@@ -12,7 +12,7 @@ CFLAGS+= `pkg-config --cflags opencv`
 LDFLAGS+=`pkg-config --libs opencv`
 
 # Added for mxnet
-export MXNET_ROOT=`pwd`/../../../../mxnet-mirror-original
+export MXNET_ROOT=`pwd`/../../..
 
 CFLAGS+=-I$(MXNET_ROOT)/include -I$(MXNET_ROOT)/src
 CFLAGS+=-I$(MXNET_ROOT)/nnvm/include -I$(MXNET_ROOT)/mshadow
@@ -23,10 +23,10 @@ CFLAGS+=-DMSHADOW_USE_CBLAS
 LDFLAGS+=$(MXNET_ROOT)/lib/libmxnet.so
 
 image-classification-predict: image-classification-predict.o
-	nvcc -O0 -g -o image-classification-predict image-classification-predict.o $(LDFLAGS)
+	nvcc -O3  -o image-classification-predict image-classification-predict.o $(LDFLAGS)
 
 image-classification-predict.o: image-classification-predict.cc
-	nvcc -O0 -g -c image-classification-predict.cc ${CFLAGS}
+	nvcc -O3 -c image-classification-predict.cc ${CFLAGS}
 	
 clean: 
 	rm image-classification-predict

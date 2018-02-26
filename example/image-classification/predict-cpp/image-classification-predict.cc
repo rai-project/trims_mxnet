@@ -140,7 +140,7 @@ void PrintOutputResult(const std::vector<float> &data,
   int best_idx = 0;
 
   for (int i = 0; i < static_cast<int>(data.size()); i++) {
-    printf("Accuracy[%d] = %.8f\n", i, data[i]);
+    /* printf("Accuracy[%d] = %.8f\n", i, data[i]); */
 
     if (data[i] > best_accuracy) {
       best_accuracy = data[i];
@@ -153,10 +153,6 @@ void PrintOutputResult(const std::vector<float> &data,
 }
 
 int main(int argc, char *argv[]) {
-
-  cudaSetDevice(0);
-  force_runtime_initialization();
-
   std::string test_file = argc == 1 ? "banana.png" : std::string(argv[1]);
 
   if (!file_exists(test_file)) {
@@ -201,11 +197,14 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  const std::string filename{"profile"};
+  const std::string filename{model_name+"_profile.json"};
   MXSetProfilerConfig(1, filename.c_str());
 
   // Stope profiling
   MXSetProfilerState(1);
+
+  cudaSetDevice(0);
+  force_runtime_initialization();
 
   // Create Predictor
   MXPredCreate((const char *)json_data.GetBuffer(),

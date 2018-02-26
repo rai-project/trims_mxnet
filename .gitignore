@@ -158,3 +158,6 @@ model/
 python/mxnet/symbol/gen_*
 python/mxnet/ndarray/gen_*
 python/.eggs
+
+image-classification-predict
+*.nvprof
