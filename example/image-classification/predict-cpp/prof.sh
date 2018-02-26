@@ -1,5 +1,6 @@
 #!/bin/sh
 DATE=`date '+%Y-%m-%d-%H-%M-%S'`
+export UPR_MODEL_NAME=vgg16
 export OMP_NUM_THREADS=1
 export MXNET_ENGINE_TYPE=NaiveEngine
 
@@ -9,6 +10,10 @@ export MXNET_CPU_PRIORITY_NTHREADS=1
 export MXNET_GPU_WORKER_NTHREADS=2
 
 mkdir -p profiles
+
+./image-classification-predict
+./image-classification-predict
+
 
 # nvprof -f --track-memory-allocations on --print-api-trace --export-profile `hostname`_profile_0.timeline.nvprof ./image-classification-predict
 nvprof -f --export-profile profiles/`hostname`-${DATE}_profile_0.timeline.nvprof ./image-classification-predict
