@@ -155,12 +155,9 @@ void PrintOutputResult(const std::vector<float> &data,
 }
 
 int main(int argc, char *argv[]) {
-
-  cudaSetDevice(0);
-  force_runtime_initialization();
-
-  std::string test_file = argc == 1 ? "banana.png" : std::string(argv[1]);
-
+  const std::string test_file = "banana.png";
+  const std::string profile_path_suffix  = argc == 1 ? "" : std::string(argv[1]);
+  
   if (!file_exists(test_file)) {
     std::cerr << "the file " << test_file << " does not exist";
     return -1;
@@ -212,11 +209,14 @@ int main(int argc, char *argv[]) {
 
   GetImageFile(test_file, image_data.data(), channels, cv::Size(width, height));
 
-  const std::string filename{"profile"};
+  const std::string filename{model_name + "_profile_" + profile_path_suffix + ".json"};
   MXSetProfilerConfig(1, filename.c_str());
 
   // Start profiling
   MXSetProfilerState(1);
+
+  cudaSetDevice(0);
+  force_runtime_initialization();
 
   // Create Predictor
   MXPredCreate((const char *)json_data.GetBuffer(),
