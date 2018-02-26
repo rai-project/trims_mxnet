@@ -19,7 +19,7 @@ CFLAGS+=-I$(MXNET_ROOT)/nnvm/include -I$(MXNET_ROOT)/mshadow
 CFLAGS+=-I$(MXNET_ROOT)/dlpack/include -I$(MXNET_ROOT)/dmlc-core/include
 CFLAGS+=-I$(MXNET_ROOT)/3rdparty
 CFLAGS+=-I/usr/local/cuda
-CFLAGS+=-DMSHADOW_USE_CBLAS
+CFLAGS+=-DMSHADOW_USE_CBLAS -DMSHADOW_USE_SSE=0
 LDFLAGS+=$(MXNET_ROOT)/lib/libmxnet.so
 
 image-classification-predict: image-classification-predict.o
