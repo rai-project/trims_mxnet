@@ -78,6 +78,7 @@ static std::map<std::string, std::string> model_directory_paths{
     {"squeezenet", CARML_HOME_BASE_DIR + "squeezenetv1"},
     {"squeezenetv1", CARML_HOME_BASE_DIR + "squeezenetv1"},
     {"squeezenetv1.1", CARML_HOME_BASE_DIR + "squeezenetv1.1"},
+    {"resnet-152", CARML_HOME_BASE_DIR + "resnet-152"},
     {"vgg16", CARML_HOME_BASE_DIR + "vgg16"}};
 
 
