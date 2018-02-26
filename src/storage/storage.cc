@@ -119,7 +119,7 @@ void StorageImpl::Alloc(Storage::Handle *handle) {
           CUDA_CALL(cudaGetDeviceCount(&num_gpu_device));
           CHECK_GT(num_gpu_device, 0) << "GPU usage requires at least 1 GPU";
           static const auto is_client = dmlc::GetEnv("UPR_CLIENT", false);
-          if (is_client) {
+          if (is_client && false) {
               ptr = new storage::GPUPooledStorageManager();
           } else {
             ptr = new storage::NaiveStorageManager<storage::GPUDeviceStorage>();

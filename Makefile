@@ -70,6 +70,8 @@ CFLAGS += -DFMT_HEADER_ONLY=1 -finstrument-functions
 CFLAGS += -DMSHADOW_USE_CUSOLVER=0 -DMXNET_USE_CUSOLVER=0
 MSHADOW_NVCCFLAGS += -DMSHADOW_USE_CUSOLVER=0 -DMXNET_USE_CUSOLVER=0 
 
+NVCCFLAGS += --default-stream per-thread
+
 ifeq ($(DEV), 1)
 	CFLAGS += -g -Werror 
 	NVCCFLAGS += -Werror cross-execution-space-call  
@@ -79,7 +81,7 @@ endif
 ifneq ($(DEBUG), 1)
 	CFLAGS += -DNDEBUG=1
 endif
-CFLAGS += -O3 -pg -p -g -ggdb 
+CFLAGS += -O3 #-pg -p -g -ggdb 
 CGRPCFLAGS = `pkg-config --cflags protobuf grpc`
 LDGRPCFLAGS = `pkg-config --libs protobuf grpc++ grpc`
 # CGRPCFLAGS = -pthread -I/home/linuxbrew/.linuxbrew/Cellar/protobuf/3.5.1/include -I/home/linuxbrew/.linuxbrew/Cellar/grpc/1.9.0/include
@@ -274,7 +276,7 @@ endif
 ifeq ($(USE_CUDA), 1)
 ifeq ($(CUDA_ARCH),)
 	# KNOWN_CUDA_ARCHS := 30 35 50 52 60 61 70
-	KNOWN_CUDA_ARCHS := 50 52 60 61 70
+	KNOWN_CUDA_ARCHS := 60 61
 	# Run nvcc on a zero-length file to check architecture-level support.
 	# Create args to include SASS in the fat binary for supported levels.
 	CUDA_ARCH := $(foreach arch,$(KNOWN_CUDA_ARCHS), \

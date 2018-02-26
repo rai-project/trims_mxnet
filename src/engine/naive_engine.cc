@@ -48,10 +48,27 @@ class NaiveEngine final : public Engine {
   };
 
   NaiveEngine() {
+    auto ctx = Context::GPU();
+ #if MXNET_USE_CUDA
+    LOG(INFO) << "Engine initialization";
+    size_t dev_id = static_cast<size_t>(ctx.dev_id);
+    MSHADOW_CATCH_ERROR(mshadow::SetDevice<gpu>(ctx.dev_id));
+    if (streams_.size() <= dev_id) {
+      streams_.resize(dev_id + 1, nullptr);
+    }
+    if (streams_[dev_id] != nullptr) {
+      LOG(INFO) << "stream [" << dev_id << "] is not empty, will be overwritten";
+    }
+    if (streams_[dev_id] == nullptr) {
+      streams_[dev_id] = mshadow::NewStream<gpu>(true, MXNET_USE_CUDNN != 0, dev_id);
+      LOG(INFO) << "stream [" << dev_id << "] is initializad with new stream";
+    }
+#endif
   }
   // virtual destructor
   virtual ~NaiveEngine() {
 #if MXNET_USE_CUDA
+return ;
     LOG(INFO) << "Engine shutdown";
     for (size_t i = 0; i < streams_.size(); ++i) {
       if (streams_[i] != nullptr) {
@@ -151,6 +168,7 @@ class NaiveEngine final : public Engine {
     if (exec_ctx.dev_mask() == gpu::kDevMask) {
 #if MXNET_USE_CUDA
       size_t dev_id = static_cast<size_t>(exec_ctx.dev_id);
+#if 0
       MSHADOW_CATCH_ERROR(mshadow::SetDevice<gpu>(exec_ctx.dev_id));
       if (streams_.size() <= dev_id) {
         streams_.resize(dev_id + 1, nullptr);
@@ -158,6 +176,7 @@ class NaiveEngine final : public Engine {
       if (streams_[dev_id] == nullptr) {
         streams_[dev_id] = mshadow::NewStream<gpu>(true, MXNET_USE_CUDNN != 0, dev_id);
       }
+#endif
       exec_fun(RunContext{exec_ctx, streams_[dev_id]}, callback);
 #else
       LOG(FATAL) << "GPU is not enabled";
