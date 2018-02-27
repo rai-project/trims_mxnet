@@ -78,7 +78,7 @@ static std::map<std::string, std::string> model_directory_paths{
     {"squeezenet", CARML_HOME_BASE_DIR + "squeezenetv1"},
     {"squeezenetv1", CARML_HOME_BASE_DIR + "squeezenetv1"},
     {"squeezenetv1.1", CARML_HOME_BASE_DIR + "squeezenetv1.1"},
-    {"resnet-152", CARML_HOME_BASE_DIR + "resnet-152"},
+    {"resnet-152-11k", CARML_HOME_BASE_DIR + "resnet-152-11k"},
     {"vgg16", CARML_HOME_BASE_DIR + "vgg16"}};
 
 
@@ -161,8 +161,9 @@ static std::string get_model_symbol_path(std::string model_name = "") {
   return path + "/model.symbol";
 }
 
-static std::string get_synset_path() {
-  return CARML_HOME_BASE_DIR + "synset.txt";
+static std::string get_synset_path(std::string model_name = "") {
+  const std::string path = get_model_directory_path(model_name);
+  return path + "/synset.txt";
 }
 
 struct server {
