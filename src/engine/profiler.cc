@@ -30,6 +30,7 @@
 #include <mxnet/base.h>
 #include <thread>
 
+#include "ipc.h"
 #include "json.hpp"
 
 #if MXNET_USE_CUDA
@@ -168,68 +169,88 @@ namespace engine {
       }
     }
 
+    json metadata;
+
+    try {
+      metadata = json({{"is_client", upr::is_client},
+                       {"UPR_BASE_DIR", upr::UPR_BASE_DIR},
+                       {"model_name", upr::get_model_name()},
+                       {"model_path", upr::get_model_directory_path()},
+                       {"model_params", upr::get_model_params_path()},
+                       {"symbol_params", upr::get_model_symbol_path()}});
+    } catch (...) {
+      const auto e = std::current_exception();
+      metadata     = json({{"error", e.what()}})
+    }
+
     enable_output_ = false;
 
     std::ofstream outfile(filename_);
-    outfile << std::setw(4) << json{{"traceEvents", trace_events}, {"displayTimeUnit", "ms"}} << std::endl;
-    outfile.flush();
-    outfile.close();
-  }
-
-  inline uint64_t NowInUsec() {
-#if defined(_MSC_VER) && _MSC_VER <= 1800
-    LARGE_INTEGER frequency, counter;
-    QueryPerformanceFrequency(&frequency);
-    QueryPerformanceCounter(&counter);
-    return counter.QuadPart * 1000000 / frequency.QuadPart;
-#else
-    return std::chrono::duration_cast<std::chrono::microseconds>(
-               std::chrono::high_resolution_clock::now().time_since_epoch())
-        .count();
-#endif
-  }
-
-  void AddOprMetadata(OprExecStat *opr_stat, const std::string &key, const std::string &value) {
-    opr_stat->metadata.insert({key, value});
-  }
-
-  void SetOprCategory(OprExecStat *opr_stat, int category) {
-    opr_stat->category = category;
-  }
-
-  void SetOprStart(OprExecStat *opr_stat) {
-    if (!opr_stat) {
-      LOG(WARNING) << "SetOpStart: nullptr";
-      return;
+    outfile << std::setw(4) << json {
+      {"traceEvents", trace_events}, {"displayTimeUnit", "ms"}, {
+        "otherData", metadata,
+      }
     }
-
-#if MXNET_USE_CUDA
-#if MXNET_USE_NVTX
-    const auto name                   = opr_stat->opr_name;
-    int color_id                      = opr_stat->category;
-    color_id                          = color_id % num_colors;
-    nvtxEventAttributes_t eventAttrib = {0};
-    eventAttrib.version               = NVTX_VERSION;
-    eventAttrib.size                  = NVTX_EVENT_ATTRIB_STRUCT_SIZE;
-    eventAttrib.colorType             = NVTX_COLOR_ARGB;
-    eventAttrib.color                 = colors[color_id];
-    eventAttrib.messageType           = NVTX_MESSAGE_TYPE_ASCII;
-    eventAttrib.message.ascii         = name;
-    opr_stat->range_id                = nvtxRangeStartEx(&eventAttrib);
-#endif
-#endif
-
-    opr_stat->opr_start_rel_micros = NowInUsec() - Profiler::Get()->GetInitTime();
   }
-
-  void SetOprEnd(OprExecStat *opr_stat) {
-#if MXNET_USE_CUDA
-#if MXNET_USE_NVTX
-    nvtxRangeEnd(opr_stat->range_id);
-#endif
-#endif
-    opr_stat->opr_end_rel_micros = NowInUsec() - Profiler::Get()->GetInitTime();
-  }
-
+  << std::endl;
+  outfile.flush();
+  outfile.close();
 } // namespace engine
+
+inline uint64_t NowInUsec() {
+#if defined(_MSC_VER) && _MSC_VER <= 1800
+  LARGE_INTEGER frequency, counter;
+  QueryPerformanceFrequency(&frequency);
+  QueryPerformanceCounter(&counter);
+  return counter.QuadPart * 1000000 / frequency.QuadPart;
+#else
+  return std::chrono::duration_cast<std::chrono::microseconds>(
+             std::chrono::high_resolution_clock::now().time_since_epoch())
+      .count();
+#endif
+}
+
+void AddOprMetadata(OprExecStat *opr_stat, const std::string &key, const std::string &value) {
+  opr_stat->metadata.insert({key, value});
+}
+
+void SetOprCategory(OprExecStat *opr_stat, int category) {
+  opr_stat->category = category;
+}
+
+void SetOprStart(OprExecStat *opr_stat) {
+  if (!opr_stat) {
+    LOG(WARNING) << "SetOpStart: nullptr";
+    return;
+  }
+
+#if MXNET_USE_CUDA
+#if MXNET_USE_NVTX
+  const auto name                   = opr_stat->opr_name;
+  int color_id                      = opr_stat->category;
+  color_id                          = color_id % num_colors;
+  nvtxEventAttributes_t eventAttrib = {0};
+  eventAttrib.version               = NVTX_VERSION;
+  eventAttrib.size                  = NVTX_EVENT_ATTRIB_STRUCT_SIZE;
+  eventAttrib.colorType             = NVTX_COLOR_ARGB;
+  eventAttrib.color                 = colors[color_id];
+  eventAttrib.messageType           = NVTX_MESSAGE_TYPE_ASCII;
+  eventAttrib.message.ascii         = name;
+  opr_stat->range_id                = nvtxRangeStartEx(&eventAttrib);
+#endif
+#endif
+
+  opr_stat->opr_start_rel_micros = NowInUsec() - Profiler::Get()->GetInitTime();
+}
+
+void SetOprEnd(OprExecStat *opr_stat) {
+#if MXNET_USE_CUDA
+#if MXNET_USE_NVTX
+  nvtxRangeEnd(opr_stat->range_id);
+#endif
+#endif
+  opr_stat->opr_end_rel_micros = NowInUsec() - Profiler::Get()->GetInitTime();
+}
+
+} // namespace mxnet
 } // namespace mxnet
