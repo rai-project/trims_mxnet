@@ -69,18 +69,16 @@ using namespace mxnet;
 
 static const auto HOME = dmlc::GetEnv("HOME", std::string("/home/abduld"));
 static const auto is_client = dmlc::GetEnv("UPR_CLIENT", false);
-static const auto IPC_HANDLES_BASE_PATH = std::string("/tmp/persistent");
-static const auto CARML_HOME_BASE_DIR =
-    HOME + std::string("/carml/data/mxnet/");
+static const auto UPR_BASE_DIR =
+    dmlc::GetEnv("UPR_BASE_DIR", HOME + std::string("/carml/data/mxnet/"));
 
 static std::map<std::string, std::string> model_directory_paths{
-    {"alexnet", CARML_HOME_BASE_DIR + "alexnet"},
-    {"squeezenet", CARML_HOME_BASE_DIR + "squeezenetv1"},
-    {"squeezenetv1", CARML_HOME_BASE_DIR + "squeezenetv1"},
-    {"squeezenetv1.1", CARML_HOME_BASE_DIR + "squeezenetv1.1"},
-    {"resnet-152-11k", CARML_HOME_BASE_DIR + "resnet-152-11k"},
-    {"vgg16", CARML_HOME_BASE_DIR + "vgg16"}};
-
+    {"alexnet", UPR_BASE_DIR + "alexnet"},
+    {"squeezenet", UPR_BASE_DIR + "squeezenetv1"},
+    {"squeezenetv1", UPR_BASE_DIR + "squeezenetv1"},
+    {"squeezenetv1.1", UPR_BASE_DIR + "squeezenetv1.1"},
+    {"resnet-152-11k", UPR_BASE_DIR + "resnet-152-11k"},
+    {"vgg16", UPR_BASE_DIR + "vgg16"}};
 
 /**
  * @brief Ensures the CUDA runtime has fully initialized
@@ -107,7 +105,8 @@ static int span_category_serialization = 7;
 static int span_category_ipc = 8;
 static int span_category_grpc = 9;
 
-static engine::OprExecStat *start_span(const std::string &name, int category = 0) {
+static inline engine::OprExecStat *start_span(const std::string &name,
+                                       int category = 0) {
 #if MXNET_USE_PROFILER
   const auto ctx = get_ctx();
   auto opr_stat = engine::Profiler::Get()->AddOprStat(ctx.dev_type, ctx.dev_id);
@@ -123,7 +122,7 @@ static engine::OprExecStat *start_span(const std::string &name, int category = 0
 #endif
 }
 
-static void stop_span(engine::OprExecStat *stat) {
+static inline void stop_span(engine::OprExecStat *stat) {
   if (stat == nullptr) {
     return;
   }
@@ -151,27 +150,6 @@ static std::string get_model_directory_path(std::string model_name = "") {
   return it->second;
 }
 
-static std::string get_model_params_path(std::string model_name = "") {
-  const std::string path = get_model_directory_path(model_name);
-  return path + "/model.params";
-}
-
-static std::string get_model_symbol_path(std::string model_name = "") {
-  const std::string path = get_model_directory_path(model_name);
-  return path + "/model.symbol";
-}
-
-static std::string get_synset_path(std::string model_name = "") {
-  const std::string path = get_model_directory_path(model_name);
-  return path + "/synset.txt";
-}
-
-struct server {
-  static std::string host_name;
-  static int port;
-  static std::string address;
-};
-
 static bool directory_exists(const std::string &path) {
   struct stat sb;
   if (stat(path.c_str(), &sb) == -1) {
@@ -196,6 +174,67 @@ static bool file_exists(const std::string &path) {
   }
   return true;
 }
+
+static std::string get_model_params_path(std::string model_name = "") {
+  const std::string path = get_model_directory_path(model_name);
+  auto model_path = path + "/model.params";
+  if (file_exists(model_path)) {
+    return model_path;
+  }
+  model_path = path + "/" + model_name + ".params";
+  if (file_exists(model_path)) {
+    return model_path;
+  }
+  model_path = path + "/" + model_name + "-0000.params";
+  if (file_exists(model_path)) {
+    return model_path;
+  }
+
+  throw dmlc::Error(
+      fmt::format("unable to find {} model in model_direction_paths. make sure "
+                  "that you have the model"
+                  "in the directory and it's called either model.params, "
+                  "{}.params, or {}-0000.params",
+                  model_name, model_name, model_name));
+
+  return "";
+}
+
+static std::string get_model_symbol_path(std::string model_name = "") {
+  const std::string path = get_model_directory_path(model_name);
+  auto model_path = path + "/model.symbol";
+  if (file_exists(model_path)) {
+    return model_path;
+  }
+  model_path = path + "/" + model_name + ".symbol";
+  if (file_exists(model_path)) {
+    return model_path;
+  }
+  model_path = path + "/" + model_name + "-symbol.json";
+  if (file_exists(model_path)) {
+    return model_path;
+  }
+
+  throw dmlc::Error(
+      fmt::format("unable to find {} model in model_direction_paths. make sure "
+                  "that you have the model"
+                  "in the directory and it's called either model.symbol, "
+                  "{}.symbol, or {}-symbol.json",
+                  model_name, model_name, model_name));
+
+  return "";
+}
+
+static std::string get_synset_path(std::string model_name = "") {
+  const std::string path = get_model_directory_path(model_name);
+  return path + "/synset.txt";
+}
+
+struct server {
+  static std::string host_name;
+  static int port;
+  static std::string address;
+};
 
 template <typename charT>
 inline bool string_starts_with(const std::basic_string<charT> &big,
