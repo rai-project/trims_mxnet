@@ -153,7 +153,8 @@ void PrintOutputResult(const std::vector<float> &data,
 }
 
 int main(int argc, char *argv[]) {
-  std::string test_file = argc == 1 ? "banana.png" : std::string(argv[1]);
+  std::string test_file = "banana.png";
+  std::string profile_suffix = argc == 1 ? "" : std::string(argv[1]);
 
   if (!file_exists(test_file)) {
     std::cerr << "the file " << test_file << " does not exist";
@@ -197,7 +198,7 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  const std::string filename{model_name+"_profile.json"};
+  const std::string filename{model_name+"_original_profile_"+profile_suffix+".json"};
   MXSetProfilerConfig(1, filename.c_str());
 
   // Stope profiling

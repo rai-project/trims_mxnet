@@ -54,14 +54,17 @@ static std::ostream &operator<<(std::ostream &os,
 
 using namespace mxnet;
 
+static const auto HOME = dmlc::GetEnv("HOME", std::string("/home/abdul"));
+static const auto is_client = dmlc::GetEnv("UPR_CLIENT", false);
 static const auto CARML_HOME_BASE_DIR =
-    std::string("/home/abduld/carml/data/mxnet/");
+    HOME + std::string("/carml/data/mxnet/");
 
 static std::map<std::string, std::string> model_directory_paths{
     {"alexnet", CARML_HOME_BASE_DIR + "alexnet"},
     {"squeezenet", CARML_HOME_BASE_DIR + "squeezenetv1"},
     {"squeezenetv1", CARML_HOME_BASE_DIR + "squeezenetv1"},
     {"squeezenetv1.1", CARML_HOME_BASE_DIR + "squeezenetv1.1"},
+    {"resnet-152-11k", CARML_HOME_BASE_DIR + "resnet-152-11k"},
     {"vgg16", CARML_HOME_BASE_DIR + "vgg16"}};
 
 
@@ -144,8 +147,9 @@ static std::string get_model_symbol_path(std::string model_name = "") {
   return path + "/model.symbol";
 }
 
-static std::string get_synset_path() {
-  return CARML_HOME_BASE_DIR + "synset.txt";
+static std::string get_synset_path(std::string model_name = "") {
+  const std::string path = get_model_directory_path(model_name);
+  return path + "/synset.txt";
 }
 
 static bool directory_exists(const std::string &path) {
