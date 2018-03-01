@@ -44,12 +44,15 @@
 #include <Windows.h>
 #endif
 
-namespace mxnet {
-namespace engine {
+namespace mxnet
+{
+namespace engine
+{
 
 using json = nlohmann::json;
 
-Profiler::Profiler() : state_(kNotRunning), enable_output_(false) {
+Profiler::Profiler() : state_(kNotRunning), enable_output_(false)
+{
   filename_ = dmlc::GetEnv("UPR_PROFILE_TARGET", std::string("profile.json"));
   this->init_time_ = NowInUsec();
 
@@ -62,23 +65,27 @@ Profiler::Profiler() : state_(kNotRunning), enable_output_(false) {
 #endif
 
   this->profile_stat = new DevStat[cpu_num_ + gpu_num_ + 1];
-  for (unsigned int i = 0; i < cpu_num_; ++i) {
+  for (unsigned int i = 0; i < cpu_num_; ++i)
+  {
     profile_stat[i].dev_name_ = "cpu/" + std::to_string(i);
   }
-  for (unsigned int i = 0; i < gpu_num_; ++i) {
+  for (unsigned int i = 0; i < gpu_num_; ++i)
+  {
     profile_stat[cpu_num_ + i].dev_name_ = "gpu/" + std::to_string(i);
   }
   profile_stat[cpu_num_ + gpu_num_].dev_name_ = "cpu pinned/";
 
   mode_ = (ProfilerMode)dmlc::GetEnv("MXNET_PROFILER_MODE",
                                      static_cast<int>(kAllOperator));
-  if (dmlc::GetEnv("MXNET_PROFILER_AUTOSTART", 1)) {
+  if (dmlc::GetEnv("MXNET_PROFILER_AUTOSTART", 1))
+  {
     this->state_ = ProfilerState::kRunning;
     this->enable_output_ = true;
   }
 }
 
-Profiler *Profiler::Get() {
+Profiler *Profiler::Get()
+{
 #if MXNET_USE_PROFILER
   static Profiler inst;
   return &inst;
@@ -87,23 +94,27 @@ Profiler *Profiler::Get() {
 #endif
 }
 
-void Profiler::SetState(ProfilerState state) {
+void Profiler::SetState(ProfilerState state)
+{
   std::lock_guard<std::mutex> lock{this->m_};
   this->state_ = state;
   // once running, output will be enabled.
-  if (state == kRunning) {
+  if (state == kRunning)
+  {
     this->enable_output_ = true;
     this->init_time_ = NowInUsec();
   }
 }
 
-void Profiler::SetConfig(ProfilerMode mode, std::string output_filename) {
+void Profiler::SetConfig(ProfilerMode mode, std::string output_filename)
+{
   std::lock_guard<std::mutex> lock{this->m_};
   this->mode_ = mode;
   this->filename_ = output_filename;
 }
 
-OprExecStat *Profiler::AddOprStat(int dev_type, uint32_t dev_id) {
+OprExecStat *Profiler::AddOprStat(int dev_type, uint32_t dev_id)
+{
   std::unique_ptr<OprExecStat> opr_stat(new OprExecStat);
   opr_stat->category = 0;
   opr_stat->dev_type = dev_type;
@@ -111,7 +122,8 @@ OprExecStat *Profiler::AddOprStat(int dev_type, uint32_t dev_id) {
   opr_stat->opr_name[sizeof(opr_stat->opr_name) - 1] = '\0';
 
   int idx;
-  switch (dev_type) {
+  switch (dev_type)
+  {
   case Context::kCPU:
     idx = dev_id;
     break;
@@ -131,7 +143,8 @@ OprExecStat *Profiler::AddOprStat(int dev_type, uint32_t dev_id) {
   return opr_stat.release();
 }
 
-json emitPid(const std::string &name, uint32_t pid) {
+json emitPid(const std::string &name, uint32_t pid)
+{
   json j = {{"ph", "M"},
             {"args", {"name", name}},
             {"pid", pid},
@@ -140,13 +153,14 @@ json emitPid(const std::string &name, uint32_t pid) {
 }
 
 json emitEvent(const std::string &name, const std::string &category,
-               const std::string &ph, uint64_t ts, uint32_t pid, uint32_t tid) {
-  json j = {{"name", name}, {"cat", category}, {"ph", ph},
-            {"ts", ts},     {"pid", pid},      {"tid", tid}};
+               const std::string &ph, uint64_t ts, uint32_t pid, uint32_t tid)
+{
+  json j = {{"name", name}, {"cat", category}, {"ph", ph}, {"ts", ts}, {"pid", pid}, {"tid", tid}};
   return j;
 }
 
-void Profiler::DumpProfile() {
+void Profiler::DumpProfile()
+{
   SetState(kNotRunning);
 
   std::lock_guard<std::mutex> lock{this->m_};
@@ -154,16 +168,19 @@ void Profiler::DumpProfile() {
 
   uint32_t dev_num = cpu_num_ + gpu_num_ + 1;
 
-  for (uint32_t i = 0; i < dev_num; ++i) {
+  for (uint32_t i = 0; i < dev_num; ++i)
+  {
     const DevStat &d = profile_stat[i];
     const auto pid = emitPid(d.dev_name_, i);
     trace_events.emplace_back(pid);
   }
 
-  for (uint32_t i = 0; i < dev_num; ++i) {
+  for (uint32_t i = 0; i < dev_num; ++i)
+  {
     DevStat &d = profile_stat[i];
     OprExecStat *_opr_stat;
-    while (d.opr_exec_stats_->try_dequeue(_opr_stat)) {
+    while (d.opr_exec_stats_->try_dequeue(_opr_stat))
+    {
       CHECK_NOTNULL(_opr_stat);
       std::unique_ptr<OprExecStat> opr_stat(_opr_stat); // manage lifecycle
       uint32_t pid = i;
@@ -179,44 +196,47 @@ void Profiler::DumpProfile() {
 
   json metadata;
 
-  try {
-  char hostname[HOST_NAME_MAX];
-  char username[LOGIN_NAME_MAX];
-  gethostname(hostname, HOST_NAME_MAX);
-  getlogin_r(username, LOGIN_NAME_MAX);
-    metadata = json({
-      {"hostname", std::string(hostname)},
-      {"username", std::string(username)},
-      {"git", {
-        {"commit", std::string(build_git_sha)},
-        {"date", std::string(build_git_time)}
-      }},
-      {"is_client", upr::is_client},
+  try
+  {
+    char hostname[HOST_NAME_MAX];
+    char username[LOGIN_NAME_MAX];
+    const auto now = std::chrono::system_clock::now();
+    gethostname(hostname, HOST_NAME_MAX);
+    getlogin_r(username, LOGIN_NAME_MAX);
+    metadata = json({{"hostname", std::string(hostname)},
+                     {"username", std::string(username)},
+                     {"git", {{"commit", std::string(build_git_sha)}, {"date", std::string(build_git_time)}}},
+                     {"run_at", std::chrono::system_clock::to_time_t(now)},
+                     {"is_client", upr::is_client},
                      {"UPR_BASE_DIR", upr::UPR_BASE_DIR},
                      {"model_name", upr::get_model_name()},
                      {"model_path", upr::get_model_directory_path()},
                      {"model_params", upr::get_model_params_path()},
                      {"symbol_params", upr::get_model_symbol_path()}});
-  } catch (dmlc::Error &e) {
+  }
+  catch (dmlc::Error &e)
+  {
     metadata = json({{"error", e.what()}});
-  } catch (const std::exception &e) {
+  }
+  catch (const std::exception &e)
+  {
     metadata = json({{"error", e.what()}});
   }
 
   enable_output_ = false;
 
   std::ofstream outfile(filename_);
-  outfile << std::setw(4) << json{{"traceEvents", trace_events},
-                                  {"displayTimeUnit", "ms"},
-                                  {
-                                      "otherData", metadata,
-                                  }}
+  outfile << std::setw(4) << json{{"traceEvents", trace_events}, {"displayTimeUnit", "ms"}, {
+                                                                                                "otherData",
+                                                                                                metadata,
+                                                                                            }}
           << std::endl;
   outfile.flush();
   outfile.close();
 }
 
-inline uint64_t NowInUsec() {
+inline uint64_t NowInUsec()
+{
 #if defined(_MSC_VER) && _MSC_VER <= 1800
   LARGE_INTEGER frequency, counter;
   QueryPerformanceFrequency(&frequency);
@@ -230,16 +250,20 @@ inline uint64_t NowInUsec() {
 }
 
 void AddOprMetadata(OprExecStat *opr_stat, const std::string &key,
-                    const std::string &value) {
+                    const std::string &value)
+{
   opr_stat->metadata.insert({key, value});
 }
 
-void SetOprCategory(OprExecStat *opr_stat, int category) {
+void SetOprCategory(OprExecStat *opr_stat, int category)
+{
   opr_stat->category = category;
 }
 
-void SetOprStart(OprExecStat *opr_stat) {
-  if (!opr_stat) {
+void SetOprStart(OprExecStat *opr_stat)
+{
+  if (!opr_stat)
+  {
     LOG(WARNING) << "SetOpStart: nullptr";
     return;
   }
@@ -263,7 +287,8 @@ void SetOprStart(OprExecStat *opr_stat) {
   opr_stat->opr_start_rel_micros = NowInUsec() - Profiler::Get()->GetInitTime();
 }
 
-void SetOprEnd(OprExecStat *opr_stat) {
+void SetOprEnd(OprExecStat *opr_stat)
+{
 #if MXNET_USE_CUDA
 #if MXNET_USE_NVTX
   nvtxRangeEnd(opr_stat->range_id);
