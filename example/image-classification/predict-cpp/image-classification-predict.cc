@@ -171,6 +171,7 @@ int main(int argc, char *argv[]) {
 
   // Models path for your model, you have to modify it
   std::string model_name  = get_model_name();
+  printf("Predict using model %s\n", model_name.c_str());
   std::string json_file   = get_model_symbol_path();
   std::string param_file  = get_model_params_path();
   std::string synset_file = get_synset_path();
@@ -210,7 +211,7 @@ int main(int argc, char *argv[]) {
 
   const std::string profile_default_path{model_name + "_profile_" + profile_path_suffix + ".json"};
   const auto profile_path = dmlc::GetEnv("UPR_PROFILE_TARGET", profile_default_path);
-  MXSetProfilerConfig(1, filename.c_str());
+  MXSetProfilerConfig(1, profile_default_path.c_str());
 
   // Start profiling
   MXSetProfilerState(1);

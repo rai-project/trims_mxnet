@@ -10,9 +10,8 @@
 #include <string>
 #include <sstream>
 
-#include "nvToolsExt.h"
-
 #if MXNET_USE_NVTX
+#include "nvToolsExt.h"
 #ifndef PUSH_RANGE
 #define PUSH_RANGE0(name,cid,FUNCTION_NAME) { \
     int color_id = cid; \

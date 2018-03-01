@@ -8,9 +8,6 @@ export OMP_NUM_THREADS=1
 # export GLOG_v=4
 export MXNET_ENGINE_TYPE=NaiveEngine
 export MXNET_GPU_WORKER_NTHREADS=2
-export UPR_MODEL_NAME=alexnet
-
-mkdir -p profiles
 
 # first time
 ./image-classification-predict `hostname`_0
