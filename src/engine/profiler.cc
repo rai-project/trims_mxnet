@@ -198,17 +198,21 @@ void Profiler::DumpProfile()
 
   try
   {
+    using namespace std::chrono;
     char hostname[HOST_NAME_MAX];
     char username[LOGIN_NAME_MAX];
-    const auto now = std::chrono::system_clock::now();
-    const auto start_time = std::chrono::duration_cast<uint64_t, std::chrono::microseconds>(Profiler::Get()->GetInitTime());
+    const std::time_t now =std::chrono::system_clock::to_time_t(  std::chrono::system_clock::now());
+const auto init_time = Profiler::Get()->GetInitTime();
+const auto duration_since_epoch = std::chrono::microseconds(init_time);
+const time_point<system_clock> tp_after_duration(duration_since_epoch);
+const time_t start_time = system_clock::to_time_t(tp_after_duration);
     gethostname(hostname, HOST_NAME_MAX);
     getlogin_r(username, LOGIN_NAME_MAX);
     metadata = json({{"hostname", std::string(hostname)},
                      {"username", std::string(username)},
                      {"git", {{"commit", std::string(build_git_sha)}, {"date", std::string(build_git_time)}}},
-                     {"start_at", std::ctime(start_time)},
-                     {"end_at", std::ctime(std::chrono::system_clock::to_time_t(now))},
+                     {"start_at", start_time},
+                     {"end_at", now},
                      {"is_client", upr::is_client},
                      {"UPR_BASE_DIR", upr::UPR_BASE_DIR},
                      {"model_name", upr::get_model_name()},

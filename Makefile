@@ -18,6 +18,7 @@
 ROOTDIR = $(CURDIR)
 
 SCALA_VERSION_PROFILE := scala-2.11
+GIT_COMMIT_FILE=src/version.h
 
 ifeq ($(OS),Windows_NT)
 	UNAME_S := Windows
@@ -420,7 +421,6 @@ build/plugin/%.o: plugin/%.cc
 	$(CXX) -std=c++11 -c $(CFLAGS) -MMD -Isrc/operator -c $< -o $@
 
 
-GIT_COMMIT_FILE=src/version.h
 
 .PHONY: force
 $(GIT_COMMIT_FILE): force
@@ -429,11 +429,11 @@ $(GIT_COMMIT_FILE): force
 
 # NOTE: to statically link libmxnet.a we need the option
 # --Wl,--whole-archive -lmxnet --Wl,--no-whole-archive
-lib/libmxnet.a: $(ALLX_DEP) $(GIT_COMMIT_FILE)
+lib/libmxnet.a: $(GIT_COMMIT_FILE) $(ALLX_DEP) 
 	@mkdir -p $(@D)
 	ar crv $@ $(filter %.o, $?)
 
-lib/libmxnet.so: $(ALLX_DEP) $(GIT_COMMIT_FILE)
+lib/libmxnet.so: $(GIT_COMMIT_FILE) $(ALLX_DEP) 
 	@mkdir -p $(@D)
 	$(CXX) $(CFLAGS) -shared -o $@ $(filter-out %libnnvm.a, $(filter %.o %.a, $^)) $(LDFLAGS) \
 	-Wl,${WHOLE_ARCH} $(filter %libnnvm.a, $^) -Wl,${NO_WHOLE_ARCH}
