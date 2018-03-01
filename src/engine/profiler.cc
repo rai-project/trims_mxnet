@@ -201,12 +201,14 @@ void Profiler::DumpProfile()
     char hostname[HOST_NAME_MAX];
     char username[LOGIN_NAME_MAX];
     const auto now = std::chrono::system_clock::now();
+    const auto start_time = std::chrono::duration_cast<uint64_t, std::chrono::microseconds>(Profiler::Get()->GetInitTime());
     gethostname(hostname, HOST_NAME_MAX);
     getlogin_r(username, LOGIN_NAME_MAX);
     metadata = json({{"hostname", std::string(hostname)},
                      {"username", std::string(username)},
                      {"git", {{"commit", std::string(build_git_sha)}, {"date", std::string(build_git_time)}}},
-                     {"run_at", std::chrono::system_clock::to_time_t(now)},
+                     {"start_at", std::ctime(start_time)},
+                     {"end_at", std::ctime(std::chrono::system_clock::to_time_t(now))},
                      {"is_client", upr::is_client},
                      {"UPR_BASE_DIR", upr::UPR_BASE_DIR},
                      {"model_name", upr::get_model_name()},
