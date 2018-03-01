@@ -1,5 +1,5 @@
 #pragma once
-#ifdef MXNET_USE_CUDA
+// #ifdef MXNET_USE_CUDA
 
 #include "driver_types.h"
 #include <iostream>
@@ -221,8 +221,21 @@ static std::string get_model_symbol_path(std::string model_name = "") {
 }
 
 static std::string get_synset_path(std::string model_name = "") {
+  if (model_name == "") {
+    model_name = get_model_name();
+  }
   const std::string path = get_model_directory_path(model_name);
-  return path + "/synset.txt";
+
+  auto synset_path        = path + "/synset.txt";
+  if (file_exists(synset_path)) {
+    return synset_path;
+  }
+
+  throw dmlc::Error(fmt::format("unable to find {} model synset in model_directory_path. make sure "
+                                "that you have the synset file"
+                                "in the directory and it's called synset.txt", model_name));
+
+  return "";
 }
 
 struct server {
