@@ -231,9 +231,8 @@ static std::string get_synset_path(std::string model_name = "") {
     return synset_path;
   }
 
-  throw dmlc::Error(fmt::format("unable to find {} model synset in model_directory_path. make sure "
-                                "that you have the synset file"
-                                "in the directory and it's called synset.txt", model_name));
+  throw dmlc::Error(fmt::format("unable to find {} model synset in {}. make sure "
+                                "that you have the synset file in the directory and it's called synset.txt", model_name, path));
 
   return "";
 }
