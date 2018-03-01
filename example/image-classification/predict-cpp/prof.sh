@@ -15,6 +15,9 @@ export MXNET_GPU_WORKER_NTHREADS=2
 # second time
 ./image-classification-predict `hostname`_1
 
+# third time
+./image-classification-predict `hostname`_2
+
 exit
 # nvprof -f --track-memory-allocations on --print-api-trace --export-profile `hostname`_profile_0.timeline.nvprof ./image-classification-predict
 nvprof -f --export-profile profiles/`hostname`-${DATE}_profile_0.timeline.nvprof ./image-classification-predict
