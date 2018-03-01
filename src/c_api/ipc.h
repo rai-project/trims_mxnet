@@ -1,5 +1,5 @@
 #pragma once
-// #ifdef MXNET_USE_CUDA
+#ifdef MXNET_USE_CUDA
 
 #include "driver_types.h"
 #include <iostream>
