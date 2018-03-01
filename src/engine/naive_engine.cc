@@ -151,7 +151,8 @@ class NaiveEngine final : public Engine {
 #endif
     if (exec_ctx.dev_mask() == gpu::kDevMask) {
 #if MXNET_USE_CUDA
-      auto span= upr::start_span("performing NaiveEngine initialization" , span_category_mxnet_init);
+      using namespace upr;
+      auto span= start_span("performing NaiveEngine initialization" , span_category_mxnet_init);
       size_t dev_id = static_cast<size_t>(exec_ctx.dev_id);
       MSHADOW_CATCH_ERROR(mshadow::SetDevice<gpu>(exec_ctx.dev_id));
       if (streams_.size() <= dev_id) {
@@ -160,7 +161,7 @@ class NaiveEngine final : public Engine {
       if (streams_[dev_id] == nullptr) {
         streams_[dev_id] = mshadow::NewStream<gpu>(true, MXNET_USE_CUDNN != 0, dev_id);
       }
-      upr::stop_span(span);
+      stop_span(span);
       exec_fun(RunContext{exec_ctx, streams_[dev_id]}, callback);
 #else
       LOG(FATAL) << "GPU is not enabled";

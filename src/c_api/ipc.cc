@@ -52,14 +52,14 @@ static void *get_device_ptr(const Layer &layer) {
             << "get base64 handle = " << utils::base64_encode(ipc_handle);
 
 
-  auto span= start_span("performing cudaIpcOpenMemHandle for "s + layer.name() , span_category_ipc);
-  defer(stop_span(span));
 
   void *device_ptr;
+  auto span= start_span("performing cudaIpcOpenMemHandle for "s + layer.name() , span_category_ipc);
   CUDA_CHECK_CALL(cudaIpcOpenMemHandle((void **)&device_ptr, handle,
                                        cudaIpcMemLazyEnablePeerAccess),
                   fmt::format("failed to open cuda ipc mem handle from {}",
                               utils::base64_encode(ipc_handle)));
+  stop_span(span);
                               
   LOG(INFO) << "get device_ptr = " << device_ptr;
 

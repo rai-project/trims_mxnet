@@ -44,6 +44,9 @@
 
 #define DEFAULT_MODEL "alexnet"
 
+#ifdef NDEBUG
+#define CUDA_CHECK_CALL(func, msg) func
+#else
 #define CUDA_CHECK_CALL(func, msg)                                                                                     \
   {                                                                                                                    \
     cudaError_t e = (func);                                                                                            \
@@ -52,6 +55,7 @@
       throw dmlc::Error(fmt::format("CUDA[{}]:: {}", msg, cudaGetErrorString(e)));                                     \
     }                                                                                                                  \
   }
+#endif
 
 static std::ostream &operator<<(std::ostream &os, const cudaIpcMemHandle_t &handle) {
   const auto reserved = handle.reserved;
