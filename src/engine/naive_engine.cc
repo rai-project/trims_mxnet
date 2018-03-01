@@ -52,8 +52,8 @@ class NaiveEngine final : public Engine {
     auto ctx = Context::GPU();
  #if MXNET_USE_CUDA
  #if MXNET_USE_PROFILER
-   auto span= start_span("performing NaiveEngine initialization" , span_category_init);
-   defer(stop_span(span));
+   auto span= upr::start_span("performing NaiveEngine initialization" , span_category_init);
+   defer(upr::stop_span(span));
  #endif
 
     LOG(INFO) << "Engine initialization";
