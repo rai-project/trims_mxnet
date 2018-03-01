@@ -30,7 +30,7 @@
 #include <mxnet/base.h>
 #include <thread>
 
-#include "ipc.h"
+#include "c_api/ipc.h"
 #include "json.hpp"
 
 #if MXNET_USE_CUDA
