@@ -171,7 +171,6 @@ int main(int argc, char *argv[]) {
 
   // Models path for your model, you have to modify it
   std::string model_name  = get_model_name();
-  printf("Predict using model %s\n", model_name.c_str());
   std::string json_file   = get_model_symbol_path();
   std::string param_file  = get_model_params_path();
   std::string synset_file = get_synset_path();

@@ -28,6 +28,7 @@
 #include "./engine_impl.h"
 #include "./profiler.h"
 #include "./openmp.h"
+#include "c_api/ipc.h"
 
 namespace mxnet {
 namespace engine {
@@ -50,6 +51,11 @@ class NaiveEngine final : public Engine {
   NaiveEngine() {
     auto ctx = Context::GPU();
  #if MXNET_USE_CUDA
+ #if MXNET_USE_PROFILER
+   auto span= start_span("performing NaiveEngine initialization" , span_category_init);
+   defer(stop_span(span));
+ #endif
+
     LOG(INFO) << "Engine initialization";
     size_t dev_id = static_cast<size_t>(ctx.dev_id);
     MSHADOW_CATCH_ERROR(mshadow::SetDevice<gpu>(ctx.dev_id));

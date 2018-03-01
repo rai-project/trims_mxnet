@@ -66,7 +66,6 @@ class LibraryInitializer {
 #if MXNET_USE_SIGNAL_HANDLER && DMLC_LOG_STACK_TRACE
     signal(SIGSEGV, SegfaultLogger);
 #endif
-    Engine::_GetSharedRef();
 #if MXNET_USE_PROFILER
     // ensure profiler's constructor are called before atexit.
     engine::Profiler::Get();
@@ -78,6 +77,7 @@ class LibraryInitializer {
       }
     });
 #endif
+    Engine::_GetSharedRef();
   }
 
   static LibraryInitializer* Get();

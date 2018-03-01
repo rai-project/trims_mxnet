@@ -52,10 +52,9 @@ static void *get_device_ptr(const Layer &layer) {
             << "get base64 handle = " << utils::base64_encode(ipc_handle);
 
 
-    auto span= start_span("performing cudaIpcOpenMemHandle for "s + layer.name() , span_category_ipc);
-    defer(stop_span(span));
+  auto span= start_span("performing cudaIpcOpenMemHandle for "s + layer.name() , span_category_ipc);
+  defer(stop_span(span));
 
-  // LOG(INFO) << "open cuda mem handle = " << handle;
   void *device_ptr;
   CUDA_CHECK_CALL(cudaIpcOpenMemHandle((void **)&device_ptr, handle,
                                        cudaIpcMemLazyEnablePeerAccess),
@@ -70,8 +69,8 @@ static void *get_device_ptr(const Layer &layer) {
 static void to_ndarray(std::vector<NDArray> *arrays, const Layer &layer) {
   const auto ctx = get_ctx();
 
-    auto span= start_span("convering "s + layer.name() +  " to  nd_array"s, span_category_serialization);
-    defer(stop_span(span));
+  auto span= start_span("convering "s + layer.name() +  " to  nd_array"s, span_category_serialization);
+  defer(stop_span(span));
 
   const auto shape = to_shape(layer.shape());
   const auto dev_mask = ctx.dev_mask();
@@ -82,14 +81,15 @@ static void to_ndarray(std::vector<NDArray> *arrays, const Layer &layer) {
 
   auto device_ptr = get_device_ptr(layer);
 
-    auto span_creating = start_span("creating nd_array for "s + layer.name() , span_category_serialization);
-    defer(stop_span(span_creating));
+  auto span_creating = start_span("creating nd_array for "s + layer.name() , span_category_serialization);
+  defer(stop_span(span_creating));
 
   TBlob blob(device_ptr, shape, dev_mask, dev_id);
   arrays->emplace_back(blob, dev_id);
 
   return ;
 }
+
 static void
 to_ndarrays(std::vector<NDArray> *arrays, std::vector<std::string> *keys, const ModelHandle &reply) {
   const auto layers = reply.layer();
