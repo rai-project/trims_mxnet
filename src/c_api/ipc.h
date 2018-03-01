@@ -98,24 +98,37 @@ static Context get_ctx() {
   return ctx;
 }
 
-static int span_category_init          = 5;
-static int span_category_load          = 6;
-static int span_category_serialization = 7;
-static int span_category_ipc           = 8;
-static int span_category_grpc          = 9;
-static int span_category_mxnet_init          = 11;
+static std::string span_category_init          = "init";
+static std::string span_category_load          = "load";
+static std::string span_category_serialization = "serialization";
+static std::string span_category_ipc           = "ipc";
+static std::string span_category_grpc          = "grpc";
+static std::string span_category_mxnet_init    = "init";
 
-static inline engine::OprExecStat *start_span(const std::string &name, int category = 0) {
+using span_props = std::map<std::string, std::string>;
+
+static inline engine::OprExecStat *start_span(const std::string &name, std::string category = "other") {
 #if MXNET_USE_PROFILER
-  const auto ctx      = get_ctx();
-  auto opr_stat       = engine::Profiler::Get()->AddOprStat(ctx.dev_type, ctx.dev_id);
-  uint64_t tid        = std::hash<std::thread::id>()(std::this_thread::get_id());
-  opr_stat->thread_id = tid;
-  strncpy(opr_stat->opr_name, name.c_str(), name.size());
-  opr_stat->opr_name[name.size()] = '\0';
+  const auto ctx = get_ctx();
+  auto opr_stat  = engine::Profiler::Get()->AddOprStat(ctx.dev_type, ctx.dev_id);
+  uint64_t tid   = std::hash<std::thread::id>()(std::this_thread::get_id());
+  opr_stat->name = name;
   engine::SetOprCategory(opr_stat, category);
   engine::SetOprStart(opr_stat);
   return opr_stat;
+#else
+  return nullptr;
+#endif
+}
+
+static inline engine::OprExecStat *start_span(const std::string &name, span_props props,
+                                              std::string category = "other") {
+#if MXNET_USE_PROFILER
+  auto span = start_span(name, category);
+  for (const auto kv : props) {
+    engine::AddOprMetadata(span, kv.first, kv.second);
+  }
+  return span;
 #else
   return nullptr;
 #endif
@@ -231,13 +244,14 @@ static std::string get_synset_path(std::string model_name = "") {
   }
   const std::string path = get_model_directory_path(model_name);
 
-  auto synset_path        = path + "/synset.txt";
+  auto synset_path = path + "/synset.txt";
   if (file_exists(synset_path)) {
     return synset_path;
   }
 
   throw dmlc::Error(fmt::format("unable to find {} model synset in {}. make sure "
-                                "that you have the synset file in the directory and it's called synset.txt", model_name, path));
+                                "that you have the synset file in the directory and it's called synset.txt",
+                                model_name, path));
 
   return "";
 }

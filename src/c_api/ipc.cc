@@ -18,7 +18,6 @@
 
 #include "fmt/format.h"
 
-
 using namespace mxnet;
 using namespace std::string_literals;
 using namespace grpc;
@@ -26,8 +25,8 @@ using namespace grpc;
 namespace upr {
 
 std::string server::host_name = "localhost"s;
-int server::port = dmlc::GetEnv("PORT", 50051);
-std::string server::address = fmt::format("{}:{}", host_name, port);
+int server::port              = dmlc::GetEnv("PORT", 50051);
+std::string server::address   = fmt::format("{}:{}", host_name, port);
 
 static TShape to_shape(Shape shape) {
   auto dim = shape.dim();
@@ -38,29 +37,22 @@ static TShape to_shape(Shape shape) {
 static void *get_device_ptr(const Layer &layer) {
   const auto ipc_handle = layer.ipc_handle();
   if (ipc_handle == "") {
-    const auto msg = fmt::format(
-        "unable to get device ptr from {}. make sure handle is not empty",
-        ipc_handle);
+    const auto msg = fmt::format("unable to get device ptr from {}. make sure handle is not empty", ipc_handle);
     LOG(FATAL) << msg;
     throw dmlc::Error(msg);
   }
 
   cudaIpcMemHandle_t handle;
-  memcpy((uint8_t *)&handle, ipc_handle.c_str(), sizeof(handle));
+  memcpy((uint8_t *) &handle, ipc_handle.c_str(), sizeof(handle));
 
-  LOG(INFO) << "get handle = " << handle
-            << "get base64 handle = " << utils::base64_encode(ipc_handle);
-
-
+  LOG(INFO) << "get handle = " << handle << "get base64 handle = " << utils::base64_encode(ipc_handle);
 
   void *device_ptr;
-  auto span= start_span("performing cudaIpcOpenMemHandle for "s + layer.name() , span_category_ipc);
-  CUDA_CHECK_CALL(cudaIpcOpenMemHandle((void **)&device_ptr, handle,
-                                       cudaIpcMemLazyEnablePeerAccess),
-                  fmt::format("failed to open cuda ipc mem handle from {}",
-                              utils::base64_encode(ipc_handle)));
+  auto span = start_span("cudaIpcOpenMemHandle", span_category_ipc, span_props{{"layer", layer.name()}});
+  CUDA_CHECK_CALL(cudaIpcOpenMemHandle((void **) &device_ptr, handle, cudaIpcMemLazyEnablePeerAccess),
+                  fmt::format("failed to open cuda ipc mem handle from {}", utils::base64_encode(ipc_handle)));
   stop_span(span);
-                              
+
   LOG(INFO) << "get device_ptr = " << device_ptr;
 
   return device_ptr;
@@ -69,33 +61,31 @@ static void *get_device_ptr(const Layer &layer) {
 static void to_ndarray(std::vector<NDArray> *arrays, const Layer &layer) {
   const auto ctx = get_ctx();
 
-  auto span= start_span("convering "s + layer.name() +  " to  nd_array"s, span_category_serialization);
+  auto span = start_span("to_nd_array"s, span_category_serialization, span_props{{"layer", layer.name()}});
   defer(stop_span(span));
 
-  const auto shape = to_shape(layer.shape());
+  const auto shape    = to_shape(layer.shape());
   const auto dev_mask = ctx.dev_mask();
-  const auto dev_id = ctx.dev_id;
+  const auto dev_id   = ctx.dev_id;
 
-  LOG(INFO) << "in layey=" << layer.name()
-            << " getting device ptr using ctx = " << ctx;
+  LOG(INFO) << "in layer=" << layer.name() << " getting device ptr using ctx = " << ctx;
 
   auto device_ptr = get_device_ptr(layer);
 
-  auto span_creating = start_span("creating nd_array for "s + layer.name() , span_category_serialization);
+  auto span_creating =
+      start_span("creating_nd_array"s, span_category_serialization, span_props{{"layer", layer.name()}});
   defer(stop_span(span_creating));
 
   TBlob blob(device_ptr, shape, dev_mask, dev_id);
   arrays->emplace_back(blob, dev_id);
 
-  return ;
+  return;
 }
 
-static void
-to_ndarrays(std::vector<NDArray> *arrays, std::vector<std::string> *keys, const ModelHandle &reply) {
+static void to_ndarrays(std::vector<NDArray> *arrays, std::vector<std::string> *keys, const ModelHandle &reply) {
   const auto layers = reply.layer();
 
-  LOG(INFO) << "got " << layers.size()
-            << " layers form reply, before to_ndarray";
+  LOG(INFO) << "got " << layers.size() << " layers form reply, before to_ndarray";
 
   for (const auto layer : layers) {
     keys->emplace_back(layer.name());
@@ -104,7 +94,7 @@ to_ndarrays(std::vector<NDArray> *arrays, std::vector<std::string> *keys, const 
 
   LOG(INFO) << "finished nd_array conversion";
 
-  return ;
+  return;
 }
 
 struct client {
@@ -113,22 +103,21 @@ struct client {
   static std::string server_address;
   class RegistryClient {
   public:
-    explicit RegistryClient(std::shared_ptr<Channel> channel)
-        : stub_(Registry::NewStub(channel)) {}
+    explicit RegistryClient(std::shared_ptr<Channel> channel) : stub_(Registry::NewStub(channel)) {
+    }
 
     Model Info(const ModelRequest &request) {
       Model reply;
       ClientContext context;
 
-      auto span = start_span("grpc info", span_category_grpc);
+      auto span = start_span("info", span_category_grpc);
       defer(stop_span(span));
 
       const auto status = stub_->Info(&context, request, &reply);
 
       if (!status.ok()) {
-        throw dmlc::Error(fmt::format("Error: [{}] {}. Info failed on client.",
-                                      status.error_message(),
-                                      status.error_details()));
+        throw dmlc::Error(
+            fmt::format("Error: [{}] {}. Info failed on client.", status.error_message(), status.error_details()));
       }
       return reply;
     }
@@ -143,15 +132,14 @@ struct client {
       ModelHandle reply;
       ClientContext context;
 
-      auto span = start_span("grpc open", span_category_grpc);
+      auto span = start_span("open", span_category_grpc);
       defer(stop_span(span));
 
       const auto status = stub_->Open(&context, request, &reply);
 
       if (!status.ok()) {
-        throw dmlc::Error(fmt::format("Error: [{}] {}. Open failed on client.",
-                                      status.error_message(),
-                                      status.error_details()));
+        throw dmlc::Error(
+            fmt::format("Error: [{}] {}. Open failed on client.", status.error_message(), status.error_details()));
       }
       return reply;
     }
@@ -166,15 +154,14 @@ struct client {
       Void reply;
       ClientContext context;
 
-      auto span = start_span("grpc close", span_category_grpc);
+      auto span = start_span("close", span_category_grpc);
       defer(stop_span(span));
 
       const auto status = stub_->Close(&context, request, &reply);
 
       if (!status.ok()) {
-        throw dmlc::Error(fmt::format("Error: [{}] {}. Close failed on client.",
-                                      status.error_message(),
-                                      status.error_details()));
+        throw dmlc::Error(
+            fmt::format("Error: [{}] {}. Close failed on client.", status.error_message(), status.error_details()));
       }
       return;
     }
@@ -183,19 +170,17 @@ struct client {
     std::unique_ptr<Registry::Stub> stub_;
   };
 
-  static void Load(std::string model_name, std::vector<NDArray> *res_arrays,
-                   std::vector<std::string> *res_keys) {
-    auto span_loading = start_span("loading nd_array", span_category_load);
+  static void Load(std::string model_name, std::vector<NDArray> *res_arrays, std::vector<std::string> *res_keys) {
+    auto span_loading = start_span("load_nd_array", span_category_load, span_props{{"model_name", model_name}});
     defer(stop_span(span_loading));
 
-    RegistryClient client(grpc::CreateChannel(
-        server_address, grpc::InsecureChannelCredentials()));
+    RegistryClient client(grpc::CreateChannel(server_address, grpc::InsecureChannelCredentials()));
 
     const auto open_reply = client.Open(model_name); // The actual RPC call!
 
     LOG(INFO) << "Client received open reply: " << open_reply.id();
 
-    auto span_converting = start_span("convering to nd_array", span_category_serialization);
+    auto span_converting = start_span("convering_to_nd_array", span_category_serialization);
     defer(stop_span(span_converting));
 
     to_ndarrays(res_arrays, res_keys, open_reply);
@@ -205,11 +190,10 @@ struct client {
 };
 
 std::string client::server_host_name = server::host_name;
-int client::server_port = server::port;
-std::string client::server_address = server::address;
+int client::server_port              = server::port;
+std::string client::server_address   = server::address;
 
-void Load(std::string model_name, std::vector<NDArray> *data,
-          std::vector<std::string> *keys) {
+void Load(std::string model_name, std::vector<NDArray> *data, std::vector<std::string> *keys) {
 
   LOG(INFO) << "UPR:: loading in Client mode";
 

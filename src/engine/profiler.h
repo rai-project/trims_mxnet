@@ -43,9 +43,9 @@ namespace engine {
    * \brief Operation execution statistics
    */
   struct OprExecStat {
-    int category;
+    std::string category{"category"};
     /*! \brief operation name */
-    char opr_name[256];
+    std::string opr_name{""};
     /*!
      * \brief operation execution start relative timestamp
      *        time unit is microsecond (10^-6 s)
@@ -72,13 +72,15 @@ namespace engine {
 #endif
 #endif
 
-    std::map<std::string, std::string> metadata;
+    std::map<std::string, std::string> metadata{};
   };
 
   /*!
    * \brief Device statistics
    */
   struct DevStat {
+    /*! \brief device id */
+    int dev_id_;
     /*! \brief device name */
     std::string dev_name_;
     /*! \brief operation execution statistics on this device */
