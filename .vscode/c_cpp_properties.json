@@ -1,0 +1,32 @@
+{
+    "configurations": [
+        {
+            "name": "null",
+            "includePath": [
+                "/usr/local/cuda/include"
+            ],
+            "defines": [
+                "MXNET_USE_CUDA",
+                "USE_SSE=0",
+                "MSHADOW_USE_SSE=0",
+                "FMT_HEADER_ONLY=1",
+                "USE_OPENMP=0",
+                "NO_OPENMP=1",
+                "USE_CUDA=1",
+                "MXNET_USE_CUDA=1",
+                "MXNET_USE_PROFILER"
+            ],
+            "browse": {
+                "path": [],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": ""
+            },
+            "intelliSenseMode": "clang-x64",
+            "macFrameworkPath": [
+                "/System/Library/Frameworks",
+                "/Library/Frameworks"
+            ]
+        }
+    ],
+    "version": 3
+}
