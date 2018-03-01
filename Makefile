@@ -424,8 +424,8 @@ GIT_COMMIT_FILE=src/version.h
 
 .PHONY: force
 $(GIT_COMMIT_FILE): force
-	git rev-parse HEAD | awk ' BEGIN {print "#include \"./version.h\""} {print "const char * build_git_sha = \"" $$0"\";"} END {}' > src/version.cc
-	date | awk 'BEGIN {} {print "const char * build_git_time = \""$$0"\";"} END {} ' >> src/version.cc
+	git rev-parse HEAD | awk ' BEGIN {print "#include \"./version.h\""} {print "const char * build_git_sha = \"" $$0"\";"} END {}' > src/version.inc
+	date | awk 'BEGIN {} {print "const char * build_git_time = \""$$0"\";"} END {} ' >> src/version.inc
 
 # NOTE: to statically link libmxnet.a we need the option
 # --Wl,--whole-archive -lmxnet --Wl,--no-whole-archive

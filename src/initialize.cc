@@ -30,6 +30,7 @@
 #if DETAILED_PROFILE
 #include "./inst_nvtx.inc"
 #endif
+#include "./version.inc"
 
 // - apt-get install binutils-dev ...
 // - g++/clang++ -lbfd ...
