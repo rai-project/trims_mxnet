@@ -419,13 +419,20 @@ build/plugin/%.o: plugin/%.cc
 	@mkdir -p $(@D)
 	$(CXX) -std=c++11 -c $(CFLAGS) -MMD -Isrc/operator -c $< -o $@
 
+
+GIT_COMMIT_FILE=src/version.h
+
+$(GIT_COMMIT_FILE): phony
+    $(GIT) rev-parse HEAD | awk ' BEGIN {print "#include \"version.h\""} {print "const char * build_git_sha = \"" $$0"\";"} END {}' > src/version.cc
+    date | awk 'BEGIN {} {print "const char * build_git_time = \""$$0"\";"} END {} ' >> src/version.cc
+
 # NOTE: to statically link libmxnet.a we need the option
 # --Wl,--whole-archive -lmxnet --Wl,--no-whole-archive
-lib/libmxnet.a: $(ALLX_DEP)
+lib/libmxnet.a: $(ALLX_DEP) $(GIT_COMMIT_FILE)
 	@mkdir -p $(@D)
 	ar crv $@ $(filter %.o, $?)
 
-lib/libmxnet.so: $(ALLX_DEP)
+lib/libmxnet.so: $(ALLX_DEP) $(GIT_COMMIT_FILE)
 	@mkdir -p $(@D)
 	$(CXX) $(CFLAGS) -shared -o $@ $(filter-out %libnnvm.a, $(filter %.o %.a, $^)) $(LDFLAGS) \
 	-Wl,${WHOLE_ARCH} $(filter %libnnvm.a, $^) -Wl,${NO_WHOLE_ARCH}

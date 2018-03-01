@@ -22,6 +22,7 @@
  * \file profiler.cc
  * \brief implements profiler
  */
+#include "../version.h"
 #include "./profiler.h"
 #include <dmlc/base.h>
 #include <dmlc/logging.h>
@@ -29,6 +30,8 @@
 #include <fstream>
 #include <mxnet/base.h>
 #include <thread>
+#include <unistd.h>
+#include <limits.h>
 
 #include "c_api/ipc.h"
 #include "json.hpp"
@@ -177,7 +180,18 @@ void Profiler::DumpProfile() {
   json metadata;
 
   try {
-    metadata = json({{"is_client", upr::is_client},
+  char hostname[HOST_NAME_MAX];
+  char username[LOGIN_NAME_MAX];
+  gethostname(hostname, HOST_NAME_MAX);
+  getlogin_r(username, LOGIN_NAME_MAX);
+    metadata = json({
+      {"hostname", std::string(hostname)},
+      {"username", std::string(username)},
+      {"git", {
+        {"commit", std::string(build_git_sha)},
+        {"date", std::string(build_git_time)}
+      }},
+      {"is_client", upr::is_client},
                      {"UPR_BASE_DIR", upr::UPR_BASE_DIR},
                      {"model_name", upr::get_model_name()},
                      {"model_path", upr::get_model_directory_path()},
