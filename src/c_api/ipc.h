@@ -99,6 +99,7 @@ static int span_category_load          = 6;
 static int span_category_serialization = 7;
 static int span_category_ipc           = 8;
 static int span_category_grpc          = 9;
+static int span_category_mxnet_init          = 11;
 
 static inline engine::OprExecStat *start_span(const std::string &name, int category = 0) {
 #if MXNET_USE_PROFILER

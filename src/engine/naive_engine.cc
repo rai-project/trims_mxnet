@@ -26,7 +26,7 @@
 #include <atomic>
 #include <thread>
 #include "./engine_impl.h"
-#include "./profiler.h"
+#include "../profiler/profiler.h"
 #include "./openmp.h"
 #include "c_api/ipc.h"
 
@@ -45,36 +45,14 @@ class NaiveEngine final : public Engine {
     /*! \brief indicate whether to profile this operator */
     bool profiling{false};
     /*! \brief operator execution statistics */
-    OprExecStat *opr_stat;
+    std::unique_ptr<profiler::ProfileOperator> opr_profile;
   };
 
   NaiveEngine() {
-    auto ctx = Context::GPU();
- #if MXNET_USE_CUDA
- #if MXNET_USE_PROFILER
-   auto span= upr::start_span("performing NaiveEngine initialization" , span_category_init);
-   defer(upr::stop_span(span));
- #endif
-
-    LOG(INFO) << "Engine initialization";
-    size_t dev_id = static_cast<size_t>(ctx.dev_id);
-    MSHADOW_CATCH_ERROR(mshadow::SetDevice<gpu>(ctx.dev_id));
-    if (streams_.size() <= dev_id) {
-      streams_.resize(dev_id + 1, nullptr);
-    }
-    if (streams_[dev_id] != nullptr) {
-      LOG(INFO) << "stream [" << dev_id << "] is not empty, will be overwritten";
-    }
-    if (streams_[dev_id] == nullptr) {
-      streams_[dev_id] = mshadow::NewStream<gpu>(true, MXNET_USE_CUDNN != 0, dev_id);
-      LOG(INFO) << "stream [" << dev_id << "] is initializad with new stream";
-    }
-#endif
   }
   // virtual destructor
   virtual ~NaiveEngine() {
 #if MXNET_USE_CUDA
-return ;
     LOG(INFO) << "Engine shutdown";
     for (size_t i = 0; i < streams_.size(); ++i) {
       if (streams_[i] != nullptr) {
@@ -96,7 +74,8 @@ return ;
                         std::vector<VarHandle> const& const_vars,
                         std::vector<VarHandle> const& mutable_vars,
                         FnProperty prop = FnProperty::kNormal,
-                        const char* opr_name = nullptr) override {
+                        const char* opr_name = nullptr,
+                        bool wait = false) override {
     NaiveOpr *opr = new NaiveOpr();
     opr->fn = fn;
     opr->const_vars = const_vars;
@@ -112,23 +91,22 @@ return ;
   }
 
   void Push(OprHandle op, Context exec_ctx, int priority = 0, bool profiling = false) override {
-    Profiler *profiler = Profiler::Get();
+    profiler::Profiler *profiler = profiler::Profiler::Get();
     NaiveOpr *opr = op->Cast<NaiveOpr>();
-    opr->profiling = profiling && (profiler->GetMode() == Profiler::kOnlySymbolic);
+    opr->profiling = profiling && profiler->IsProfiling(profiler::Profiler::kSymbolic);
     this->PushAsync([&](RunContext ctx, CallbackOnComplete on_complete) {
 #if MXNET_USE_PROFILER
         if (opr->profiling) {
-          opr->opr_stat = Profiler::Get()->AddOprStat(exec_ctx.dev_type, exec_ctx.dev_id);
-          uint64_t id = std::hash<std::thread::id>()(std::this_thread::get_id());
-          opr->opr_stat->thread_id = id;
-          strncpy(opr->opr_stat->opr_name,
-            opr->opr_name,
-            sizeof(opr->opr_stat->opr_name) - 1);
-          SetOprStart(opr->opr_stat);
+          std::unique_ptr<profiler::ProfileOperator::Attributes> attrs;
+          if (profiler->AggregateEnabled()) {
+            attrs.reset(new profiler::ProfileOperator::Attributes());
+          }
+          opr->opr_profile.reset(new profiler::ProfileOperator(opr->opr_name, attrs.release()));
+          opr->opr_profile->start(exec_ctx.dev_type, exec_ctx.dev_id);
         }
         opr->fn(ctx, on_complete);
         if (opr->profiling) {
-          SetOprEnd(opr->opr_stat);
+          opr->opr_profile->stop();
         }
 #else
         opr->fn(ctx, on_complete);
@@ -148,33 +126,31 @@ return ;
                  std::vector<VarHandle> const& mutable_vars,
                  FnProperty prop = FnProperty::kNormal,
                  int priority = 0,
-                 const char* opr_name = nullptr) override {
+                 const char* opr_name = nullptr,
+                 bool wait = false) override {
     CallbackOnComplete callback = CreateCallback(
         NaiveEngine::OnComplete, nullptr);
     this->req_completed_ = false;
 #if MXNET_USE_PROFILER
-    Profiler *profiler = Profiler::Get();
+    profiler::Profiler *profiler = profiler::Profiler::Get();
     NaiveOpr *opr = nullptr;
-    bool profiling = (profiler->GetState() == Profiler::kRunning) &&
-                   (profiler->GetMode() == Profiler::kAllOperator) &&
-                   opr_name;
+    const bool profiling = opr_name && profiler->IsProfiling(profiler::Profiler::kImperative);
     if (profiling) {
       opr = NewOperator(exec_fun, const_vars, mutable_vars,
                         prop, opr_name)->Cast<NaiveOpr>();
       opr->profiling = profiling;
-      opr->opr_stat = Profiler::Get()->AddOprStat(exec_ctx.dev_type, exec_ctx.dev_id);
-      uint64_t id = std::hash<std::thread::id>()(std::this_thread::get_id());
-      opr->opr_stat->thread_id = id;
-      strncpy(opr->opr_stat->opr_name,
-              opr->opr_name,
-              sizeof(opr->opr_stat->opr_name) - 1);
-      SetOprStart(opr->opr_stat);
+      std::unique_ptr<profiler::ProfileOperator::Attributes> attrs;
+      if (profiler->AggregateEnabled()) {
+        attrs.reset(new profiler::ProfileOperator::Attributes());
+      }
+      opr->opr_profile.reset(new profiler::ProfileOperator(opr->opr_name, attrs.release()));
+      opr->opr_profile->start(exec_ctx.dev_type, exec_ctx.dev_id);
     }
 #endif
     if (exec_ctx.dev_mask() == gpu::kDevMask) {
 #if MXNET_USE_CUDA
+      auto span= upr::start_span("performing NaiveEngine initialization" , span_category_mxnet_init);
       size_t dev_id = static_cast<size_t>(exec_ctx.dev_id);
-#if 0
       MSHADOW_CATCH_ERROR(mshadow::SetDevice<gpu>(exec_ctx.dev_id));
       if (streams_.size() <= dev_id) {
         streams_.resize(dev_id + 1, nullptr);
@@ -182,8 +158,8 @@ return ;
       if (streams_[dev_id] == nullptr) {
         streams_[dev_id] = mshadow::NewStream<gpu>(true, MXNET_USE_CUDNN != 0, dev_id);
       }
-#endif
       exec_fun(RunContext{exec_ctx, streams_[dev_id]}, callback);
+      upr::stop_span(span);
 #else
       LOG(FATAL) << "GPU is not enabled";
 #endif
@@ -194,7 +170,7 @@ return ;
         << "NaiveEngine only support synchronize Push so far";
 #if MXNET_USE_PROFILER
     if (profiling) {
-      SetOprEnd(opr->opr_stat);
+      opr->opr_profile->stop();
     }
 #endif
   }
