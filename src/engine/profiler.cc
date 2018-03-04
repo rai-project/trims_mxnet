@@ -105,10 +105,10 @@ namespace engine {
 
   OprExecStat *Profiler::AddOprStat(int dev_type, uint32_t dev_id) {
     std::unique_ptr<OprExecStat> opr_stat(new OprExecStat);
-    opr_stat->category                                 = 0;
+    opr_stat->category                                 = "generic";
     opr_stat->dev_type                                 = dev_type;
     opr_stat->dev_id                                   = dev_id;
-    opr_stat->opr_name[sizeof(opr_stat->opr_name) - 1] = '\0';
+    opr_stat->opr_name = "undefined";
 
     int idx;
     switch (dev_type) {
@@ -144,9 +144,9 @@ namespace engine {
     return engine;
   }
 
-  static json emitPid(const DevStat &dev) {
+  static json emitPid(const DevStat &d) {
     const auto name = d.dev_name_;
-    const auto pid  = d.dev_id_;
+    auto pid  = d.dev_id_;
     if (engine_type() == "NaiveEngine") {
       pid = 0;
     }
@@ -154,18 +154,19 @@ namespace engine {
     return j;
   }
 
-  static json emitPid(const DevStat &dev, std::unique_ptr<OprExecStat> opr_stat, std::string begin_end) {
+  static json emitEvent(const DevStat &d, std::unique_ptr<OprExecStat> opr_stat, std::string begin_end) {
     const auto name     = opr_stat->opr_name;
     const auto category = opr_stat->category;
     const auto ts       = opr_stat->opr_start_rel_micros;
-    const auto pid      = d.dev_id_;
+    auto pid      = d.dev_id_;
     auto tid            = opr_stat->thread_id;
     const auto args     = json(opr_stat->metadata);
 
     if (engine_type() == "NaiveEngine") {
       pid = 0;
+      tid = 0;
     }
-    json j = {{"name", name}, {"cat", category}, {"ph", ph}, {"ts", ts}, {"pid", pid}, {"tid", tid}};
+    json j = {{"name", name}, {"cat", category}, {"ph", begin_end}, {"ts", ts}, {"pid", pid}, {"tid", tid}, {"args", args}};
     return j;
   }
 

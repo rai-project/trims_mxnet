@@ -112,7 +112,7 @@ static inline engine::OprExecStat *start_span(const std::string &name, std::stri
   const auto ctx = get_ctx();
   auto opr_stat  = engine::Profiler::Get()->AddOprStat(ctx.dev_type, ctx.dev_id);
   uint64_t tid   = std::hash<std::thread::id>()(std::this_thread::get_id());
-  opr_stat->name = name;
+  opr_stat->opr_name = name;
   engine::SetOprCategory(opr_stat, category);
   engine::SetOprStart(opr_stat);
   return opr_stat;
