@@ -121,8 +121,8 @@ static inline engine::OprExecStat *start_span(const std::string &name, std::stri
 #endif
 }
 
-static inline engine::OprExecStat *start_span(const std::string &name, span_props props,
-                                              std::string category = "other") {
+static inline engine::OprExecStat *start_span(const std::string &name, 
+                                              std::string category, span_props props) {
 #if MXNET_USE_PROFILER
   auto span = start_span(name, category);
   for (const auto kv : props) {
