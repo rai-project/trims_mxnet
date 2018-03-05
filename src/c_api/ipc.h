@@ -107,7 +107,7 @@ static std::string span_category_mxnet_init    = "init";
 
 using span_props = std::map<std::string, std::string>;
 
-static inline engine::OprExecStat *start_span(const std::string &name, std::string category = "other") {
+static inline engine::OprExecStat *start_span(const std::string &name, std::string category ) {
 #if MXNET_USE_PROFILER
   const auto ctx = get_ctx();
   auto opr_stat  = engine::Profiler::Get()->AddOprStat(ctx.dev_type, ctx.dev_id);

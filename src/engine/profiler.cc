@@ -264,7 +264,7 @@ namespace engine {
     opr_stat->metadata.insert({key, value});
   }
 
-  void SetOprCategory(OprExecStat *opr_stat, int category) {
+  void SetOprCategory(OprExecStat *opr_stat, const std::string & category) {
     opr_stat->category = category;
   }
 

@@ -169,7 +169,7 @@ namespace engine {
   /*! \return current clock time, time unit is microsecond (10^-6 s) */
   inline uint64_t NowInUsec();
   void AddOprMetadata(OprExecStat *opr_stat, const std::string &key, const std::string &value);
-  void SetOprCategory(OprExecStat *opr_stat, std::string category);
+  void SetOprCategory(OprExecStat *opr_stat, const std::string & category);
   /*! \brief set operation execution start timestamp */
   void SetOprStart(OprExecStat *opr_stat);
   /*! \brief set operation execution end timestamp */
