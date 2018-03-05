@@ -107,11 +107,11 @@ static std::map<std::string, std::string> model_directory_paths{{"bvlc_alexnet_1
                                                                 {"resnext101_1.0", UPR_BASE_DIR + "resnext101_1.0"},
                                                                 {"squeezenet_1.0", UPR_BASE_DIR + "squeezenet_1.0"},
                                                                 {"squeezenet_1.1", UPR_BASE_DIR + "squeezenet_1.1"},
-                                                                {"vgg16_sod_1.0", UPR_BASE_DIR + "vgg16_sod_1.0"}},                                                                
-                                                                {"vgg16_sos_1.0", UPR_BASE_DIR + "vgg16_sos_1.0"}},                                                                
-                                                                {"vgg16_1.0", UPR_BASE_DIR + "vgg16_1.0"}},                                                                
-                                                                {"vgg19_1.0", UPR_BASE_DIR + "vgg19_1.0"}},                                                                
-                                                                {"xception_1.0", UPR_BASE_DIR + "xception_1.0"}},                                                                
+                                                                {"vgg16_sod_1.0", UPR_BASE_DIR + "vgg16_sod_1.0"},                                                                
+                                                                {"vgg16_sos_1.0", UPR_BASE_DIR + "vgg16_sos_1.0"},                                                                
+                                                                {"vgg16_1.0", UPR_BASE_DIR + "vgg16_1.0"},                                                                
+                                                                {"vgg19_1.0", UPR_BASE_DIR + "vgg19_1.0"},                                                                
+                                                                {"xception_1.0", UPR_BASE_DIR + "xception_1.0"},                                                                
                                                                 {"wrn50_2.0", UPR_BASE_DIR + "wrn50_2.0"}};
 
 /**
