@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/bash
 
 DATE=`date '+%Y-%m-%d-%H-%M-%S'`
 export UPR_CLIENT=1
@@ -12,7 +12,7 @@ export MXNET_GPU_WORKER_NTHREADS=2
 declare -a models=(
     bvlc_alexnet_1.0
     bvlc_googlenet_1.0
-)
+    )
 
 for i in "${models[@]}"
 do

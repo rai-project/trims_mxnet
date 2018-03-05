@@ -42,7 +42,7 @@
 #define MBYTE 1024 * KBYTE
 #define DATA_SIZE 4 * BYTE
 
-#define DEFAULT_MODEL "alexnet"
+#define DEFAULT_MODEL "bvlc_alexnet_1.0"
 
 #ifdef NDEBUG
 #define CUDA_CHECK_CALL(func, msg) func
