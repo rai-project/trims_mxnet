@@ -2,6 +2,7 @@
 
 DATE=`date '+%Y-%m-%d-%H-%M-%S'`
 export UPR_CLIENT=1
+export UPR_INITIALIZE_EAGER=1
 export MXNET_CPU_PRIORITY_NTHREADS=1
 export OMP_NUM_THREADS=1
 

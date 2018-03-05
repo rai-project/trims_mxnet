@@ -57,7 +57,7 @@ namespace engine {
     void Initalize(Context exec_ctx) {
 #if MXNET_USE_CUDA
       using namespace upr;
-      static bool initialized = true;
+      static bool initialized = false;
       if (initialized) {
         return;
       }
@@ -72,7 +72,7 @@ namespace engine {
         stop_span(span);
       }
       initialized = true;
-#endif MXNET_USE_CUDA
+#endif //MXNET_USE_CUDA
     }
 
     // new variables
@@ -160,6 +160,7 @@ namespace engine {
         if (!eager_init) {
           this->Initalize(exec_ctx);
         }
+        size_t dev_id = static_cast<size_t>(exec_ctx.dev_id);
         exec_fun(RunContext{exec_ctx, streams_[dev_id]}, callback);
 #else
         LOG(FATAL) << "GPU is not enabled";

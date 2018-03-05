@@ -84,7 +84,7 @@ public:
     if (eager_init) {
       static const auto ctx = Context::GPU();
       auto engine           = Engine::_GetSharedRef();
-      engine->Initalize(ctx);
+      engine->Initialize(ctx);
     }
   }
 
