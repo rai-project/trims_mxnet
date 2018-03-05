@@ -28,11 +28,11 @@
 #include <dmlc/base.h>
 #if DMLC_USE_CXX11
 #include <algorithm>
-#include <memory>
 #include <functional>
+#include <memory>
 #endif
-#include <vector>
 #include "./base.h"
+#include <vector>
 
 namespace mxnet {
 
@@ -41,37 +41,37 @@ class Engine;
 
 /*! \brief namespace of engine internal types. */
 namespace engine {
-/*! \brief Internal representation of variable. */
-struct Var;
-/*! \brief Internal representation of operator.  */
-struct Opr;
-/*! \brief Variable pointer type, usually hold by user used to specify dependencies. */
-typedef Var* VarHandle;
-/*! \brief Operator pointer type, usually hold by user.*/
-typedef Opr* OprHandle;
-/*!
- * \brief OnComplete Callback to the engine,
- *  called by AsyncFn when action completes
- */
-class CallbackOnComplete {
- public:
-  // use implicit copy and assign
-  /*! \brief involve the callback */
-  inline void operator()() const {
-    (*callback_)(engine_, param_);
-  }
+  /*! \brief Internal representation of variable. */
+  struct Var;
+  /*! \brief Internal representation of operator.  */
+  struct Opr;
+  /*! \brief Variable pointer type, usually hold by user used to specify dependencies. */
+  typedef Var* VarHandle;
+  /*! \brief Operator pointer type, usually hold by user.*/
+  typedef Opr* OprHandle;
+  /*!
+   * \brief OnComplete Callback to the engine,
+   *  called by AsyncFn when action completes
+   */
+  class CallbackOnComplete {
+  public:
+    // use implicit copy and assign
+    /*! \brief involve the callback */
+    inline void operator()() const {
+      (*callback_)(engine_, param_);
+    }
 
- private:
-  /*! \brief engine can see content of callback */
-  friend class ::mxnet::Engine;
-  /*! \brief the real callback */
-  void (*callback_)(Engine *, void *);
-  /*! \brief the engine class passed to callback */
-  Engine* engine_;
-  /*! \brief the parameter set on callback */
-  void* param_;
-};
-}  // namespace engine
+  private:
+    /*! \brief engine can see content of callback */
+    friend class ::mxnet::Engine;
+    /*! \brief the real callback */
+    void (*callback_)(Engine*, void*);
+    /*! \brief the engine class passed to callback */
+    Engine* engine_;
+    /*! \brief the parameter set on callback */
+    void* param_;
+  };
+} // namespace engine
 
 #if DMLC_USE_CXX11
 /*! \brief Function property, used to hint what action is pushed to engine. */
@@ -88,13 +88,13 @@ enum class FnProperty {
   kAsync,
   /*! \brief Delete variable call */
   kDeleteVar
-};  // enum class FnProperty
+}; // enum class FnProperty
 
 /*!
  * \brief Dependency engine that schedules operations.
-*/
+ */
 class MXNET_API Engine {
- public:
+public:
   /*! \brief callback on complete*/
   typedef engine::CallbackOnComplete CallbackOnComplete;
   /*! \brief Synchronous operation to pass to engine. */
@@ -105,6 +105,9 @@ class MXNET_API Engine {
   typedef engine::VarHandle VarHandle;
   /*! \brief Operator pointer */
   typedef engine::OprHandle OprHandle;
+  virtual void Initialize(Context exec_ctx) {
+    LOG(FATAL) << "Engine cannot be initialized";
+  }
   /*!
    * \brief Notify the engine about a shutdown,
    *  This can help engine to print less messages into display.
@@ -146,7 +149,7 @@ class MXNET_API Engine {
   virtual OprHandle NewOperator(AsyncFn fn,
                                 std::vector<VarHandle> const& const_vars,
                                 std::vector<VarHandle> const& mutable_vars,
-                                FnProperty prop = FnProperty::kNormal,
+                                FnProperty prop      = FnProperty::kNormal,
                                 const char* opr_name = nullptr) = 0;
   /*!
    * \brief Delete the given operator.
@@ -177,12 +180,9 @@ class MXNET_API Engine {
    * \param priority Priority of the action, as hint to the engine.
    * \param opr_name The operator name.
    */
-  virtual void PushAsync(AsyncFn exec_fun, Context exec_ctx,
-                         std::vector<VarHandle> const& const_vars,
-                         std::vector<VarHandle> const& mutable_vars,
-                         FnProperty prop = FnProperty::kNormal,
-                         int priority = 0,
-                         const char* opr_name = nullptr) = 0;
+  virtual void PushAsync(AsyncFn exec_fun, Context exec_ctx, std::vector<VarHandle> const& const_vars,
+                         std::vector<VarHandle> const& mutable_vars, FnProperty prop = FnProperty::kNormal,
+                         int priority = 0, const char* opr_name = nullptr) = 0;
   /*!
    * \brief Schedule the deletion of a variable.
    *
@@ -194,9 +194,7 @@ class MXNET_API Engine {
    * \param exec_ctx Execution context.
    * \param var The variable to be deleted.
    */
-  virtual void DeleteVariable(SyncFn delete_fn,
-                              Context exec_ctx,
-                              VarHandle var) = 0;
+  virtual void DeleteVariable(SyncFn delete_fn, Context exec_ctx, VarHandle var) = 0;
   /*!
    * \brief Wait for a variable.
    * \param var The variable we should wait for. This function returns when the
@@ -208,7 +206,8 @@ class MXNET_API Engine {
    */
   virtual void WaitForAll() = 0;
   /*!\brief virtual destructor */
-  virtual ~Engine() noexcept(false) {}
+  virtual ~Engine() noexcept(false) {
+  }
   /*!
    * \return Engine singleton.
    */
@@ -234,16 +233,15 @@ class MXNET_API Engine {
    * \param opr_name The operator name.
    * \tparam SyncFn the synchronous function to be pushed.
    */
-  virtual void PushSync(SyncFn exec_fn, Context exec_ctx,
-                        std::vector<VarHandle> const& const_vars,
-                        std::vector<VarHandle> const& mutable_vars,
-                        FnProperty prop = FnProperty::kNormal,
-                        int priority = 0,
-                        const char* opr_name = nullptr) {
-    this->PushAsync([exec_fn](RunContext ctx, CallbackOnComplete on_complete) {
-        exec_fn(ctx);
-        on_complete();
-      }, exec_ctx, const_vars, mutable_vars, prop, priority, opr_name);
+  virtual void PushSync(SyncFn exec_fn, Context exec_ctx, std::vector<VarHandle> const& const_vars,
+                        std::vector<VarHandle> const& mutable_vars, FnProperty prop = FnProperty::kNormal,
+                        int priority = 0, const char* opr_name = nullptr) {
+    this->PushAsync(
+        [exec_fn](RunContext ctx, CallbackOnComplete on_complete) {
+          exec_fn(ctx);
+          on_complete();
+        },
+        exec_ctx, const_vars, mutable_vars, prop, priority, opr_name);
   }
 
   /*!
@@ -251,28 +249,26 @@ class MXNET_API Engine {
    * \param callback th static callback function.
    * \param param the paramter passed to callback.
    */
-  inline CallbackOnComplete CreateCallback(
-      void (*callback)(Engine *, void *), void *param) {
+  inline CallbackOnComplete CreateCallback(void (*callback)(Engine*, void*), void* param) {
     CallbackOnComplete ret;
     ret.callback_ = callback;
-    ret.engine_ = this;
-    ret.param_ = param;
+    ret.engine_   = this;
+    ret.param_    = param;
     return ret;
   }
   // For each var vector, sort it and remove the duplicated vars.
   // Also remove vars from read_vars if it also appears in write_vars
-  inline void DeduplicateVarHandle(std::vector<engine::VarHandle> *read_vars,
-                                   std::vector<engine::VarHandle> *write_vars) {
+  inline void DeduplicateVarHandle(std::vector<engine::VarHandle>* read_vars,
+                                   std::vector<engine::VarHandle>* write_vars) {
     std::sort(write_vars->begin(), write_vars->end());
-    write_vars->resize(std::unique(write_vars->begin(), write_vars->end()) -
-                      write_vars->begin());
+    write_vars->resize(std::unique(write_vars->begin(), write_vars->end()) - write_vars->begin());
     std::sort(read_vars->begin(), read_vars->end());
-    read_vars->resize(std::unique(read_vars->begin(), read_vars->end()) -
-                      read_vars->begin());
-    auto wit = write_vars->begin();
+    read_vars->resize(std::unique(read_vars->begin(), read_vars->end()) - read_vars->begin());
+    auto wit  = write_vars->begin();
     auto rtop = read_vars->begin();
     for (auto rit = read_vars->begin(); rit != read_vars->end(); ++rit) {
-      while (wit != write_vars->end() && *wit < *rit) ++wit;
+      while (wit != write_vars->end() && *wit < *rit)
+        ++wit;
       if (wit == write_vars->end() || *wit != *rit) {
         *rtop = *rit;
         ++rtop;
@@ -288,7 +284,7 @@ class MXNET_API Engine {
   virtual int set_bulk_size(int) {
     return 0;
   }
-};  // class Engine
-#endif  // DMLC_USE_CXX11
-}  // namespace mxnet
-#endif  // MXNET_ENGINE_H_
+};     // class Engine
+#endif // DMLC_USE_CXX11
+} // namespace mxnet
+#endif // MXNET_ENGINE_H_

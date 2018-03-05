@@ -22,10 +22,10 @@
  * \file initialize.cc
  * \brief initialize mxnet library
  */
-#include <signal.h>
+#include "engine/profiler.h"
 #include <dmlc/logging.h>
 #include <mxnet/engine.h>
-#include "engine/profiler.h"
+#include <signal.h>
 
 #if DETAILED_PROFILE
 #include "./inst_nvtx.inc"
@@ -44,24 +44,24 @@ backward::SignalHandling sh;
 
 } // namespace backward
 
-
 namespace mxnet {
 #if MXNET_USE_SIGNAL_HANDLER && DMLC_LOG_STACK_TRACE
 static void SegfaultLogger(int sig) {
   using namespace backward;
-  StackTrace st; st.load_here(32);
+  StackTrace st;
+  st.load_here(32);
   std::cerr << "\nSegmentation fault: " << sig << "\n\n";
   Printer p;
-  p.object = true;
+  p.object     = true;
   p.color_mode = ColorMode::always;
-  p.address = true;
+  p.address    = true;
   p.print(st, stderr);
   exit(-1);
 }
 #endif
 
 class LibraryInitializer {
- public:
+public:
   LibraryInitializer() {
     dmlc::InitLogging("mxnet");
 #if MXNET_USE_SIGNAL_HANDLER && DMLC_LOG_STACK_TRACE
@@ -71,14 +71,21 @@ class LibraryInitializer {
     // ensure profiler's constructor are called before atexit.
     engine::Profiler::Get();
     // DumpProfile will be called before engine's and profiler's destructor.
-    std::atexit([](){
+    std::atexit([]() {
       engine::Profiler* profiler = engine::Profiler::Get();
       if (profiler->IsEnableOutput()) {
         profiler->DumpProfile();
       }
     });
 #endif
-    Engine::_GetSharedRef();
+
+    static const auto eager_init       = dmlc::GetEnv("UPR_INTIALIZE_EAGER", false);
+    static const auto eager_init_async = dmlc::GetEnv("UPR_INTIALIZE_EAGER_ASYNC", false);
+    if (eager_init) {
+      static const auto ctx = Context::GPU();
+      auto engine           = Engine::_GetSharedRef();
+      engine->Initalize(ctx);
+    }
   }
 
   static LibraryInitializer* Get();
@@ -95,4 +102,4 @@ LibraryInitializer* LibraryInitializer::Get() {
 #endif
 
 static LibraryInitializer* __library_init = LibraryInitializer::Get();
-}  // namespace mxnet
+} // namespace mxnet

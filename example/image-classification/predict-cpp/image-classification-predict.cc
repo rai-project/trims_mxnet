@@ -159,6 +159,9 @@ int main(int argc, char *argv[]) {
   const std::string test_file           = "banana.png";
   const std::string profile_path_suffix = argc == 1 ? "" : std::string(argv[1]);
 
+  cudaSetDevice(0);
+  force_runtime_initialization();
+
   if (!file_exists(test_file)) {
     std::cerr << "the file " << test_file << " does not exist";
     return -1;
@@ -214,9 +217,6 @@ int main(int argc, char *argv[]) {
 
   // Start profiling
   MXSetProfilerState(1);
-
-  cudaSetDevice(0);
-  force_runtime_initialization();
 
   // Create Predictor
   MXPredCreate((const char *) json_data.GetBuffer(), (const char *) param_data.GetBuffer(), param_data.GetLength(),

@@ -52,16 +52,27 @@ namespace engine {
     }
     // virtual destructor
     virtual ~NaiveEngine() {
+    }
+
+    void Initalize(Context exec_ctx) {
 #if MXNET_USE_CUDA
-      LOG(INFO) << "Engine shutdown";
-      for (size_t i = 0; i < streams_.size(); ++i) {
-        if (streams_[i] != nullptr) {
-          // Catch exception for CUDA driver shutdown
-          MSHADOW_CATCH_ERROR(mshadow::DeleteStream(streams_[i]));
-          streams_[i] = nullptr;
-        }
+      using namespace upr;
+      static bool initialized = true;
+      if (initialized) {
+        return;
       }
-#endif
+      size_t dev_id = static_cast<size_t>(exec_ctx.dev_id);
+      MSHADOW_CATCH_ERROR(mshadow::SetDevice<gpu>(exec_ctx.dev_id));
+      if (streams_.size() <= dev_id) {
+        streams_.resize(dev_id + 1, nullptr);
+      }
+      if (streams_[dev_id] == nullptr) {
+        auto span        = start_span("performing NaiveEngine initialization", span_category_mxnet_init);
+        streams_[dev_id] = mshadow::NewStream<gpu>(true, MXNET_USE_CUDNN != 0, dev_id);
+        stop_span(span);
+      }
+      initialized = true;
+#endif MXNET_USE_CUDA
     }
 
     // new variables
@@ -145,17 +156,10 @@ namespace engine {
 #endif
       if (exec_ctx.dev_mask() == gpu::kDevMask) {
 #if MXNET_USE_CUDA
-        using namespace upr;
-        auto span     = start_span("performing NaiveEngine initialization", span_category_mxnet_init);
-        size_t dev_id = static_cast<size_t>(exec_ctx.dev_id);
-        MSHADOW_CATCH_ERROR(mshadow::SetDevice<gpu>(exec_ctx.dev_id));
-        if (streams_.size() <= dev_id) {
-          streams_.resize(dev_id + 1, nullptr);
+        static const auto eager_init = dmlc::GetEnv("UPR_INTIALIZE_EAGER", false);
+        if (!eager_init) {
+          this->Initalize(exec_ctx);
         }
-        if (streams_[dev_id] == nullptr) {
-          streams_[dev_id] = mshadow::NewStream<gpu>(true, MXNET_USE_CUDNN != 0, dev_id);
-        }
-        stop_span(span);
         exec_fun(RunContext{exec_ctx, streams_[dev_id]}, callback);
 #else
         LOG(FATAL) << "GPU is not enabled";

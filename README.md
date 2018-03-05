@@ -90,12 +90,14 @@ The server is part of the MXNet build process.
 
 ## Environment Variables
 
-| Name               | Description | Default Value |
-| ------------------ | ----------- | ------------- |
-| UPR_CLIENT         |             |               |
-| UPR_BASE_DIR       |             |               |
-| UPR_MODEL_NAME     |             |               |
-| UPR_PROFILE_TARGET |             | profile.json  |
+| Name                      | Description | Default Value |
+| ------------------------- | ----------- | ------------- |
+| UPR_CLIENT                |             |               |
+| UPR_BASE_DIR              |             |               |
+| UPR_MODEL_NAME            |             |               |
+| UPR_PROFILE_TARGET        |             | profile.json  |
+| UPR_INTIALIZE_EAGER       |             | false         |
+| UPR_INTIALIZE_EAGER_ASYNC |             | false         |
 
 ## How it Works
 
