@@ -139,6 +139,7 @@ static std::string span_category_serialization = "serialization";
 static std::string span_category_ipc           = "ipc";
 static std::string span_category_grpc          = "grpc";
 static std::string span_category_mxnet_init    = "init";
+static std::string span_category_ignore    = "ignore";
 
 using span_props = std::map<std::string, std::string>;
 

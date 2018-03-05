@@ -361,7 +361,7 @@ struct CachingDeviceAllocator
         cudaStream_t    active_stream = 0)  ///< [in] The stream to be associated with this allocation
     {
         *d_ptr                          = NULL;
-        int entrypoint_device           = INVALID_DEVICE_ORDINAL;
+        int entrypoint_device           = 0;
         cudaError_t error               = cudaSuccess;
 
         if (device == INVALID_DEVICE_ORDINAL)

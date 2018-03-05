@@ -219,6 +219,7 @@ continue;
       const time_t start_time = system_clock::to_time_t(tp_after_duration);
       gethostname(hostname, HOST_NAME_MAX);
       getlogin_r(username, LOGIN_NAME_MAX);
+      
       metadata = json({{"hostname", std::string(hostname)},
                        {"username", std::string(username)},
                        {"git", {{"commit", std::string(build_git_sha)}, {"date", std::string(build_git_time)}}},
@@ -226,6 +227,8 @@ continue;
                        {"end_at", format_time(now)},
                        {"is_client", upr::is_client},
                        {"UPR_BASE_DIR", upr::UPR_BASE_DIR},
+                       {"eager_mode", dmlc::GetEnv("UPR_INITIALIZE_EAGER", false)},
+                       {"eager_mode_async", dmlc::GetEnv("UPR_INITIALIZE_EAGER_ASYNC", false)},
                        {"model_name", upr::get_model_name()},
                        {"model_path", upr::get_model_directory_path()},
                        {"model_params", upr::get_model_params_path()},

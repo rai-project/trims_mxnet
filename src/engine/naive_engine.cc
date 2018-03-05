@@ -62,9 +62,9 @@ namespace engine {
         return;
       }
       int dev_id = static_cast<int>(exec_ctx.dev_id);
-      if (dev_id == -1) {
-        dev_id = 0;
-      }
+      //if (dev_id == -1) {
+      //  dev_id = 0;
+      //}
       MSHADOW_CATCH_ERROR(mshadow::SetDevice<gpu>(exec_ctx.dev_id));
       streams_.resize(dev_id + 1, nullptr);
       static const auto eager_init = dmlc::GetEnv("UPR_INITIALIZE_EAGER", false);
@@ -75,6 +75,7 @@ namespace engine {
 } else {
       streams_[dev_id] = mshadow::NewStream<gpu>(true, MXNET_USE_CUDNN != 0, dev_id);
 }
+    cudaFree(0);
       initialized = true;
 #endif //MXNET_USE_CUDA
     }

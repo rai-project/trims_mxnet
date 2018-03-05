@@ -68,6 +68,18 @@ do
 done
 
 exit
+
+for i in "${models[@]}"
+do
+    echo start to run model = $i
+    export UPR_MODEL_NAME=$i
+    # first time
+    nvprof -f --export-profile `hostname`-${DATE}_profile_0.timeline.nvprof ./image-classification-predict `hostname`_0
+    nvprof -f --export-profile `hostname`-${DATE}_profile_1.timeline.nvprof ./image-classification-predict `hostname`_1
+    nvprof -f --export-profile `hostname`-${DATE}_profile_2.timeline.nvprof ./image-classification-predict `hostname`_2
+done
+
+exit
 # nvprof -f --track-memory-allocations on --print-api-trace --export-profile `hostname`_profile_0.timeline.nvprof ./image-classification-predict
 nvprof -f --export-profile profiles/`hostname`-${DATE}_profile_0.timeline.nvprof ./image-classification-predict
 #nvprof -f --cpu-profiling on --print-gpu-trace --print-api-trace --export-profile `hostname`_profile_1.timeline.nvprof ./image-classification-predict

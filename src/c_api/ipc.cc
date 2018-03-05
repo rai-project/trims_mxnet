@@ -180,6 +180,10 @@ struct client {
 
     LOG(INFO) << "Client received open reply: " << open_reply.id();
 
+    auto span_cudaFree = start_span("cudaFree(0)", span_category_ignore);
+    cudaFree(0);
+    stop_span(span_cudaFree);
+
     auto span_converting = start_span("convering_to_nd_array", span_category_serialization);
     defer(stop_span(span_converting));
 
