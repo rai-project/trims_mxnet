@@ -72,12 +72,47 @@ static const auto HOME         = dmlc::GetEnv("HOME", std::string("/home/abduld"
 static const auto is_client    = dmlc::GetEnv("UPR_CLIENT", false);
 static const auto UPR_BASE_DIR = dmlc::GetEnv("UPR_BASE_DIR", HOME + std::string("/carml/data/mxnet/"));
 
-static std::map<std::string, std::string> model_directory_paths{{"alexnet", UPR_BASE_DIR + "alexnet"},
-                                                                {"squeezenet", UPR_BASE_DIR + "squeezenetv1"},
-                                                                {"squeezenetv1", UPR_BASE_DIR + "squeezenetv1"},
-                                                                {"squeezenetv1.1", UPR_BASE_DIR + "squeezenetv1.1"},
-                                                                {"resnet-152-11k", UPR_BASE_DIR + "resnet-152-11k"},
-                                                                {"vgg16", UPR_BASE_DIR + "vgg16"}};
+static std::map<std::string, std::string> model_directory_paths{{"bvlc_alexnet_1.0", UPR_BASE_DIR + "bvlc_alexnet_1.0"},
+                                                                {"bvlc_googlenet_1.0", UPR_BASE_DIR + "bvlc_googlenet_1.0"},
+                                                                {"bvlc_reference_caffenet_1.0", UPR_BASE_DIR + "bvlc_reference_caffenet_1.0"},
+                                                                {"bvlc_reference_rcnn_ilsvrc13_1.0", UPR_BASE_DIR + "bvlc_reference_rcnn_ilsvrc13_1.0"},
+                                                                {"dpn68_1.0", UPR_BASE_DIR + "dpn68_1.0"},
+                                                                {"dpn92_1.0", UPR_BASE_DIR + "dpn92_1.0"},
+                                                                {"inception_bn_3.0", UPR_BASE_DIR + "inception_bn_3.0"},
+                                                                {"inception_resnet_2.0", UPR_BASE_DIR + "inception_resnet_2.0"},
+                                                                {"inception_3.0", UPR_BASE_DIR + "inception_3.0"},
+                                                                {"inception_4.0", UPR_BASE_DIR + "inception_4.0"},
+                                                                {"inceptionbn_21k_1.0", UPR_BASE_DIR + "inceptionbn_21k_1.0"},
+                                                                {"locationnet_1.0", UPR_BASE_DIR + "locationnet_1.0"},
+                                                                {"network_in_network_1.0", UPR_BASE_DIR + "network_in_network_1.0"},
+                                                                {"o_resnet101_2.0", UPR_BASE_DIR + "o_resnet101_2.0"},
+                                                                {"o_resnet152_2.0", UPR_BASE_DIR + "o_resnet152_2.0"},
+                                                                {"o_vgg16_1.0", UPR_BASE_DIR + "o_vgg16_1.0"},
+                                                                {"o_vgg19_1.0", UPR_BASE_DIR + "o_vgg19_1.0"},
+                                                                {"resnet18_2.0", UPR_BASE_DIR + "resnet18_2.0"},
+                                                                {"resnet34_2.0", UPR_BASE_DIR + "resnet34_2.0"},
+                                                                {"resnet50_2.0", UPR_BASE_DIR + "resnet50_2.0"},
+                                                                {"resnet50_1.0", UPR_BASE_DIR + "resnet50_1.0"},
+                                                                {"resnet101_2.0", UPR_BASE_DIR + "resnet101_2.0"},
+                                                                {"resnet101_1.0", UPR_BASE_DIR + "resnet101_1.0"},
+                                                                {"resnet152_11k_1.0", UPR_BASE_DIR + "resnet152_11k_1.0"},
+                                                                {"resnet152_1.0", UPR_BASE_DIR + "resnet152_1.0"},
+                                                                {"resnet152_2.0", UPR_BASE_DIR + "resnet152_2.0"},
+                                                                {"resnet200_2.0", UPR_BASE_DIR + "resnet200_2.0"},
+                                                                {"resnet269_2.0", UPR_BASE_DIR + "resnet269_2.0"},
+                                                                {"resnext26_32x4d_1.0", UPR_BASE_DIR + "resnext26_32x4d_1.0"},
+                                                                {"resnext50_32x4d_1.0", UPR_BASE_DIR + "resnext50_32x4d_1.0"},
+                                                                {"resnext50_1.0", UPR_BASE_DIR + "resnext50_1.0"},                                                                
+                                                                {"resnext101_32x4d_1.0", UPR_BASE_DIR + "resnext101_32x4d_1.0"},
+                                                                {"resnext101_1.0", UPR_BASE_DIR + "resnext101_1.0"},
+                                                                {"squeezenet_1.0", UPR_BASE_DIR + "squeezenet_1.0"},
+                                                                {"squeezenet_1.1", UPR_BASE_DIR + "squeezenet_1.1"},
+                                                                {"vgg16_sod_1.0", UPR_BASE_DIR + "vgg16_sod_1.0"}},                                                                
+                                                                {"vgg16_sos_1.0", UPR_BASE_DIR + "vgg16_sos_1.0"}},                                                                
+                                                                {"vgg16_1.0", UPR_BASE_DIR + "vgg16_1.0"}},                                                                
+                                                                {"vgg19_1.0", UPR_BASE_DIR + "vgg19_1.0"}},                                                                
+                                                                {"xception_1.0", UPR_BASE_DIR + "xception_1.0"}},                                                                
+                                                                {"wrn50_2.0", UPR_BASE_DIR + "wrn50_2.0"}};
 
 /**
  * @brief Ensures the CUDA runtime has fully initialized
@@ -244,7 +279,7 @@ static std::string get_synset_path(std::string model_name = "") {
   }
   const std::string path = get_model_directory_path(model_name);
 
-  auto synset_path = path + "/synset.txt";
+  auto synset_path = path + "/features.txt";
   if (file_exists(synset_path)) {
     return synset_path;
   }
