@@ -154,13 +154,13 @@ namespace engine {
     return j;
   }
 
-  static json emitEvent(const DevStat &d, std::unique_ptr<OprExecStat> opr_stat, std::string begin_end) {
+  static json emitEvent(const DevStat &d, const OprExecStat *opr_stat, std::string begin_end) {
     const auto name     = opr_stat->opr_name;
     const auto category = opr_stat->category;
     const auto ts       = opr_stat->opr_start_rel_micros;
     auto pid      = d.dev_id_;
     auto tid            = opr_stat->thread_id;
-    const auto args     = json(opr_stat->metadata);
+    const auto args     = opr_stat->metadata;
 
     if (engine_type() == "NaiveEngine") {
       pid = 0;
@@ -194,9 +194,10 @@ namespace engine {
       OprExecStat *_opr_stat;
       while (d.opr_exec_stats_->try_dequeue(_opr_stat)) {
         CHECK_NOTNULL(_opr_stat);
-        std::unique_ptr<OprExecStat> opr_stat(_opr_stat); // manage lifecycle
-        const auto begin = emitEvent(d, std::move(opr_stat), "B");
-        const auto end   = emitEvent(d, std::move(opr_stat), "E");
+        const auto opr_stat = _opr_stat;
+        if (opr_stat == nullptr) continue;
+        const auto begin = emitEvent(d, opr_stat, "B");
+        const auto end   = emitEvent(d, opr_stat, "E");
         trace_events.emplace_back(begin);
         trace_events.emplace_back(end);
       }
