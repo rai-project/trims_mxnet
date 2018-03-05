@@ -12,6 +12,44 @@ export MXNET_GPU_WORKER_NTHREADS=2
 declare -a models=(
     bvlc_alexnet_1.0
     bvlc_googlenet_1.0
+    bvlc_reference_caffenet_1.0
+    bvlc_reference_rcnn_ilsvrc13_1.0
+    dpn68_1.0
+    dpn92_1.0
+    inception_bn_3.0
+    inception_resnet_2.0
+    inception_3.0
+    inception_4.0
+    inceptionbn_21k_1.0
+    locationnet_1.0
+    network_in_network_1.0
+    o_resnet101_2.0
+    o_resnet152_2.0
+    o_vgg16_1.0
+    o_vgg19_1.0
+    resnet34_2.0
+    resnet50_2.0
+    resnet50_1.0
+    resnet101_2.0
+    resnet101_1.0
+    resnet152_11k_1.0
+    resnet152_1.0
+    resnet152_2.0
+    resnet200_2.0
+    resnet269_2.0
+    resnext26_32x4d_1.0
+    resnext50_32x4d_1.0
+    resnext50_1.0
+    resnext101_32x4d_1.0
+    resnext101_1.0
+    squeezenet_1.0
+    squeezenet_1.1
+    vgg16_sod_1.0
+    vgg16_sos_1.0
+    vgg16_1.0
+    vgg19_1.0
+    xception_1.0
+    wrn50_2.0
     )
 
 for i in "${models[@]}"
