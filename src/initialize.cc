@@ -79,11 +79,11 @@ public:
     });
 #endif
 
-    static const auto eager_init       = dmlc::GetEnv("UPR_INTIALIZE_EAGER", false);
-    static const auto eager_init_async = dmlc::GetEnv("UPR_INTIALIZE_EAGER_ASYNC", false);
+    static const auto eager_init       = dmlc::GetEnv("UPR_INITIALIZE_EAGER", false);
+    static const auto eager_init_async = dmlc::GetEnv("UPR_INITIALIZE_EAGER_ASYNC", false);
     if (eager_init) {
       static const auto ctx = Context::GPU();
-      auto engine           = Engine::_GetSharedRef();
+      auto engine           = Engine::Get();
       engine->Initialize(ctx);
     }
   }

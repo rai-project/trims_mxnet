@@ -30,10 +30,7 @@
 namespace mxnet {
 namespace engine {
 inline Engine* CreateEngine() {
-  const char *type = getenv("MXNET_ENGINE_TYPE");
-  const bool default_engine = (type == nullptr);
-  if (type == nullptr) type = "ThreadedEnginePerDevice";
-  std::string stype = type;
+  static const auto stype = dmlc::GetEnv("MXNET_ENGINE_TYPE", std::string("NaiveEngine"));
 
   Engine *ret = nullptr;
   #if MXNET_PREDICT_ONLY == 0
@@ -49,11 +46,9 @@ inline Engine* CreateEngine() {
   #endif
 
   if (ret ==nullptr) {
-    LOG(FATAL) << "Cannot find Engine " << type;
+    LOG(FATAL) << "Cannot find Engine " << stype;
   }
-  if (!default_engine) {
-    LOG(INFO) << "MXNet start using engine: " << type;
-  }
+  LOG(INFO) << "MXNet start using engine: " << stype;
   return ret;
 }
 }  // namespace engine

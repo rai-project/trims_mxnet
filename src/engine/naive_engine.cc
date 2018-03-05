@@ -54,23 +54,27 @@ namespace engine {
     virtual ~NaiveEngine() {
     }
 
-    void Initalize(Context exec_ctx) {
+    virtual void Initialize(Context exec_ctx) override {
 #if MXNET_USE_CUDA
       using namespace upr;
       static bool initialized = false;
       if (initialized) {
         return;
       }
-      size_t dev_id = static_cast<size_t>(exec_ctx.dev_id);
+      int dev_id = static_cast<int>(exec_ctx.dev_id);
+      if (dev_id == -1) {
+        dev_id = 0;
+      }
       MSHADOW_CATCH_ERROR(mshadow::SetDevice<gpu>(exec_ctx.dev_id));
-      if (streams_.size() <= dev_id) {
-        streams_.resize(dev_id + 1, nullptr);
-      }
-      if (streams_[dev_id] == nullptr) {
-        auto span        = start_span("performing NaiveEngine initialization", span_category_mxnet_init);
-        streams_[dev_id] = mshadow::NewStream<gpu>(true, MXNET_USE_CUDNN != 0, dev_id);
-        stop_span(span);
-      }
+      streams_.resize(dev_id + 1, nullptr);
+      static const auto eager_init = dmlc::GetEnv("UPR_INITIALIZE_EAGER", false);
+      if (!eager_init) {
+      auto span        = start_span("performing NaiveEngine initialization", span_category_mxnet_init);
+      streams_[dev_id] = mshadow::NewStream<gpu>(true, MXNET_USE_CUDNN != 0, dev_id);
+      stop_span(span);
+} else {
+      streams_[dev_id] = mshadow::NewStream<gpu>(true, MXNET_USE_CUDNN != 0, dev_id);
+}
       initialized = true;
 #endif //MXNET_USE_CUDA
     }
@@ -156,9 +160,9 @@ namespace engine {
 #endif
       if (exec_ctx.dev_mask() == gpu::kDevMask) {
 #if MXNET_USE_CUDA
-        static const auto eager_init = dmlc::GetEnv("UPR_INTIALIZE_EAGER", false);
+        static const bool eager_init = dmlc::GetEnv("UPR_INITIALIZE_EAGER", false);
         if (!eager_init) {
-          this->Initalize(exec_ctx);
+          this->Initialize(exec_ctx);
         }
         size_t dev_id = static_cast<size_t>(exec_ctx.dev_id);
         exec_fun(RunContext{exec_ctx, streams_[dev_id]}, callback);

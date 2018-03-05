@@ -96,8 +96,8 @@ The server is part of the MXNet build process.
 | UPR_BASE_DIR              |             |               |
 | UPR_MODEL_NAME            |             |               |
 | UPR_PROFILE_TARGET        |             | profile.json  |
-| UPR_INTIALIZE_EAGER       |             | false         |
-| UPR_INTIALIZE_EAGER_ASYNC |             | false         |
+| UPR_INITIALIZE_EAGER       |             | false         |
+| UPR_INITIALIZE_EAGER_ASYNC |             | false         |
 
 ## How it Works
 
