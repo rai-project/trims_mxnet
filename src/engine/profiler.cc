@@ -157,7 +157,7 @@ namespace engine {
   static json emitEvent(const DevStat &d, const OprExecStat *opr_stat, std::string begin_end) {
     const auto name     = opr_stat->opr_name;
     const auto category = opr_stat->category;
-    const auto ts       = opr_stat->opr_start_rel_micros;
+    const auto ts       = begin_end  == "B" : opr_stat->opr_start_rel_micros ? opr_stat->opr_end_rel_micros;
     auto pid      = d.dev_id_;
     auto tid            = opr_stat->thread_id;
     const auto args     = opr_stat->metadata;
@@ -195,7 +195,10 @@ namespace engine {
       while (d.opr_exec_stats_->try_dequeue(_opr_stat)) {
         CHECK_NOTNULL(_opr_stat);
         const auto opr_stat = _opr_stat;
-        if (opr_stat == nullptr) continue;
+        if (opr_stat == nullptr) {
+            LOG(INFO) << "invalid oprstat";
+continue;
+}
         const auto begin = emitEvent(d, opr_stat, "B");
         const auto end   = emitEvent(d, opr_stat, "E");
         trace_events.emplace_back(begin);
