@@ -156,16 +156,17 @@ namespace engine {
 
   static std::string format_time(const std::time_t &r) {
     // static const int RFC3339NANO_SIZE = 36; /* 2006-01-02T15:04:05.999999999+00:00 */
-    static char *RFC3339Nano = "%04d-%02d-%02dT%02d:%02d:%02d.%09ld+00:00\n";
+    static const char *RFC3339Nano = "%04d-%02d-%02dT%02d:%02d:%02d.%09ld+00:00\n";
     const auto t             = gmtime(&r);
     char tstamp[512];
-    memset(tstamp, 0, 512);
-    nwrite = snprintf(tstamp, sizeof tstamp, RFC3339Nano, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_hour,
+    memset(tstamp, 0, sizeof tstamp);
+    snprintf(tstamp, sizeof tstamp, RFC3339Nano, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_hour,
                       t->tm_min, t->tm_sec, 0);
     return std::string(tstamp);
   };
 
   static json emitEvent(const DevStat &d, const OprExecStat *opr_stat, std::string begin_end) {
+    using namespace std::chrono;
     const auto name     = opr_stat->opr_name;
     const auto category = opr_stat->category;
     const auto ts       = begin_end == "B" ? opr_stat->opr_start_rel_micros : opr_stat->opr_end_rel_micros;

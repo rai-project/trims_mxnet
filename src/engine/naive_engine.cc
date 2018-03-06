@@ -29,6 +29,7 @@
 #include <atomic>
 #include <thread>
 #include <vector>
+#include <future>
 
 namespace mxnet {
 namespace engine {
@@ -55,7 +56,7 @@ namespace engine {
     }
 
     virtual void InitializeAsync(const Context &exec_ctx) override {
-      init_future_ = std::async(std::launch::async, [&exec_ctx] { this->Initialize(exec_ctx); });
+      init_future_ = std::async(std::launch::async, [this, &exec_ctx] { this->Initialize(exec_ctx); });
     }
 
     virtual void Initialize(const Context &exec_ctx) override {
