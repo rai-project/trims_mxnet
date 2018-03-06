@@ -154,6 +154,17 @@ namespace engine {
     return j;
   }
 
+  static std::string format_time(const std::time_t &r) {
+    // static const int RFC3339NANO_SIZE = 36; /* 2006-01-02T15:04:05.999999999+00:00 */
+    static char *RFC3339Nano = "%04d-%02d-%02dT%02d:%02d:%02d.%09ld+00:00\n";
+    const auto t             = gmtime(&r);
+    char tstamp[512];
+    memset(tstamp, 0, 512);
+    nwrite = snprintf(tstamp, sizeof tstamp, RFC3339Nano, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_hour,
+                      t->tm_min, t->tm_sec, 0);
+    return std::string(tstamp);
+  };
+
   static json emitEvent(const DevStat &d, const OprExecStat *opr_stat, std::string begin_end) {
     const auto name     = opr_stat->opr_name;
     const auto category = opr_stat->category;
@@ -166,24 +177,22 @@ namespace engine {
       pid = 0;
       tid = 0;
     }
-    const auto init_time = Profiler::Get()->GetInitTime();
-    json j               = {{"name", name},
+    const auto init_time            = Profiler::Get()->GetInitTime();
+    const auto duration_since_epoch = std::chrono::microseconds(init_time);
+    const time_point<system_clock> tp_after_duration(duration_since_epoch);
+    const time_t start_time = system_clock::to_time_t(tp_after_duration);
+    json j                  = {{"name", name},
               {"cat", category},
               {"ph", begin_end},
               {"ts", ts},
               {"pid", pid},
               {"tid", tid},
-              {"init_time", init_time},
+              {"init_time", format_time(start_time)},
               {"args", args},
               {"start", opr_stat->opr_start_rel_micros},
               {"end", opr_stat->opr_end_rel_micros}};
     return j;
   }
-
-  std::string format_time(const std::time_t &r) {
-    std::string t(std::ctime(&r));
-    return t.substr(0, t.length() - 1);
-  };
 
   void Profiler::DumpProfile() {
     SetState(kNotRunning);
