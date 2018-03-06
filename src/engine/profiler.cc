@@ -162,7 +162,9 @@ namespace engine {
     memset(tstamp, 0, sizeof tstamp);
     snprintf(tstamp, sizeof tstamp, RFC3339Nano, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_hour,
                       t->tm_min, t->tm_sec, 0);
-    return std::string(tstamp);
+    auto str =  std::string(tstamp);
+    str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
+    return str;
   };
 
   static json emitEvent(const DevStat &d, const OprExecStat *opr_stat, std::string begin_end) {
