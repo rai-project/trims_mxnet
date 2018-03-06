@@ -54,7 +54,11 @@ namespace engine {
     virtual ~NaiveEngine() {
     }
 
-    virtual void Initialize(Context exec_ctx) override {
+    virtual void InitializeAsync(const Context &exec_ctx) override {
+      init_future_ = std::async(std::launch::async, [&exec_ctx] { this->Initialize(exec_ctx); });
+    }
+
+    virtual void Initialize(const Context &exec_ctx) override {
 #if MXNET_USE_CUDA
       using namespace upr;
       static bool initialized = false;
@@ -62,22 +66,18 @@ namespace engine {
         return;
       }
       int dev_id = static_cast<int>(exec_ctx.dev_id);
-      //if (dev_id == -1) {
-      //  dev_id = 0;
-      //}
       MSHADOW_CATCH_ERROR(mshadow::SetDevice<gpu>(exec_ctx.dev_id));
       streams_.resize(dev_id + 1, nullptr);
       static const auto eager_init = dmlc::GetEnv("UPR_INITIALIZE_EAGER", false);
       if (!eager_init) {
-      auto span        = start_span("performing NaiveEngine initialization", span_category_mxnet_init);
-      streams_[dev_id] = mshadow::NewStream<gpu>(true, MXNET_USE_CUDNN != 0, dev_id);
-      stop_span(span);
-} else {
-      streams_[dev_id] = mshadow::NewStream<gpu>(true, MXNET_USE_CUDNN != 0, dev_id);
-}
-    cudaFree(0);
+        auto span        = start_span("performing NaiveEngine initialization", span_category_mxnet_init);
+        streams_[dev_id] = mshadow::NewStream<gpu>(true, MXNET_USE_CUDNN != 0, dev_id);
+        stop_span(span);
+      } else {
+        streams_[dev_id] = mshadow::NewStream<gpu>(true, MXNET_USE_CUDNN != 0, dev_id);
+      }
       initialized = true;
-#endif //MXNET_USE_CUDA
+#endif // MXNET_USE_CUDA
     }
 
     // new variables
@@ -108,13 +108,14 @@ namespace engine {
     void Push(OprHandle op, Context exec_ctx, int priority = 0, bool profiling = false) override {
       Profiler *profiler = Profiler::Get();
       NaiveOpr *opr      = op->Cast<NaiveOpr>();
-      opr->profiling     = profiling && (profiler->GetMode() == Profiler::kOnlySymbolic);
+      opr->profiling     = profiling && (profiler->GetMode() == Profiler::kOnlySymbolic ||
+                                     profiler->GetMode() == Profiler::kAllOperator);
       this->PushAsync(
           [&](RunContext ctx, CallbackOnComplete on_complete) {
 #if MXNET_USE_PROFILER
             if (opr->profiling) {
               opr->opr_stat            = Profiler::Get()->AddOprStat(exec_ctx.dev_type, exec_ctx.dev_id);
-              uint64_t id              = std::hash<std::thread::id>()(std::this_thread::get_id());
+              uint64_t id              = 0; // std::hash<std::thread::id>()(std::this_thread::get_id());
               opr->opr_stat->thread_id = id;
               opr->opr_stat->opr_name  = opr->opr_name;
               SetOprStart(opr->opr_stat);
@@ -153,7 +154,7 @@ namespace engine {
         opr                      = NewOperator(exec_fun, const_vars, mutable_vars, prop, opr_name)->Cast<NaiveOpr>();
         opr->profiling           = profiling;
         opr->opr_stat            = Profiler::Get()->AddOprStat(exec_ctx.dev_type, exec_ctx.dev_id);
-        uint64_t id              = std::hash<std::thread::id>()(std::this_thread::get_id());
+        uint64_t id              = 0; // std::hash<std::thread::id>()(std::this_thread::get_id());
         opr->opr_stat->thread_id = id;
         opr->opr_stat->opr_name  = opr->opr_name;
         SetOprStart(opr->opr_stat);
@@ -161,8 +162,11 @@ namespace engine {
 #endif
       if (exec_ctx.dev_mask() == gpu::kDevMask) {
 #if MXNET_USE_CUDA
-        static const bool eager_init = dmlc::GetEnv("UPR_INITIALIZE_EAGER", false);
-        if (!eager_init) {
+        static const bool eager_init       = dmlc::GetEnv("UPR_INITIALIZE_EAGER", false);
+        static const auto eager_init_async = dmlc::GetEnv("UPR_INITIALIZE_EAGER_ASYNC", false);
+        if (eager_init_async) {
+          this->init_future_.wait();
+        } else if (!eager_init) {
           this->Initialize(exec_ctx);
         }
         size_t dev_id = static_cast<size_t>(exec_ctx.dev_id);
@@ -210,6 +214,8 @@ namespace engine {
     mshadow::Stream<cpu> cpu_stream_;
     // GPU streams
     std::vector<mshadow::Stream<gpu> *> streams_;
+    // iniitalization future if eager async initialization is enabled
+    std::future<void> init_future_;
   }; // class NaiveEngine
 
   Engine *CreateNaiveEngine() {

@@ -166,14 +166,16 @@ namespace engine {
       pid = 0;
       tid = 0;
     }
-    json j = {{"name", name},
+    const auto init_time = Profiler::Get()->GetInitTime();
+    json j               = {{"name", name},
               {"cat", category},
               {"ph", begin_end},
               {"ts", ts},
               {"pid", pid},
               {"tid", tid},
+              {"init_time", init_time},
               {"args", args},
-              {"begin", opr_stat->opr_start_rel_micros},
+              {"start", opr_stat->opr_start_rel_micros},
               {"end", opr_stat->opr_end_rel_micros}};
     return j;
   }

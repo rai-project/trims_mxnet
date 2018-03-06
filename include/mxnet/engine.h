@@ -105,7 +105,10 @@ public:
   typedef engine::VarHandle VarHandle;
   /*! \brief Operator pointer */
   typedef engine::OprHandle OprHandle;
-  virtual void Initialize(Context exec_ctx) {
+  virtual void InitializeAsync(const Context& exec_ctx) {
+    LOG(FATAL) << "Engine cannot be initialized";
+  }
+  virtual void Initialize(const Context& exec_ctx) {
     LOG(FATAL) << "Engine cannot be initialized";
   }
   /*!

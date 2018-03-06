@@ -81,7 +81,11 @@ public:
 
     static const auto eager_init       = dmlc::GetEnv("UPR_INITIALIZE_EAGER", false);
     static const auto eager_init_async = dmlc::GetEnv("UPR_INITIALIZE_EAGER_ASYNC", false);
-    if (eager_init) {
+    if (eager_init_async) {
+      static const auto ctx = Context::GPU();
+      auto engine           = Engine::Get();
+      engine->InitializeAsync(ctx);
+    } else if (eager_init) {
       static const auto ctx = Context::GPU();
       auto engine           = Engine::Get();
       engine->Initialize(ctx);
