@@ -105,9 +105,9 @@ namespace engine {
 
   OprExecStat *Profiler::AddOprStat(int dev_type, uint32_t dev_id) {
     std::unique_ptr<OprExecStat> opr_stat(new OprExecStat);
-    opr_stat->category                                 = "generic";
-    opr_stat->dev_type                                 = dev_type;
-    opr_stat->dev_id                                   = dev_id;
+    opr_stat->category = "generic";
+    opr_stat->dev_type = dev_type;
+    opr_stat->dev_id   = dev_id;
     opr_stat->opr_name = "undefined";
 
     int idx;
@@ -146,7 +146,7 @@ namespace engine {
 
   static json emitPid(const DevStat &d) {
     const auto name = d.dev_name_;
-    auto pid  = d.dev_id_;
+    auto pid        = d.dev_id_;
     if (engine_type() == "NaiveEngine") {
       pid = 0;
     }
@@ -157,8 +157,8 @@ namespace engine {
   static json emitEvent(const DevStat &d, const OprExecStat *opr_stat, std::string begin_end) {
     const auto name     = opr_stat->opr_name;
     const auto category = opr_stat->category;
-    const auto ts       = begin_end  == "B" ? opr_stat->opr_start_rel_micros : opr_stat->opr_end_rel_micros;
-    auto pid      = d.dev_id_;
+    const auto ts       = begin_end == "B" ? opr_stat->opr_start_rel_micros : opr_stat->opr_end_rel_micros;
+    auto pid            = d.dev_id_;
     auto tid            = opr_stat->thread_id;
     const auto args     = opr_stat->metadata;
 
@@ -166,7 +166,15 @@ namespace engine {
       pid = 0;
       tid = 0;
     }
-    json j = {{"name", name}, {"cat", category}, {"ph", begin_end}, {"ts", ts}, {"pid", pid}, {"tid", tid}, {"args", args}, {"begin", opr_stat->opr_start_rel_micros}, {"end", opr_stat->opr_end_rel_micros}};
+    json j = {{"name", name},
+              {"cat", category},
+              {"ph", begin_end},
+              {"ts", ts},
+              {"pid", pid},
+              {"tid", tid},
+              {"args", args},
+              {"begin", opr_stat->opr_start_rel_micros},
+              {"end", opr_stat->opr_end_rel_micros}};
     return j;
   }
 
@@ -196,9 +204,9 @@ namespace engine {
         CHECK_NOTNULL(_opr_stat);
         const auto opr_stat = _opr_stat;
         if (opr_stat == nullptr) {
-            LOG(INFO) << "invalid oprstat";
-continue;
-}
+          LOG(INFO) << "invalid oprstat";
+          continue;
+        }
         const auto begin = emitEvent(d, opr_stat, "B");
         const auto end   = emitEvent(d, opr_stat, "E");
         trace_events.emplace_back(begin);
@@ -219,7 +227,7 @@ continue;
       const time_t start_time = system_clock::to_time_t(tp_after_duration);
       gethostname(hostname, HOST_NAME_MAX);
       getlogin_r(username, LOGIN_NAME_MAX);
-      
+
       metadata = json({{"hostname", std::string(hostname)},
                        {"username", std::string(username)},
                        {"git", {{"commit", std::string(build_git_sha)}, {"date", std::string(build_git_time)}}},
@@ -271,7 +279,7 @@ continue;
     opr_stat->metadata.insert({key, value});
   }
 
-  void SetOprCategory(OprExecStat *opr_stat, const std::string & category) {
+  void SetOprCategory(OprExecStat *opr_stat, const std::string &category) {
     opr_stat->category = category;
   }
 
