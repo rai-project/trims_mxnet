@@ -23,6 +23,7 @@
  * \brief initialize mxnet library
  */
 #include "engine/profiler.h"
+#include "c_api/ipc.h"
 #include <dmlc/logging.h>
 #include <mxnet/engine.h>
 #include <signal.h>
@@ -86,9 +87,12 @@ public:
       auto engine           = Engine::Get();
       engine->InitializeAsync(ctx);
     } else if (eager_init) {
+      using namespace upr;
+      //auto span = start_span("library initialization", span_category_init); 
       static const auto ctx = Context::GPU();
       auto engine           = Engine::Get();
       engine->Initialize(ctx);
+     // stop_span(span);
     }
   }
 

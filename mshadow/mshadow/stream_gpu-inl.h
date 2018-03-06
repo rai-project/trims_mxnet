@@ -178,6 +178,7 @@ struct Stream<gpu> {
 };
 template<>
 inline void DeleteStream<gpu>(Stream<gpu> *stream) {
+    return ;
   if (stream) {
     MSHADOW_CUDA_CALL(cudaStreamDestroy(stream->stream_));
     stream->DestroyBlasHandle();
@@ -190,9 +191,11 @@ template<>
 inline Stream<gpu> *NewStream<gpu>(bool create_blas_handle,
                                    bool create_dnn_handle,
                                    int dev_id) {
-  // RAII on Cuda exception
-  struct StreamDeleter { void operator()(Stream<gpu> *ptr) const { DeleteStream<gpu>(ptr); } };
-  std::unique_ptr<Stream<gpu>, StreamDeleter> st(new Stream<gpu>());
+  static Stream<gpu> * st = nullptr;
+  if (st != nullptr) {
+      return st;
+  }
+  st = new Stream<gpu>();
   MSHADOW_CUDA_CALL(cudaStreamCreate(&st->stream_));
   if (create_blas_handle) {
     st->CreateBlasHandle();
@@ -205,7 +208,7 @@ inline Stream<gpu> *NewStream<gpu>(bool create_blas_handle,
   if (dev_id != -1) {
     MSHADOW_CUDA_CALL(cudaGetDeviceProperties(&st->prop, dev_id));
   }
-  return st.release();
+  return st;
 }
 #endif
 }  // namespace mshadow
