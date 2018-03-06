@@ -150,19 +150,22 @@ namespace engine {
     if (engine_type() == "NaiveEngine") {
       pid = 0;
     }
-    json j = {{"ph", "M"}, {"args", {"name", name}}, {"pid", pid}, {"name", "process_name"}};
+    json j = {{"ph", "M"},
+              {"args", std::map<std::string, std::string>{{"name", name}}},
+              {"pid", pid},
+              {"name", "process_name"}};
     return j;
   }
 
   static std::string format_time(const std::time_t &r) {
     // static const int RFC3339NANO_SIZE = 36; /* 2006-01-02T15:04:05.999999999+00:00 */
     static const char *RFC3339Nano = "%04d-%02d-%02dT%02d:%02d:%02d.%09ld+00:00\n";
-    const auto t             = gmtime(&r);
+    const auto t                   = gmtime(&r);
     char tstamp[512];
     memset(tstamp, 0, sizeof tstamp);
-    snprintf(tstamp, sizeof tstamp, RFC3339Nano, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_hour,
-                      t->tm_min, t->tm_sec, 0);
-    auto str =  std::string(tstamp);
+    snprintf(tstamp, sizeof tstamp, RFC3339Nano, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_hour, t->tm_min,
+             t->tm_sec, 0);
+    auto str = std::string(tstamp);
     str.erase(std::remove(str.begin(), str.end(), '\n'), str.end());
     return str;
   };
