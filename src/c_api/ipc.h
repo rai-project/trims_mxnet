@@ -308,5 +308,36 @@ inline bool string_starts_with(const std::basic_string<charT> &big, const std::b
 }
 
 void Load(std::string model_name, std::vector<mxnet::NDArray> *data, std::vector<std::string> *keys);
+
+
+class UPRInitializer {
+public:
+  UPRInitializer() {
+// #if MXNET_USE_PROFILER
+//     // ensure profiler's constructor are called before atexit.
+//     engine::Profiler::Get();
+//     // DumpProfile will be called before engine's and profiler's destructor.
+//     std::atexit([]() {
+//       engine::Profiler* profiler = engine::Profiler::Get();
+//       if (profiler->IsEnableOutput()) {
+//         profiler->DumpProfile();
+//       }
+//     });
+// #endif
+
+    auto span        = start_span("cudaFree(0) in upr initialization", span_category_mxnet_init);
+    cudaFree(0);
+    stop_span(span);
+  }
+
+  static UPRInitializer* Get();
+};
+
+UPRInitializer* UPRInitializer::Get() {
+  static UPRInitializer inst;
+  return &inst;
+}
+
+static UPRInitializer* __upr_init = UPRInitializer::Get();
 } // namespace upr
 #endif // MXNET_USE_CUDA

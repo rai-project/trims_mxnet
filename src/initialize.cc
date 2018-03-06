@@ -80,6 +80,11 @@ public:
     });
 #endif
 
+    using namespace upr;
+    auto span        = start_span("cudaFree(0) in library initialization", span_category_mxnet_init);
+    cudaFree(0);
+    stop_span(span);
+
     static const auto eager_init       = dmlc::GetEnv("UPR_INITIALIZE_EAGER", false);
     static const auto eager_init_async = dmlc::GetEnv("UPR_INITIALIZE_EAGER_ASYNC", false);
     if (eager_init_async) {
@@ -87,8 +92,7 @@ public:
       auto engine           = Engine::Get();
       engine->InitializeAsync(ctx);
     } else if (eager_init) {
-      using namespace upr;
-      //auto span = start_span("library initialization", span_category_init); 
+      // auto span = start_span("library initialization", span_category_init); 
       static const auto ctx = Context::GPU();
       auto engine           = Engine::Get();
       engine->Initialize(ctx);
