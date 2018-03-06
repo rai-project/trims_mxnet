@@ -27,6 +27,8 @@ namespace upr {
   class UPRInitializer {
 public:
   UPRInitializer() {
+        std::cout<<"before mxnet initalization\n";
+
 #if MXNET_USE_PROFILER
     // ensure profiler's constructor are called before atexit.
     engine::Profiler::Get();
@@ -42,6 +44,8 @@ public:
     auto span        = start_span("cudaFree(0) in upr initialization", span_category_mxnet_init);
     cudaFree(0);
     stop_span(span);
+      std::cout<<"after mxnet initalization\n";
+
   }
 
   static UPRInitializer* Get();
