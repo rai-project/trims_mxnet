@@ -28,6 +28,8 @@
 #include <mxnet/engine.h>
 #include <signal.h>
 
+#include <iostream>
+
 #if DETAILED_PROFILE
 #include "./inst_nvtx.inc"
 #endif
@@ -65,6 +67,8 @@ static void SegfaultLogger(int sig) {
 class LibraryInitializer {
 public:
   LibraryInitializer() {
+    std::cout<<"before mxnet initalization\n";
+
     dmlc::InitLogging("mxnet");
 #if MXNET_USE_SIGNAL_HANDLER && DMLC_LOG_STACK_TRACE
     signal(SIGSEGV, SegfaultLogger);
@@ -99,6 +103,8 @@ public:
       engine->Initialize(ctx);
      // stop_span(span);
     }
+
+    std::cout<<"after mxnet initalization\n";
   }
 
   static LibraryInitializer* Get();

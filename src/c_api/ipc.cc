@@ -9,6 +9,7 @@
 #include <dmlc/recordio.h>
 #include <dmlc/type_traits.h>
 #include <nnvm/node.h>
+#include <iostream>
 
 #include <grpc++/grpc++.h>
 #include <grpc/support/log.h>
@@ -26,17 +27,17 @@ namespace upr {
   class UPRInitializer {
 public:
   UPRInitializer() {
-// #if MXNET_USE_PROFILER
-//     // ensure profiler's constructor are called before atexit.
-//     engine::Profiler::Get();
-//     // DumpProfile will be called before engine's and profiler's destructor.
-//     std::atexit([]() {
-//       engine::Profiler* profiler = engine::Profiler::Get();
-//       if (profiler->IsEnableOutput()) {
-//         profiler->DumpProfile();
-//       }
-//     });
-// #endif
+#if MXNET_USE_PROFILER
+    // ensure profiler's constructor are called before atexit.
+    engine::Profiler::Get();
+    // DumpProfile will be called before engine's and profiler's destructor.
+    std::atexit([]() {
+      engine::Profiler* profiler = engine::Profiler::Get();
+      if (profiler->IsEnableOutput()) {
+        profiler->DumpProfile();
+      }
+    });
+#endif
 
     auto span        = start_span("cudaFree(0) in upr initialization", span_category_mxnet_init);
     cudaFree(0);
@@ -203,6 +204,8 @@ struct client {
   };
 
   static void Load(std::string model_name, std::vector<NDArray> *res_arrays, std::vector<std::string> *res_keys) {
+    std::cout<<"starting Load() in upr\n";
+
     auto span_loading = start_span("load_nd_array", span_category_load, span_props{{"model_name", model_name}});
     defer(stop_span(span_loading));
 
@@ -220,6 +223,8 @@ struct client {
     defer(stop_span(span_converting));
 
     to_ndarrays(res_arrays, res_keys, open_reply);
+
+    std::cout<<"ending Load() in upr\n";
 
     LOG(INFO) << "Loaded model " << model_name;
   }
