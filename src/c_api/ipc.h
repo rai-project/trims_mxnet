@@ -146,7 +146,7 @@ using span_props = std::map<std::string, std::string>;
 static inline engine::OprExecStat *start_span(const std::string &name, std::string category ) {
 #if MXNET_USE_PROFILER
   const auto ctx = get_ctx();
-  auto opr_stat  = engine::Profiler::Get()->AddOprStat(ctx.dev_type, ctx.dev_id);
+  auto opr_stat  = engine::Profiler::Get()->AddOprStat(ctx.dev_type, ctx.dev_id, name);
   uint64_t tid   = std::hash<std::thread::id>()(std::this_thread::get_id());
   opr_stat->opr_name = name;
   engine::SetOprCategory(opr_stat, category);
@@ -178,6 +178,23 @@ static inline void stop_span(engine::OprExecStat *stat) {
 #if MXNET_USE_PROFILER
   engine::SetOprEnd(stat);
 #endif
+}
+
+#define SPAN_PRIVATE_UNIQUE_ID __LINE__ // __COUNTER__
+
+#define SPAN_PRIVATE_NAME \
+      SPAN_PRIVATE_CONCAT(__span__, SPAN_PRIVATE_UNIQUE_ID)
+#define SPAN_PRIVATE_CONCAT(a, b) SPAN_PRIVATE_CONCAT2(a, b)
+#define SPAN_PRIVATE_CONCAT2(a, b) a##b
+
+#define TIME_IT(...)  \
+    auto SPAN_PRIVATE_NAME = upr::start_span(#__VA_ARGS__, "statement", {{"line", std::to_string(__LINE__)}}); \
+    __VA_ARGS__;\
+    upr::stop_span(SPAN_PRIVATE_NAME); 
+
+static std::string get_model_name() {
+  static const auto model_name = dmlc::GetEnv("UPR_MODEL_NAME", std::string(DEFAULT_MODEL));
+  return model_name;
 }
 
 static std::string get_model_name() {

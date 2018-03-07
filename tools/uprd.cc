@@ -68,9 +68,7 @@ private:
 
     LOG(INFO) << "getting ipc mem handle using device_ptr = "
               << (size_t)device_ptr;
-    const auto err = cudaIpcGetMemHandle(&handle, (void *)device_ptr);
 
-    LOG(INFO) << cudaGetErrorString(err);
     CUDA_CHECK_CALL(cudaIpcGetMemHandle(&handle, (void *)device_ptr),
                     "failed to create a handle ref");
     LOG(INFO) << "got ipc mem handle";

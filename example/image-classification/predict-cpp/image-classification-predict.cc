@@ -210,6 +210,10 @@ int main(int argc, char *argv[]) {
 
   GetImageFile(test_file, image_data.data(), channels, cv::Size(width, height));
 
+
+  // GPU init using cudaFree(0)
+  MXPredCreate(nullptr, nullptr, 0, 0,0, 0, nullptr, nullptr, nullptr, nullptr);
+
   const std::string profile_default_path{model_name + "_profile_" + profile_path_suffix + ".json"};
   const auto profile_path = dmlc::GetEnv("UPR_PROFILE_TARGET", profile_default_path);
   MXSetProfilerConfig(1, profile_default_path.c_str());
@@ -218,9 +222,14 @@ int main(int argc, char *argv[]) {
   MXSetProfilerState(1);
 
   // Create Predictor
+ {
+  const auto span = start_span("performing predict", "ignore");
   MXPredCreate((const char *) json_data.GetBuffer(), (const char *) param_data.GetBuffer(), param_data.GetLength(),
                dev_type, dev_id, num_input_nodes, input_keys, input_shape_indptr, input_shape_data, &pred_hnd);
   CHECK(pred_hnd != nullptr) << " got error=" << MXGetLastError();
+  stop_span(span);
+  CHECK(pred_hnd != nullptr) << " got error=" << MXGetLastError();
+ }
 
   // Set Input Image
   MXPredSetInput(pred_hnd, "data", image_data.data(), image_size);
