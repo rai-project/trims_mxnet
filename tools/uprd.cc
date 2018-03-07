@@ -334,6 +334,8 @@ private:
     return;
   }
 
+  size_t fifo_order{0};
+
 public:
   // control memory usage by percentage of gpu
   grpc::Status Open(grpc::ServerContext *context, const ModelRequest *request, ModelHandle *reply) override {
@@ -366,6 +368,8 @@ public:
 
       owned_model->set_byte_count(byte_count);
 
+      model.set_fifo_order(fifo_order++);
+
       memory_db_[request->name()] = std::make_unique<Model, ModelDeleter>(model);
       memory_usage_ += byte_count;
     }
@@ -387,8 +391,8 @@ public:
 
     // LOG(INFO) << "finished satisfying open request";
 
-    auto use_history = handle->mutable_use_history()->Add();
-    use_history->CopyFrom(GetCurrentTime());
+    auto use_history = it->second->mutable_use_history()->Add();
+    it->second->CopyFrom(GetCurrentTime());
 
     reply->CopyFrom(*handle);
 
