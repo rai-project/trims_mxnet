@@ -45,12 +45,9 @@ std::vector<K> keys(const std::map<K, V> &m) {
 
 class RegistryImpl final : public Registry::Service {
 private:
-  void delete_model(Model *ptr) {
-    std::cout << "Model ptr" << model->model_id << "\n";
-  }
   struct ModelDeleter {
     void operator()(Model *ptr) const {
-      delete_model(ptr);
+      std::cout << "Model ptr" << ptr->id() << "\n";
     }
   };
   using memory_db_t = std::map<std::string, std::unique_ptr<Model, ModelDeleter>>;
@@ -261,12 +258,12 @@ private:
       }
       auto min_element      = std::min_element(memory_db_.begin(), memory_db_.end(),
                                           [](const memory_db_t::value_type &s1, const memory_db_t::value_type &s2) {
-                                            if (s1->second.ref_count > 0) {
+                                            if (s1.second->ref_count() > 0) {
                                               return false;
                                             }
-                                            return s1->second->lru_timestamp < s2->second->lru_timestamp;
+                                            return s1.second->lru_timestamp() < s2.second->lru_timestamp();
                                           });
-      const auto byte_count = min_element->second->owned_model->byte_count;
+      const auto byte_count = min_element->second->owned_model().byte_count();
       memory_usage_ -= byte_count;
       memory_freed += byte_count;
       memory_db_.erase(min_element);
@@ -347,14 +344,14 @@ public:
 
       evict_if_needed(request);
 
-      Model model;
-      model.set_id(uuid);
-      model.set_name(request->name());
-      model.set_ref_count(0);
+      Model * model = new Model();
+      model->set_id(uuid);
+      model->set_name(request->name());
+      model->set_ref_count(0);
 
-      auto owned_model = model.mutable_owned_model();
+      auto owned_model = model->mutable_owned_model();
       owned_model->set_id("owned-by-" + uuid);
-      owned_model->set_model_id(model.id());
+      owned_model->set_model_id(model->id());
       owned_model->set_byte_count(0);
 
       load_ndarray(owned_model->mutable_layer(), request, /*ref_count=*/-1);
@@ -366,9 +363,9 @@ public:
 
       owned_model->set_byte_count(byte_count);
 
-      model.set_fifo_order(fifo_order++);
+      model->set_fifo_order(fifo_order++);
 
-      memory_db_[request->name()] = std::make_unique<Model, ModelDeleter>(model);
+      memory_db_[request->name()] = std::unique_ptr<Model, ModelDeleter>(model);
       memory_usage_ += byte_count;
     }
 
@@ -389,8 +386,8 @@ public:
 
     // LOG(INFO) << "finished satisfying open request";
 
-    auto use_history = it->second->mutable_use_history()->Add();
-    it->second->CopyFrom(GetCurrentTime());
+    auto t = it->second->mutable_use_history()->Add();
+    t->CopyFrom(TimeUtil::GetCurrentTime());
 
     reply->CopyFrom(*handle);
 
@@ -415,12 +412,12 @@ public:
 
   std::string find_model_name_by_model_id(std::string model_id) {
     const auto loc = std::find_if(memory_db_.begin(), memory_db_.end(), [&model_id](const memory_db_t::value_type &k) {
-      return k->second.model_id == model_id;
+      return k.second->id() == model_id;
     });
     if (loc == memory_db_.end()) {
       return "";
     }
-    return loc;
+    return loc->second->name();
   }
 
   // void destroy_layer(const Layer &layer) {
@@ -450,33 +447,33 @@ public:
       return grpc::Status(grpc::NOT_FOUND,
                           "unable to find model name with id "s + request->model_id() + " during close request");
     }
-    auto it = memory_db_.find(model_name);
-    if (it == memory_db_.end()) {
+    auto model_entry = memory_db_.find(model_name);
+    if (model_entry == memory_db_.end()) {
       LOG(ERROR) << "failed to close request\n";
       return grpc::Status(grpc::NOT_FOUND, "unable to find handle with name "s + model_name + " during close request");
     }
 
     const auto handle_id    = request->id();
-    const auto shared_model = it->second->mutable_shared_model();
-    for (auto model : shared_model) {
+    const auto shared_model = model_entry->second->mutable_shared_model();
+    for (auto it = shared_model->begin(); it != shared_model->end(); it++) {
+      auto model = *it;
       if (model.id() != handle_id) {
         continue;
       }
       destroy_model_handles(model);
-      it->second->mutable_shared_model()->erase(model);
+      model_entry->second->mutable_shared_model()->erase(it);
       break;
     }
 
-    const auto ref_count = it->second->ref_count() - 1;
-    it->second->set_ref_count(ref_count);
+    const auto ref_count = model_entry->second->ref_count() - 1;
+    model_entry->second->set_ref_count(ref_count);
 
     if (ref_count == 0) {
       const auto eviction_policy = UPRD_EVICTION_POLICY;
       if (eviction_policy == "eager") {
-        const auto byte_count = it->second->owned_model->byte_count;
+        const auto byte_count = model_entry->second->owned_model().byte_count();
         memory_usage_ -= byte_count;
-        memory_freed += byte_count;
-        memory_db_.erase(it);
+        memory_db_.erase(model_entry);
       }
     }
 
