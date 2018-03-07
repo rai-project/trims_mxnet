@@ -1,6 +1,7 @@
 #include "fmt/format.h"
 #include "ipc.h"
 
+#include <algorithm>
 #include <dmlc/base.h>
 #include <dmlc/io.h>
 #include <dmlc/logging.h>
@@ -22,12 +23,15 @@
 #include <grpc/support/log.h>
 #include <iostream>
 
+#include <google/protobuf/util/time_util.h>
+
 #include <cuda_runtime_api.h>
 
 using namespace upr;
 using namespace mxnet;
 using namespace std::string_literals;
 using namespace grpc;
+using namespace google::protobuf::util;
 
 static const auto element_size = sizeof(float);
 
@@ -41,6 +45,7 @@ std::vector<K> keys(const std::map<K, V> &m) {
 
 class RegistryImpl final : public Registry::Service {
 private:
+  using memory_db_t = std::map<std::string, std::unique_ptr<Model, ModelDeleter>>;
   std::map<std::string /* id::name */, cudaIpcMemHandle_t> open_handles{};
 
   std::string get_ipc_id(const std::string &id, const std::string &layer_name) {
@@ -237,49 +242,71 @@ private:
     return in.tellg();
   }
 
-  bool perform_no_eviction(const ModelRequest *request, const size_t memory_size_request) {
+  bool perform_no_eviction(const ModelRequest *request, const size_t memory_size_request, const size_t memory_to_free) {
     return false;
   }
 
-  bool perform_lru_eviction(const ModelRequest *request, const size_t memory_size_request) {
+  bool perform_lru_eviction(const ModelRequest *request, const size_t memory_size_request,
+                            const size_t memory_to_free) {
+    size_t memory_freed = 0;
+    while (memory_freed < memory_to_free) {
+      if (memory_db_.empty()) {
+        break;
+      }
+      auto min_element = std::min_element(memory_db_.begin(), memory_db_.end(),
+                                          [](const memory_db_t::value_type &s1, const memory_db_t::value_type &s2) {
+                                            if (s1->second.ref_count > 0) {
+                                              return false;
+                                            }
+                                            return s1->second->lru_timestamp < s2->second->lru_timestamp;
+                                          });
+      memory_freed += min_element->second->owned_model->byte_count;
+      c.erase(min_element);
+    }
+
+    return memory_freed < memory_to_free;
+  }
+
+  bool perform_fifo_eviction(const ModelRequest *request, const size_t memory_size_request,
+                             const size_t memory_to_free) {
     return false;
   }
 
-  bool perform_fifo_eviction(const ModelRequest *request, const size_t memory_size_request) {
+  bool perform_flush_eviction(const ModelRequest *request, const size_t memory_size_request,
+                              const size_t memory_to_free) {
     return false;
   }
 
-  bool perform_flush_eviction(const ModelRequest *request, const size_t memory_size_request) {
-    return false;
-  }
-
-  bool perform_lcu_eviction(const ModelRequest *request, const size_t memory_size_request) {
+  bool perform_lcu_eviction(const ModelRequest *request, const size_t memory_size_request,
+                            const size_t memory_to_free) {
     return false;
   }
 
   // A eviction few strategies
+  // - NEVER
   // - LRU
   // - FIFO
   // - RANDOM
   // - NEVER
   // - LCU -- least commnly used
+  // - EAGER
   // - ALL
-  bool perform_eviction(const ModelRequest *request, const size_t memory_size_request) {
+  bool perform_eviction(const ModelRequest *request, const size_t estimated_model_size, const size_t memory_to_free) {
     static const auto eviction_policy = UPRD_EVICTION_POLICY;
     if (eviction_policy == "never") {
-      return perform_no_eviction(request, memory_size_request);
+      return perform_no_eviction(request, estimated_model_size, memory_to_free);
     }
     if (eviction_policy == "lru") {
-      return perform_lru_eviction(request, memory_size_request);
+      return perform_lru_eviction(request, estimated_model_size, memory_to_free);
     }
     if (eviction_policy == "fifo") {
-      return perform_fifo_eviction(request, memory_size_request);
+      return perform_fifo_eviction(request, estimated_model_size, memory_to_free);
     }
     if (eviction_policy == "flush" || eviction_policy == "all") {
-      return perform_flush_eviction(request, memory_size_request);
+      return perform_flush_eviction(request, estimated_model_size, memory_to_free);
     }
     if (eviction_policy == "lcu") { // least commnly used
-      return perform_lcu_eviction(request, memory_size_request);
+      return perform_lcu_eviction(request, estimated_model_size, memory_to_free);
     }
 
     const auto msg = fmt::format("the eviction policy {} is not valid", eviction_policy);
@@ -291,10 +318,14 @@ private:
     static const auto max_memory_to_use = UPRD_MEMORY_PERCENTAGE * memory_total();
     const auto estimated_model_size     = estimate_model_size(request);
     if (memory_usage_ + estimated_model_size > max_memory_to_use) {
-      perform_eviction(request, estimated_model_size);
+      perform_eviction(request, estimated_model_size, memory_usage_ - estimated_model_size);
       return;
     }
     return;
+  }
+
+  void DeleteModel(Model *model) {
+    LOG(INFO) << "DELETE MODEL";
   }
 
 public:
@@ -407,7 +438,14 @@ private:
   }
 
   // The actual database.
-  std::map<std::string, std::unique_ptr<Model>> memory_db_;
+
+  struct StreamDeleter {
+    void operator()(Model *ptr) const {
+      DeleteModel(ptr);
+    }
+  };
+
+  memory_db_t memory_db_;
   int64_t memory_usage_{0};
 
   // Mutex serializing access to the map.

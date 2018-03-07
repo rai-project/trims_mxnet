@@ -233,6 +233,12 @@ namespace engine {
 
     json metadata;
 
+#ifndef HOST_NAME_MAX
+#define HOST_NAME_MAX 128
+#endif
+#ifndef LOGIN_NAME_MAX
+#define LOGIN_NAME_MAX 128
+#endif
     try {
       using namespace std::chrono;
       char hostname[HOST_NAME_MAX];
@@ -254,8 +260,8 @@ namespace engine {
                 {"is_client", upr::is_client},
                 {"UPR_BASE_DIR", upr::UPR_BASE_DIR},
                 {"input",
-                 {{"dimensions" json::array{{upr::UPR_INPUT_CHANNELS, upr::UPR_INPUT_WIDTH, upr::UPR_INPUT_HEIGHT}}},
-                  {"mean" json::array{{upr::UPR_INPUT_MEAN_R, upr::UPR_INPUT_MEAN_G, upr::UPR_INPUT_MEAN_B}}}}},
+                 {{"dimensions", json::array({upr::UPR_INPUT_CHANNELS, upr::UPR_INPUT_WIDTH, upr::UPR_INPUT_HEIGHT})},
+                  {"mean", json::array({upr::UPR_INPUT_MEAN_R, upr::UPR_INPUT_MEAN_G, upr::UPR_INPUT_MEAN_B})}}},
                 {"eager_mode", dmlc::GetEnv("UPR_INITIALIZE_EAGER", false)},
                 {"eager_mode_async", dmlc::GetEnv("UPR_INITIALIZE_EAGER_ASYNC", false)},
                 {"model_name", upr::get_model_name()},
