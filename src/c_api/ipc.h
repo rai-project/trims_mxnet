@@ -190,12 +190,7 @@ static inline void stop_span(engine::OprExecStat *stat) {
 #define TIME_IT(...)  \
     auto SPAN_PRIVATE_NAME = upr::start_span(#__VA_ARGS__, "statement", {{"line", std::to_string(__LINE__)}}); \
     __VA_ARGS__;\
-    upr::stop_span(SPAN_PRIVATE_NAME); 
-
-static std::string get_model_name() {
-  static const auto model_name = dmlc::GetEnv("UPR_MODEL_NAME", std::string(DEFAULT_MODEL));
-  return model_name;
-}
+    upr::stop_span(SPAN_PRIVATE_NAME);
 
 static std::string get_model_name() {
   static const auto model_name = dmlc::GetEnv("UPR_MODEL_NAME", std::string(DEFAULT_MODEL));
