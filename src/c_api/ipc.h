@@ -193,14 +193,17 @@ static inline void stop_span(engine::OprExecStat *stat) {
 #endif
 }
 
-#define SPAN_PRIVATE_UNIQUE_ID __LINE__ // __COUNTER__
+#define SPAN_PRIVATE_UNIQUE_ID __LINE__
 
 #define SPAN_PRIVATE_NAME SPAN_PRIVATE_CONCAT(__span__, SPAN_PRIVATE_UNIQUE_ID)
 #define SPAN_PRIVATE_CONCAT(a, b) SPAN_PRIVATE_CONCAT2(a, b)
 #define SPAN_PRIVATE_CONCAT2(a, b) a##b
 
 #define TIME_IT(...)                                                                                                   \
-  auto SPAN_PRIVATE_NAME = upr::start_span(#__VA_ARGS__, "statement", {{"line", std::to_string(__LINE__)}});           \
+  auto SPAN_PRIVATE_NAME = upr::start_span(#__VA_ARGS__, "statement",                                                  \
+                                           {{"function", std::to_string(__PRETTY_FUNCTION__)},                         \
+                                            {"file", std::to_string(__FILE__)},                                        \
+                                            {"line", std::to_string(__LINE__)}});                                      \
   __VA_ARGS__;                                                                                                         \
   upr::stop_span(SPAN_PRIVATE_NAME);
 
