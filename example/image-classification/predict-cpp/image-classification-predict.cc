@@ -161,6 +161,8 @@ int main(int argc, char *argv[]) {
 
   force_runtime_initialization();
 
+  MXPredInit();
+
   if (!file_exists(test_file)) {
     std::cerr << "the file " << test_file << " does not exist";
     return -1;
@@ -220,10 +222,8 @@ int main(int argc, char *argv[]) {
   // Start profiling
   MXSetProfilerState(1);
 
-  // Create Predictor
   MXPredCreate((const char *) json_data.GetBuffer(), (const char *) param_data.GetBuffer(), param_data.GetLength(),
                dev_type, dev_id, num_input_nodes, input_keys, input_shape_indptr, input_shape_data, &pred_hnd);
-  CHECK(pred_hnd != nullptr) << " got error=" << MXGetLastError();
 
   // Set Input Image
   MXPredSetInput(pred_hnd, "data", image_data.data(), image_size);

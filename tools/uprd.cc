@@ -78,9 +78,7 @@ private:
 
     cudaIpcMemHandle_t handle;
 
-    // LOG(INFO) << "getting ipc mem handle using device_ptr = " << (size_t) device_ptr;
     CUDA_CHECK_CALL(cudaIpcGetMemHandle(&handle, (void *) device_ptr), "failed to create a handle ref");
-    // LOG(INFO) << "got ipc mem handle";
 
     open_handles.insert({ipc_id, handle});
 

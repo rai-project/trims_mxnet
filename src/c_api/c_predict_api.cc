@@ -46,9 +46,18 @@ struct MXAPINDList {
   std::vector<mx_float> data;
 };
 
+int MXInit() {
+  return MXPredCreate(nullptr, nullptr, 0, 0, 0, 0, nullptr, nullptr, nullptr, nullptr);
+}
+
 int MXPredCreate(const char *symbol_json_str, const void *param_bytes, int param_size, int dev_type, int dev_id,
                  mx_uint num_input_nodes, const char **input_keys, const mx_uint *input_shape_indptr,
                  const mx_uint *input_shape_data, PredictorHandle *out) {
+  if (symbol_json_str == nullptr) {
+    cudaFree(0);
+    return 0;
+  }
+
   return MXPredCreatePartialOut(symbol_json_str, param_bytes, param_size, dev_type, dev_id, num_input_nodes, input_keys,
                                 input_shape_indptr, input_shape_data, 0, NULL, out);
 }
