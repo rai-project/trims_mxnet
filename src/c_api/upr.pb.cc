@@ -126,6 +126,7 @@ void InitDefaultsModelImpl() {
   ::google::protobuf::internal::InitProtobufDefaults();
 #endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
   protobuf_upr_2eproto::InitDefaultsModelHandle();
+  protobuf_google_2fprotobuf_2ftimestamp_2eproto::InitDefaultsTimestamp();
   {
     void* ptr = &::upr::_Model_default_instance_;
     new (ptr) ::upr::Model();
@@ -223,6 +224,10 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::Model, ref_count_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::Model, owned_model_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::Model, shared_model_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::Model, lru_timestamp_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::Model, fifo_order_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::Model, use_history_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::Model, always_resident_),
   ~0u,  // no _has_bits_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::ModelRequest, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -242,8 +247,8 @@ static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROT
   { 7, -1, sizeof(::upr::Layer)},
   { 19, -1, sizeof(::upr::ModelHandle)},
   { 28, -1, sizeof(::upr::Model)},
-  { 39, -1, sizeof(::upr::ModelRequest)},
-  { 47, -1, sizeof(::upr::Void)},
+  { 43, -1, sizeof(::upr::ModelRequest)},
+  { 51, -1, sizeof(::upr::Void)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -277,29 +282,34 @@ void protobuf_RegisterTypes(const ::std::string&) {
 void AddDescriptorsImpl() {
   InitDefaults();
   static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-      "\n\tupr.proto\022\003upr\"\"\n\005Shape\022\014\n\004rank\030\001 \001(\005\022"
-      "\013\n\003dim\030\002 \003(\005\"\217\001\n\005Layer\022\n\n\002id\030\001 \001(\t\022\014\n\004na"
-      "me\030\002 \001(\t\022\031\n\005shape\030\003 \001(\0132\n.upr.Shape\022\022\n\nb"
-      "yte_count\030\004 \001(\003\022\022\n\nipc_handle\030\005 \001(\014\022\026\n\016d"
-      "evice_raw_ptr\030\006 \001(\003\022\021\n\tref_count\030\007 \001(\003\"Z"
-      "\n\013ModelHandle\022\n\n\002id\030\001 \001(\t\022\020\n\010model_id\030\002 "
-      "\001(\t\022\022\n\nbyte_count\030\003 \001(\003\022\031\n\005layer\030\004 \003(\0132\n"
-      ".upr.Layer\"\226\001\n\005Model\022\n\n\002id\030\001 \001(\t\022\014\n\004name"
-      "\030\002 \001(\t\022\021\n\tfile_path\030\003 \001(\t\022\021\n\tref_count\030\004"
-      " \001(\003\022%\n\013owned_model\030\005 \001(\0132\020.upr.ModelHan"
-      "dle\022&\n\014shared_model\030\006 \003(\0132\020.upr.ModelHan"
-      "dle\"F\n\014ModelRequest\022\014\n\004name\030\001 \001(\t\022\026\n\016dir"
-      "ectory_path\030\002 \001(\t\022\020\n\010no_cache\030\003 \001(\010\"\006\n\004V"
-      "oid2\212\001\n\010Registry\022-\n\004Open\022\021.upr.ModelRequ"
-      "est\032\020.upr.ModelHandle\"\000\022&\n\005Close\022\020.upr.M"
-      "odelHandle\032\t.upr.Void\"\000\022\'\n\004Info\022\021.upr.Mo"
-      "delRequest\032\n.upr.Model\"\000B\010Z\003upr\370\001\001b\006prot"
-      "o3"
+      "\n\tupr.proto\022\003upr\032\037google/protobuf/timest"
+      "amp.proto\"\"\n\005Shape\022\014\n\004rank\030\001 \001(\005\022\013\n\003dim\030"
+      "\002 \003(\005\"\217\001\n\005Layer\022\n\n\002id\030\001 \001(\t\022\014\n\004name\030\002 \001("
+      "\t\022\031\n\005shape\030\003 \001(\0132\n.upr.Shape\022\022\n\nbyte_cou"
+      "nt\030\004 \001(\003\022\022\n\nipc_handle\030\005 \001(\014\022\026\n\016device_r"
+      "aw_ptr\030\006 \001(\003\022\021\n\tref_count\030\007 \001(\003\"Z\n\013Model"
+      "Handle\022\n\n\002id\030\001 \001(\t\022\020\n\010model_id\030\002 \001(\t\022\022\n\n"
+      "byte_count\030\003 \001(\003\022\031\n\005layer\030\004 \003(\0132\n.upr.La"
+      "yer\"\247\002\n\005Model\022\n\n\002id\030\001 \001(\t\022\014\n\004name\030\002 \001(\t\022"
+      "\021\n\tfile_path\030\003 \001(\t\022\021\n\tref_count\030\004 \001(\003\022%\n"
+      "\013owned_model\030\005 \001(\0132\020.upr.ModelHandle\022&\n\014"
+      "shared_model\030\006 \003(\0132\020.upr.ModelHandle\0221\n\r"
+      "lru_timestamp\030\007 \001(\0132\032.google.protobuf.Ti"
+      "mestamp\022\022\n\nfifo_order\030\010 \001(\003\022/\n\013use_histo"
+      "ry\030\t \003(\0132\032.google.protobuf.Timestamp\022\027\n\017"
+      "always_resident\030\n \001(\010\"F\n\014ModelRequest\022\014\n"
+      "\004name\030\001 \001(\t\022\026\n\016directory_path\030\002 \001(\t\022\020\n\010n"
+      "o_cache\030\003 \001(\010\"\006\n\004Void2\212\001\n\010Registry\022-\n\004Op"
+      "en\022\021.upr.ModelRequest\032\020.upr.ModelHandle\""
+      "\000\022&\n\005Close\022\020.upr.ModelHandle\032\t.upr.Void\""
+      "\000\022\'\n\004Info\022\021.upr.ModelRequest\032\n.upr.Model"
+      "\"\000B\010Z\003upr\370\001\001b\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 682);
+      descriptor, 860);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "upr.proto", &protobuf_RegisterTypes);
+  ::protobuf_google_2fprotobuf_2ftimestamp_2eproto::AddDescriptors();
 }
 
 void AddDescriptors() {
@@ -1637,6 +1647,8 @@ void ModelHandle::InternalSwap(ModelHandle* other) {
 void Model::InitAsDefaultInstance() {
   ::upr::_Model_default_instance_._instance.get_mutable()->owned_model_ = const_cast< ::upr::ModelHandle*>(
       ::upr::ModelHandle::internal_default_instance());
+  ::upr::_Model_default_instance_._instance.get_mutable()->lru_timestamp_ = const_cast< ::google::protobuf::Timestamp*>(
+      ::google::protobuf::Timestamp::internal_default_instance());
 }
 void Model::_slow_mutable_owned_model() {
   owned_model_ = ::google::protobuf::Arena::CreateMessage< ::upr::ModelHandle >(
@@ -1655,6 +1667,32 @@ void Model::unsafe_arena_set_allocated_owned_model(
   }
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:upr.Model.owned_model)
 }
+void Model::_slow_mutable_lru_timestamp() {
+  lru_timestamp_ = ::google::protobuf::Arena::CreateMessage< ::google::protobuf::Timestamp >(
+      GetArenaNoVirtual());
+}
+void Model::unsafe_arena_set_allocated_lru_timestamp(
+    ::google::protobuf::Timestamp* lru_timestamp) {
+  if (GetArenaNoVirtual() == NULL) {
+    delete lru_timestamp_;
+  }
+  lru_timestamp_ = lru_timestamp;
+  if (lru_timestamp) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:upr.Model.lru_timestamp)
+}
+void Model::clear_lru_timestamp() {
+  if (GetArenaNoVirtual() == NULL && lru_timestamp_ != NULL) {
+    delete lru_timestamp_;
+  }
+  lru_timestamp_ = NULL;
+}
+void Model::clear_use_history() {
+  use_history_.Clear();
+}
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int Model::kIdFieldNumber;
 const int Model::kNameFieldNumber;
@@ -1662,6 +1700,10 @@ const int Model::kFilePathFieldNumber;
 const int Model::kRefCountFieldNumber;
 const int Model::kOwnedModelFieldNumber;
 const int Model::kSharedModelFieldNumber;
+const int Model::kLruTimestampFieldNumber;
+const int Model::kFifoOrderFieldNumber;
+const int Model::kUseHistoryFieldNumber;
+const int Model::kAlwaysResidentFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 Model::Model()
@@ -1675,7 +1717,8 @@ Model::Model()
 Model::Model(::google::protobuf::Arena* arena)
   : ::google::protobuf::Message(),
   _internal_metadata_(arena),
-  shared_model_(arena) {
+  shared_model_(arena),
+  use_history_(arena) {
   ::protobuf_upr_2eproto::InitDefaultsModel();
   SharedCtor();
   RegisterArenaDtor(arena);
@@ -1685,6 +1728,7 @@ Model::Model(const Model& from)
   : ::google::protobuf::Message(),
       _internal_metadata_(NULL),
       shared_model_(from.shared_model_),
+      use_history_(from.use_history_),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   id_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
@@ -1707,7 +1751,14 @@ Model::Model(const Model& from)
   } else {
     owned_model_ = NULL;
   }
-  ref_count_ = from.ref_count_;
+  if (from.has_lru_timestamp()) {
+    lru_timestamp_ = new ::google::protobuf::Timestamp(*from.lru_timestamp_);
+  } else {
+    lru_timestamp_ = NULL;
+  }
+  ::memcpy(&ref_count_, &from.ref_count_,
+    static_cast<size_t>(reinterpret_cast<char*>(&always_resident_) -
+    reinterpret_cast<char*>(&ref_count_)) + sizeof(always_resident_));
   // @@protoc_insertion_point(copy_constructor:upr.Model)
 }
 
@@ -1716,8 +1767,8 @@ void Model::SharedCtor() {
   name_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   file_path_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ::memset(&owned_model_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&ref_count_) -
-      reinterpret_cast<char*>(&owned_model_)) + sizeof(ref_count_));
+      reinterpret_cast<char*>(&always_resident_) -
+      reinterpret_cast<char*>(&owned_model_)) + sizeof(always_resident_));
   _cached_size_ = 0;
 }
 
@@ -1732,6 +1783,7 @@ void Model::SharedDtor() {
   name_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   file_path_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (this != internal_default_instance()) delete owned_model_;
+  if (this != internal_default_instance()) delete lru_timestamp_;
 }
 
 void Model::ArenaDtor(void* object) {
@@ -1766,6 +1818,7 @@ void Model::Clear() {
   (void) cached_has_bits;
 
   shared_model_.Clear();
+  use_history_.Clear();
   id_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
   name_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
   file_path_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
@@ -1773,7 +1826,13 @@ void Model::Clear() {
     delete owned_model_;
   }
   owned_model_ = NULL;
-  ref_count_ = GOOGLE_LONGLONG(0);
+  if (GetArenaNoVirtual() == NULL && lru_timestamp_ != NULL) {
+    delete lru_timestamp_;
+  }
+  lru_timestamp_ = NULL;
+  ::memset(&ref_count_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&always_resident_) -
+      reinterpret_cast<char*>(&ref_count_)) + sizeof(always_resident_));
   _internal_metadata_.Clear();
 }
 
@@ -1872,6 +1931,57 @@ bool Model::MergePartialFromCodedStream(
         break;
       }
 
+      // .google.protobuf.Timestamp lru_timestamp = 7;
+      case 7: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(58u /* 58 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
+               input, mutable_lru_timestamp()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int64 fifo_order = 8;
+      case 8: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(64u /* 64 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                 input, &fifo_order_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated .google.protobuf.Timestamp use_history = 9;
+      case 9: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(74u /* 74 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(input, add_use_history()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // bool always_resident = 10;
+      case 10: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(80u /* 80 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &always_resident_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0) {
@@ -1946,6 +2056,29 @@ void Model::SerializeWithCachedSizes(
       6, this->shared_model(static_cast<int>(i)), output);
   }
 
+  // .google.protobuf.Timestamp lru_timestamp = 7;
+  if (this->has_lru_timestamp()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      7, *this->lru_timestamp_, output);
+  }
+
+  // int64 fifo_order = 8;
+  if (this->fifo_order() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(8, this->fifo_order(), output);
+  }
+
+  // repeated .google.protobuf.Timestamp use_history = 9;
+  for (unsigned int i = 0,
+      n = static_cast<unsigned int>(this->use_history_size()); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      9, this->use_history(static_cast<int>(i)), output);
+  }
+
+  // bool always_resident = 10;
+  if (this->always_resident() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(10, this->always_resident(), output);
+  }
+
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
@@ -2013,6 +2146,31 @@ void Model::SerializeWithCachedSizes(
         6, this->shared_model(static_cast<int>(i)), deterministic, target);
   }
 
+  // .google.protobuf.Timestamp lru_timestamp = 7;
+  if (this->has_lru_timestamp()) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      InternalWriteMessageToArray(
+        7, *this->lru_timestamp_, deterministic, target);
+  }
+
+  // int64 fifo_order = 8;
+  if (this->fifo_order() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(8, this->fifo_order(), target);
+  }
+
+  // repeated .google.protobuf.Timestamp use_history = 9;
+  for (unsigned int i = 0,
+      n = static_cast<unsigned int>(this->use_history_size()); i < n; i++) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      InternalWriteMessageToArray(
+        9, this->use_history(static_cast<int>(i)), deterministic, target);
+  }
+
+  // bool always_resident = 10;
+  if (this->always_resident() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(10, this->always_resident(), target);
+  }
+
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
@@ -2038,6 +2196,17 @@ size_t Model::ByteSizeLong() const {
       total_size +=
         ::google::protobuf::internal::WireFormatLite::MessageSize(
           this->shared_model(static_cast<int>(i)));
+    }
+  }
+
+  // repeated .google.protobuf.Timestamp use_history = 9;
+  {
+    unsigned int count = static_cast<unsigned int>(this->use_history_size());
+    total_size += 1UL * count;
+    for (unsigned int i = 0; i < count; i++) {
+      total_size +=
+        ::google::protobuf::internal::WireFormatLite::MessageSize(
+          this->use_history(static_cast<int>(i)));
     }
   }
 
@@ -2069,11 +2238,30 @@ size_t Model::ByteSizeLong() const {
         *this->owned_model_);
   }
 
+  // .google.protobuf.Timestamp lru_timestamp = 7;
+  if (this->has_lru_timestamp()) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::MessageSize(
+        *this->lru_timestamp_);
+  }
+
   // int64 ref_count = 4;
   if (this->ref_count() != 0) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::Int64Size(
         this->ref_count());
+  }
+
+  // int64 fifo_order = 8;
+  if (this->fifo_order() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int64Size(
+        this->fifo_order());
+  }
+
+  // bool always_resident = 10;
+  if (this->always_resident() != 0) {
+    total_size += 1 + 1;
   }
 
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
@@ -2106,6 +2294,7 @@ void Model::MergeFrom(const Model& from) {
   (void) cached_has_bits;
 
   shared_model_.MergeFrom(from.shared_model_);
+  use_history_.MergeFrom(from.use_history_);
   if (from.id().size() > 0) {
     set_id(from.id());
   }
@@ -2118,8 +2307,17 @@ void Model::MergeFrom(const Model& from) {
   if (from.has_owned_model()) {
     mutable_owned_model()->::upr::ModelHandle::MergeFrom(from.owned_model());
   }
+  if (from.has_lru_timestamp()) {
+    mutable_lru_timestamp()->::google::protobuf::Timestamp::MergeFrom(from.lru_timestamp());
+  }
   if (from.ref_count() != 0) {
     set_ref_count(from.ref_count());
+  }
+  if (from.fifo_order() != 0) {
+    set_fifo_order(from.fifo_order());
+  }
+  if (from.always_resident() != 0) {
+    set_always_resident(from.always_resident());
   }
 }
 
@@ -2163,11 +2361,15 @@ void Model::UnsafeArenaSwap(Model* other) {
 void Model::InternalSwap(Model* other) {
   using std::swap;
   shared_model_.InternalSwap(&other->shared_model_);
+  use_history_.InternalSwap(&other->use_history_);
   id_.Swap(&other->id_);
   name_.Swap(&other->name_);
   file_path_.Swap(&other->file_path_);
   swap(owned_model_, other->owned_model_);
+  swap(lru_timestamp_, other->lru_timestamp_);
   swap(ref_count_, other->ref_count_);
+  swap(fifo_order_, other->fifo_order_);
+  swap(always_resident_, other->always_resident_);
   _internal_metadata_.Swap(&other->_internal_metadata_);
   swap(_cached_size_, other->_cached_size_);
 }
