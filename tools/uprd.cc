@@ -387,6 +387,9 @@ public:
 
     // LOG(INFO) << "finished satisfying open request";
 
+    auto use_history = handle->mutable_use_history()->Add();
+    use_history->CopyFrom(GetCurrentTime());
+
     reply->CopyFrom(*handle);
 
     return grpc::Status::OK;
