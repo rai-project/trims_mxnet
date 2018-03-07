@@ -216,10 +216,10 @@ namespace engine {
 
     for (uint32_t i = 0; i < dev_num; ++i) {
       DevStat &d = profile_stat[i];
-      auto opr_stat = _opr_stat;
+      OprExecStat *_opr_stat;
       while (d.opr_exec_stats_->try_dequeue(_opr_stat)) {
         CHECK_NOTNULL(_opr_stat);
-        const auto opr_stat = _opr_stat;
+        auto opr_stat = _opr_stat;
         if (opr_stat == nullptr) {
           std::cout << "invalid oprstat";
           LOG(FATAL) << "invalid oprstat";
