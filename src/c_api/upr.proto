@@ -63,7 +63,7 @@ message Model {
   // order (for fifo)
   int64 fifo_order = 8;
   // use history
-  repeated google.protobuf.Timestamp history = 9;
+  repeated google.protobuf.Timestamp use_history = 9;
   // whether to disable eviction of the model
   bool always_resident = 10;
 }
