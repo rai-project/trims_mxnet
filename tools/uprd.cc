@@ -45,6 +45,14 @@ std::vector<K> keys(const std::map<K, V> &m) {
 
 class RegistryImpl final : public Registry::Service {
 private:
+  void delete_model(Model *ptr) {
+    std::cout << "Model ptr" << model->model_id << "\n";
+  }
+  struct ModelDeleter {
+    void operator()(Model *ptr) const {
+      delete_model(ptr);
+    }
+  };
   using memory_db_t = std::map<std::string, std::unique_ptr<Model, ModelDeleter>>;
   std::map<std::string /* id::name */, cudaIpcMemHandle_t> open_handles{};
 
@@ -253,15 +261,17 @@ private:
       if (memory_db_.empty()) {
         break;
       }
-      auto min_element = std::min_element(memory_db_.begin(), memory_db_.end(),
+      auto min_element      = std::min_element(memory_db_.begin(), memory_db_.end(),
                                           [](const memory_db_t::value_type &s1, const memory_db_t::value_type &s2) {
                                             if (s1->second.ref_count > 0) {
                                               return false;
                                             }
                                             return s1->second->lru_timestamp < s2->second->lru_timestamp;
                                           });
-      memory_freed += min_element->second->owned_model->byte_count;
-      c.erase(min_element);
+      const auto byte_count = min_element->second->owned_model->byte_count;
+      memory_usage_ -= byte_count;
+      memory_freed += byte_count;
+      memory_db_.erase(min_element);
     }
 
     return memory_freed < memory_to_free;
@@ -324,10 +334,6 @@ private:
     return;
   }
 
-  void DeleteModel(Model *model) {
-    LOG(INFO) << "DELETE MODEL";
-  }
-
 public:
   // control memory usage by percentage of gpu
   grpc::Status Open(grpc::ServerContext *context, const ModelRequest *request, ModelHandle *reply) override {
@@ -360,7 +366,7 @@ public:
 
       owned_model->set_byte_count(byte_count);
 
-      memory_db_[request->name()] = std::make_unique<Model>(model);
+      memory_db_[request->name()] = std::make_unique<Model, ModelDeleter>(model);
       memory_usage_ += byte_count;
     }
 
@@ -402,30 +408,44 @@ public:
     return grpc::Status::OK;
   }
 
+  std::string find_model_name_by_model_id(std::string model_id) {
+    const auto loc = std::find_if(memory_db_.begin(), memory_db_.end(), [&model_id](const memory_db_t::value_type &k) {
+      return k->second.model_id == model_id;
+    });
+    if (loc == memory_db_.end()) {
+      return "";
+    }
+    return loc;
+  }
+
   grpc::Status Close(grpc::ServerContext *context, const ModelHandle *request, Void *reply) override {
     std::lock_guard<std::mutex> lock(db_mutex_);
 
-    auto it = memory_db_.find(request->model_id());
-    if (it == memory_db_.end()) {
+    const auto model_name = find_model_name_by_model_id(request->model_id());
+    if (model_name == "") {
       LOG(ERROR) << "failed to close request\n";
       return grpc::Status(grpc::NOT_FOUND,
-                          "unable to find handle with name "s + request->model_id() + " during close request");
+                          "unable to find model name with id "s + request->model_id() + " during close request");
     }
-
-#ifdef REF_COUNT_ENABLED
-    const auto path = request->file_path();
+    auto it = memory_db_.find(model_name);
+    if (it == memory_db_.end()) {
+      LOG(ERROR) << "failed to close request\n";
+      return grpc::Status(grpc::NOT_FOUND, "unable to find handle with name "s + model_name + " during close request");
+    }
 
     const auto ref_count = it->second->ref_count() - 1;
     it->second->set_ref_count(ref_count);
 
     if (ref_count == 0) {
-      // cudaFree((void *)it->second->raw_ptr());
-      memory_db_.erase(it);
+      const auto eviction_policy = UPRD_EVICTION_POLICY;
+      if (eviction_policy == "eager") {
+        const auto byte_count = it->second->owned_model->byte_count;
+        memory_usage_ -= byte_count;
+        memory_freed += byte_count;
+        memory_db_.erase(it);
+      }
     }
-    std::cout << "receive close request\n";
-#else
-    LOG(ERROR) << "TODO:: enable decremenet refcount on close\n";
-#endif
+
     return grpc::Status::OK;
   }
 
@@ -438,12 +458,6 @@ private:
   }
 
   // The actual database.
-
-  struct StreamDeleter {
-    void operator()(Model *ptr) const {
-      DeleteModel(ptr);
-    }
-  };
 
   memory_db_t memory_db_;
   int64_t memory_usage_{0};

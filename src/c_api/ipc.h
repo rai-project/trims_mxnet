@@ -27,6 +27,7 @@
 
 #include "./../engine/profiler.h"
 #include "./base64.h"
+#include "./c_api_common.h"
 #include "./defer.h"
 #include "fmt/format.h"
 #include "prettyprint.hpp"
@@ -147,6 +148,7 @@ static Context get_ctx() {
 
 static std::string span_category_init          = "init";
 static std::string span_category_load          = "load";
+static std::string span_category_close         = "close";
 static std::string span_category_serialization = "serialization";
 static std::string span_category_ipc           = "ipc";
 static std::string span_category_grpc          = "grpc";
@@ -332,6 +334,7 @@ inline bool string_starts_with(const std::basic_string<charT> &big, const std::b
   return valid_ and starts_with_;
 }
 
-void Load(std::string model_name, std::vector<mxnet::NDArray> *data, std::vector<std::string> *keys);
+void Unload(mxnet::MXAPIPredictor *pred);
+std::string Load(std::string model_name, std::vector<mxnet::NDArray> *data, std::vector<std::string> *keys);
 } // namespace upr
 #endif // MXNET_USE_CUDA

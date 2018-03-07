@@ -38,22 +38,6 @@
 
 using namespace mxnet;
 
-// predictor interface
-struct MXAPIPredictor {
-  // output arrays
-  std::vector<NDArray> out_arrays;
-  // argument arrays
-  std::vector<NDArray> arg_arrays;
-  // output shapes
-  std::vector<TShape> out_shapes;
-  // uint32_t buffer for output shapes
-  std::vector<uint32_t> out_shapes_buffer;
-  // key to arguments
-  std::unordered_map<std::string, size_t> key2arg;
-  // executor
-  std::unique_ptr<Executor> exec;
-};
-
 struct MXAPINDList {
   std::vector<std::string> keys;
   std::vector<TShape> shapes;
@@ -126,8 +110,10 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
     std::vector<std::string> names;
 
     const auto model_name = upr::get_model_name();
+    ret->model_name       = model_name;
 #ifdef MXNET_USE_CUDA
-    upr::Load(std::string(model_name), &data, &names);
+    const auto model_id = upr::Load(std::string(model_name), &data, &names);
+    ret->model_id       = model_id;
 #else
     LOG(FATAL) << "enable USE_CUDA in the makefile to use the upr path";
 #endif
@@ -265,7 +251,9 @@ int MXPredGetOutput(PredictorHandle handle, mx_uint index, mx_float *data, mx_ui
 
 int MXPredFree(PredictorHandle handle) {
   API_BEGIN();
-  delete static_cast<MXAPIPredictor *>(handle);
+  auto pred = static_cast<MXAPIPredictor *>(handle);
+  upr::Unload(pred);
+  delete pred;
   API_END();
 }
 
