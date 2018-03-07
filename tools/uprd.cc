@@ -89,10 +89,7 @@ private:
     const auto ipc_id = get_ipc_id(id, name);
 
     cudaIpcMemHandle_t handle;
-
     CUDA_CHECK_CALL(cudaIpcGetMemHandle(&handle, (void *) device_ptr), "failed to create a handle ref");
-
-    // open_handles.insert({ipc_id, handle});
 
     layer->set_ipc_handle(handle.reserved, CUDA_IPC_HANDLE_SIZE);
     // LOG(INFO) << "setting ipc handle " << utils::base64_encode(layer->ipc_handle()) << " for layer " << layer->name()
@@ -108,18 +105,6 @@ private:
   void make_ipc_handle(Layer *layer, NDArray &array) {
     make_ipc_handle(layer, layer->id(), layer->name(), array);
   }
-
-  // void close_ipc_handle(std::string id, std::string name) {
-  //   const auto ipc_id = get_ipc_id(id, name);
-  //   const auto it     = open_handles.find(ipc_id);
-  //   if (it == open_handles.end()) {
-  //     LOG(INFO) << "the ipc with id = " << ipc_id << " was not found";
-  //     return;
-  //   }
-  //   // LOG(INFO) << "TODO:: the ipc with id = " << ipc_id << " needs to be closed";
-  //   open_handles.erase(ipc_id);
-  //   return;
-  // }
 
   void to_shape(Shape *res, TShape shape) {
     res->set_rank(shape.ndim());
@@ -289,17 +274,61 @@ private:
 
   bool perform_fifo_eviction(const ModelRequest *request, const size_t memory_size_request,
                              const size_t memory_to_free) {
-    return false;
+    size_t memory_freed = 0;
+    while (memory_freed < memory_to_free) {
+      if (memory_db_.empty()) {
+        break;
+      }
+      auto min_element      = std::min_element(memory_db_.begin(), memory_db_.end(),
+                                          [](const memory_db_t::value_type &s1, const memory_db_t::value_type &s2) {
+                                            if (s1.second->ref_count() > 0) {
+                                              return false;
+                                            }
+                                            return s1.second->fifo_order() < s2.second->fifo_order();
+                                          });
+      const auto byte_count = min_element->second->owned_model().byte_count();
+      memory_usage_ -= byte_count;
+      memory_freed += byte_count;
+      memory_db_.erase(min_element);
+    }
+
+    return memory_freed < memory_to_free;
   }
 
   bool perform_flush_eviction(const ModelRequest *request, const size_t memory_size_request,
                               const size_t memory_to_free) {
-    return false;
+    size_t memory_freed = 0;
+    for (auto elem : memory_db_) {
+      const auto byte_count = elem->second->owned_model().byte_count();
+      memory_usage_ -= byte_count;
+      memory_freed += byte_count;
+    }
+    memory_db_.clear();
+
+    return memory_freed < memory_to_free;
   }
 
   bool perform_lcu_eviction(const ModelRequest *request, const size_t memory_size_request,
                             const size_t memory_to_free) {
-    return false;
+    size_t memory_freed = 0;
+    while (memory_freed < memory_to_free) {
+      if (memory_db_.empty()) {
+        break;
+      }
+      auto min_element      = std::min_element(memory_db_.begin(), memory_db_.end(),
+                                          [](const memory_db_t::value_type &s1, const memory_db_t::value_type &s2) {
+                                            if (s1.second->ref_count() > 0) {
+                                              return false;
+                                            }
+                                            return s1.second->use_history().size() < s2.second->use_history().size();
+                                          });
+      const auto byte_count = min_element->second->owned_model().byte_count();
+      memory_usage_ -= byte_count;
+      memory_freed += byte_count;
+      memory_db_.erase(min_element);
+    }
+
+    return memory_freed < memory_to_free;
   }
 
   // A eviction few strategies
