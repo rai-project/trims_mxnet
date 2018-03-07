@@ -34,18 +34,8 @@
 #include "./inst_nvtx.inc"
 #endif
 #include "./version.inc"
+#include "./initialize.h"
 
-// - apt-get install binutils-dev ...
-// - g++/clang++ -lbfd ...
-#define BACKWARD_HAS_BFD 1
-
-#include "backward.hpp"
-
-namespace backward {
-
-backward::SignalHandling sh;
-
-} // namespace backward
 
 
 namespace mxnet {
@@ -64,9 +54,7 @@ static void SegfaultLogger(int sig) {
 }
 #endif
 
-class LibraryInitializer {
-public:
-  LibraryInitializer() {
+LibraryInitializer::LibraryInitializer() {
     std::cout<<"before mxnet initalization\n";
 
     dmlc::InitLogging("mxnet");
@@ -100,15 +88,15 @@ public:
       // auto span = start_span("library initialization", span_category_init); 
       static const auto ctx = Context::GPU();
       auto engine           = Engine::Get();
+      std::cout<<"before engine->Initialize(ctx)\n";
       engine->Initialize(ctx);
+      std::cout<<"after engine->Initialize(ctx)\n";
      // stop_span(span);
     }
 
     std::cout<<"after mxnet initalization\n";
   }
 
-  static LibraryInitializer* Get();
-};
 
 LibraryInitializer* LibraryInitializer::Get() {
   static LibraryInitializer inst;

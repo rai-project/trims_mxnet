@@ -91,6 +91,7 @@ int MXRandomSeed(int seed) {
   API_END();
 }
 
+
 int MXNotifyShutdown() {
   API_BEGIN();
   Engine::Get()->NotifyShutdown();

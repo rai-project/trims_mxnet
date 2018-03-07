@@ -23,41 +23,41 @@ using namespace mxnet;
 using namespace std::string_literals;
 using namespace grpc;
 
-namespace upr {
-  class UPRInitializer {
-public:
-  UPRInitializer() {
-        std::cout<<"before mxnet initalization\n";
+/* namespace upr { */
+/*   class UPRInitializer { */
+/* public: */
+/*   UPRInitializer() { */
+/*         std::cout<<"before upr initalization\n"; */
 
-#if MXNET_USE_PROFILER
-    // ensure profiler's constructor are called before atexit.
-    engine::Profiler::Get();
-    // DumpProfile will be called before engine's and profiler's destructor.
-    std::atexit([]() {
-      engine::Profiler* profiler = engine::Profiler::Get();
-      if (profiler->IsEnableOutput()) {
-        profiler->DumpProfile();
-      }
-    });
-#endif
+/* #if MXNET_USE_PROFILER */
+/*     // ensure profiler's constructor are called before atexit. */
+/*     engine::Profiler::Get(); */
+/*     // DumpProfile will be called before engine's and profiler's destructor. */
+/*     std::atexit([]() { */
+/*       engine::Profiler* profiler = engine::Profiler::Get(); */
+/*       if (profiler->IsEnableOutput()) { */
+/*         profiler->DumpProfile(); */
+/*       } */
+/*     }); */
+/* #endif */
 
-    auto span        = start_span("cudaFree(0) in upr initialization", span_category_mxnet_init);
-    cudaFree(0);
-    stop_span(span);
-      std::cout<<"after mxnet initalization\n";
+/*     auto span        = start_span("cudaFree(0) in upr initialization", span_category_mxnet_init); */
+/*     cudaFree(0); */
+/*     stop_span(span); */
+/*       std::cout<<"after upr initalization\n"; */
 
-  }
+/*   } */
 
-  static UPRInitializer* Get();
-};
+/*   static UPRInitializer* Get(); */
+/* }; */
 
-UPRInitializer* UPRInitializer::Get() {
-  static UPRInitializer inst;
-  return &inst;
-}
+/* UPRInitializer* UPRInitializer::Get() { */
+/*   static UPRInitializer inst; */
+/*   return &inst; */
+/* } */
 
-static UPRInitializer* __upr_init = UPRInitializer::Get();
-}
+/* static UPRInitializer* __upr_init = UPRInitializer::Get(); */
+/* } */
 
 namespace upr {
 

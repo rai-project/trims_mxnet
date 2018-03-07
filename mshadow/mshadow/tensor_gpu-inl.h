@@ -9,6 +9,8 @@
 #include "./base.h"
 #include "./tensor.h"
 
+#include <iostream>
+
 #include "nvToolsExt.h"
 
 #if MXNET_USE_NVTX
@@ -50,6 +52,9 @@ inline void InitTensorEngine<gpu>(int dev_id) {
   }
   CHECK_LT(device_id, device_count) << "Incorrect Device ID";
   MSHADOW_CUDA_CALL(cudaSetDevice(device_id));
+  std::cout<<"before cudaFree in inittensorengine\n";
+  MSHADOW_CUDA_CALL(cudaFree(0));
+  std::cout<<"after cudaFree in inittensorengine\n";
   MSHADOW_CUDA_CALL(cudaGetDeviceProperties(&prop, device_id));
 }
 template<>

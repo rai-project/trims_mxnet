@@ -55,7 +55,7 @@ namespace engine {
 
     this->cpu_num_ = std::thread::hardware_concurrency();
 #if MXNET_USE_CUDA
-    int kMaxNumGpus = 32;
+    int kMaxNumGpus = 1;
     this->gpu_num_  = kMaxNumGpus;
 #else
     this->gpu_num_ = 0;
@@ -103,14 +103,18 @@ namespace engine {
     this->filename_ = output_filename;
   }
 
-  OprExecStat *Profiler::AddOprStat(int dev_type, uint32_t dev_id) {
+  OprExecStat *Profiler::AddOprStat(int dev_type, uint32_t dev_id, std::string opr_name = "undefined") {
     std::unique_ptr<OprExecStat> opr_stat(new OprExecStat);
     opr_stat->category = "generic";
     opr_stat->dev_type = dev_type;
     opr_stat->dev_id   = dev_id;
-    opr_stat->opr_name = "undefined";
+    opr_stat->opr_name = opr_name;
 
-    int idx;
+    if (opr_name != "undefined") {
+    std::cout << "adding " << opr_name << " \n";
+    }
+    int idx = 0 ;
+#if 0
     switch (dev_type) {
       case Context::kCPU:
         idx = dev_id;
@@ -125,6 +129,7 @@ namespace engine {
         LOG(FATAL) << "Unknown dev_type: " << dev_type;
         return NULL;
     }
+#endif
 
     DevStat &dev_stat = profile_stat[idx];
     dev_stat.opr_exec_stats_->enqueue(opr_stat.get());
@@ -216,15 +221,17 @@ namespace engine {
       OprExecStat *_opr_stat;
       while (d.opr_exec_stats_->try_dequeue(_opr_stat)) {
         CHECK_NOTNULL(_opr_stat);
-        const auto opr_stat = _opr_stat;
+        auto opr_stat = _opr_stat;
         if (opr_stat == nullptr) {
-          LOG(INFO) << "invalid oprstat";
+          std::cout << "invalid oprstat";
+          LOG(FATAL) << "invalid oprstat";
           continue;
         }
         const auto begin = emitEvent(d, opr_stat, "B");
         const auto end   = emitEvent(d, opr_stat, "E");
         trace_events.emplace_back(begin);
         trace_events.emplace_back(end);
+        delete opr_stat;
       }
     }
 

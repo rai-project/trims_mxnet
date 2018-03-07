@@ -201,6 +201,7 @@ MXNET_DLL const char *MXGetLastError();
  * \return 0 when success, -1 when failure happens.
  */
 MXNET_DLL int MXRandomSeed(int seed);
+MXNET_DLL int MXInit();
 /*!
  * \brief Notify the engine about a shutdown,
  *  This can help engine to print less messages into display.

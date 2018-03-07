@@ -61,7 +61,7 @@ private:
       break;
     case Context::kGPU:
     case Context::kCPUPinned: {
-#if MXNET_USE_CUDA
+#if 0
       if (num_gpu_device > 0) {
         CUDA_CALL(cudaSetDevice(ctx.real_dev_id()));
       }

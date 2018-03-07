@@ -30,6 +30,7 @@
 #include <thread>
 #include <vector>
 #include <future>
+#include <iostream>
 
 namespace mxnet {
 namespace engine {
@@ -61,6 +62,7 @@ namespace engine {
 
     virtual void Initialize(const Context &exec_ctx) override {
 #if MXNET_USE_CUDA
+      //  std::cout<<"in func Initialize()\n";
       using namespace upr;
       static bool initialized = false;
       if (initialized) {
@@ -109,8 +111,7 @@ namespace engine {
     void Push(OprHandle op, Context exec_ctx, int priority = 0, bool profiling = false) override {
       Profiler *profiler = Profiler::Get();
       NaiveOpr *opr      = op->Cast<NaiveOpr>();
-      opr->profiling     = profiling && (profiler->GetMode() == Profiler::kOnlySymbolic ||
-                                     profiler->GetMode() == Profiler::kAllOperator);
+      opr->profiling     = profiling && (profiler->GetMode() == Profiler::kOnlySymbolic);
       this->PushAsync(
           [&](RunContext ctx, CallbackOnComplete on_complete) {
 #if MXNET_USE_PROFILER
@@ -144,6 +145,7 @@ namespace engine {
                    FnProperty prop      = FnProperty::kNormal,
                    int priority         = 0,
                    const char *opr_name = nullptr) override {
+       // std::cout<<"in func PushAsync\n";
       CallbackOnComplete callback = CreateCallback(NaiveEngine::OnComplete, nullptr);
       this->req_completed_        = false;
 #if MXNET_USE_PROFILER

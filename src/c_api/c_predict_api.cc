@@ -62,12 +62,20 @@ struct MXAPINDList {
   std::vector<mx_float> data;
 };
 
+int MXInit() {
+  return MXPredCreate(nullptr, nullptr, 0, 0,0, 0, nullptr, nullptr, nullptr, nullptr);
+}
+
 int MXPredCreate(const char *symbol_json_str, const void *param_bytes,
                  int param_size, int dev_type, int dev_id,
                  mx_uint num_input_nodes, const char **input_keys,
                  const mx_uint *input_shape_indptr,
                  const mx_uint *input_shape_data, PredictorHandle *out) {
-  return MXPredCreatePartialOut(symbol_json_str, param_bytes, param_size,
+    if (symbol_json_str == nullptr) {
+      cudaFree(0);
+      return 0;
+    }
+    return MXPredCreatePartialOut(symbol_json_str, param_bytes, param_size,
                                 dev_type, dev_id, num_input_nodes, input_keys,
                                 input_shape_indptr, input_shape_data, 0, NULL,
                                 out);
@@ -82,22 +90,26 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
                            mx_uint num_output_nodes, const char **output_keys,
                            PredictorHandle *out) {
   using nnvm::Symbol;
+      TIME_IT(cudaFree(0));
 
   MXAPIPredictor *ret = new MXAPIPredictor();
   API_BEGIN();
   Symbol sym;
   // make sure symbols are registered
-  {
+      TIME_IT(cudaFree(0));
+  TIME_IT({
     mx_uint outSize;
     const char **outArray;
     MXListAllOpNames(&outSize, &outArray);
-  }
+  });
+      TIME_IT(cudaFree(0));
   // load in the symbol.
-  {
+  TIME_IT({
     nnvm::Graph g;
     g.attrs["json"] = std::make_shared<nnvm::any>(std::string(symbol_json_str));
     sym.outputs = nnvm::ApplyPass(g, "LoadLegacyJSON").outputs;
-  }
+  });
+      TIME_IT(cudaFree(0));
   // looks likely to output the internal results
   if (num_output_nodes != 0) {
     Symbol internal = sym.GetInternals();
@@ -114,12 +126,15 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
         CHECK_NE(j, all_out.size() - 1) << "didn't find node name: " << out_key;
       }
     }
-    sym = nnvm::Symbol::CreateGroup(out_syms);
+    TIME_IT(sym = nnvm::Symbol::CreateGroup(out_syms));
   }
+      TIME_IT(cudaFree(0));
 
   // load the parameters
   std::unordered_map<std::string, NDArray> arg_params, aux_params;
   {
+      TIME_IT(
+      std::cout<<"loading the parameters in MXPredCreatePartialOut\n";
     std::unordered_set<std::string> arg_names, aux_names;
     std::vector<std::string> arg_names_vec =
         sym.ListInputNames(Symbol::kReadOnlyArgs);
@@ -133,16 +148,20 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
     }
     std::vector<NDArray> data;
     std::vector<std::string> names;
-
-    LOG(INFO) << "UPR:: loading model...";
+    );
 
     const auto model_name = upr::get_model_name();
+      TIME_IT(cudaFree(0));
 #ifdef MXNET_USE_CUDA
+      TIME_IT(
     upr::Load(std::string(model_name), &data, &names);
+    );
 #else
    LOG(FATAL) << "enable USE_CUDA in the makefile to use the upr path";
 #endif
+      TIME_IT(cudaFree(0));
     CHECK_EQ(names.size(), data.size()) << "Invalid param file format";
+      TIME_IT(
     for (size_t i = 0; i < names.size(); ++i) {
       if (!strncmp(names[i].c_str(), "aux:", 4)) {
         std::string name(names[i].c_str() + 4);
@@ -157,6 +176,8 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
         }
       }
     }
+    );
+      std::cout<<"done loading the parameters in MXPredCreatePartialOut\n";
   }
 
   // shape inference and bind

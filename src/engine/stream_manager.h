@@ -29,6 +29,7 @@
 #include <array>
 #include <string>
 #include <mutex>
+#include <iostream>
 #include "../common/cuda_utils.h"
 
 namespace mxnet {
@@ -73,6 +74,7 @@ RunContext StreamManager<kNumGpus, kStreams>::GetRunContext(
 #if MXNET_USE_CUDA
       std::size_t use_counter;
       CUDA_CALL(cudaSetDevice(ctx.dev_id));
+      std::cout<<"after cudasetdevice in stream_manager\n";
       {
         std::lock_guard<std::mutex> lock{m_};
         auto&& counter = gpu_cnt_.at(ctx.dev_id);

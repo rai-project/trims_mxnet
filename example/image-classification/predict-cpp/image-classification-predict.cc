@@ -18,8 +18,10 @@
 #include <stdio.h>
 
 // Path for c_predict_api
+#include <mxnet/c_api.h>
 #include <c_api/ipc.h>
 #include <mxnet/c_predict_api.h>
+#include <initialize.h>
 
 #include <fstream>
 #include <iostream>
@@ -28,7 +30,10 @@
 
 #include <opencv2/opencv.hpp>
 
+namespace mxnet {};
+
 using namespace upr;
+using namespace mxnet;
 
 const mx_float DEFAULT_MEAN = 0;
 
@@ -161,6 +166,17 @@ int main(int argc, char *argv[]) {
 
   force_runtime_initialization();
 
+  int version = 0;
+  const auto err = MXGetVersion(&version);
+  if (err) {
+    std::cerr << "error :: " << err << " while getting mxnet version\n";
+  }
+
+  MXInit();
+
+  mxnet::LibraryInitializer::Get();
+
+  std::cout<< "mxnet version = "<<version<<"\n";
   if (!file_exists(test_file)) {
     std::cerr << "the file " << test_file << " does not exist";
     return -1;
@@ -217,10 +233,20 @@ int main(int argc, char *argv[]) {
   // Start profiling
   MXSetProfilerState(1);
 
+ {
+  const auto span = start_span("performing cuda free before pred", "ignore");
+  cudaFree(0);
+  stop_span(span);
+ }
+
   // Create Predictor
+ {
+  const auto span = start_span("performing predict", "ignore");
   MXPredCreate((const char *) json_data.GetBuffer(), (const char *) param_data.GetBuffer(), param_data.GetLength(),
                dev_type, dev_id, num_input_nodes, input_keys, input_shape_indptr, input_shape_data, &pred_hnd);
   CHECK(pred_hnd != nullptr) << " got error=" << MXGetLastError();
+  stop_span(span);
+ }
 
   // Set Input Image
   MXPredSetInput(pred_hnd, "data", image_data.data(), image_size);
