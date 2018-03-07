@@ -164,6 +164,8 @@ struct MXAPIPredictor {
   std::unordered_map<std::string, size_t> key2arg;
   // executor
   std::unique_ptr<Executor> exec;
+  // handle id
+  std::string handle_id;
   // model name
   std::string model_name;
   // model id to be used when opening / closing

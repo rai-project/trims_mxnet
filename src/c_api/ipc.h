@@ -20,6 +20,7 @@
 #include <fcntl.h>
 #include <stdexcept>
 #include <thread>
+#include <tuple>
 #include <unistd.h>
 
 #include <sys/stat.h>
@@ -335,6 +336,8 @@ inline bool string_starts_with(const std::basic_string<charT> &big, const std::b
 }
 
 void Unload(mxnet::MXAPIPredictor *pred);
-std::string Load(std::string model_name, std::vector<mxnet::NDArray> *data, std::vector<std::string> *keys);
+
+std::pair<std::string, std::string> Load(std::string model_name, std::vector<mxnet::NDArray> *data,
+                                         std::vector<std::string> *keys);
 } // namespace upr
 #endif // MXNET_USE_CUDA

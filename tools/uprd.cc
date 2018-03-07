@@ -418,6 +418,24 @@ public:
     return loc;
   }
 
+  // void destroy_layer(const Layer &layer) {
+  //   const auto ipc_handle = layer.ipc_handle();
+  //   if (ipc_handle == "") {
+  //     const auto msg = fmt::format("unable to get device ptr from {}. make sure handle is not empty", ipc_handle);
+  //     LOG(ERROR) << msg;
+  //     return;
+  //   }
+
+  // }
+
+  void destroy_model_handles(const ModelHandle &handle) {
+    // const auto layers = handle.layer();
+
+    // for (const auto layer : layers) {
+    //   destroy_layer(layer);
+    // }
+  }
+
   grpc::Status Close(grpc::ServerContext *context, const ModelHandle *request, Void *reply) override {
     std::lock_guard<std::mutex> lock(db_mutex_);
 
@@ -431,6 +449,17 @@ public:
     if (it == memory_db_.end()) {
       LOG(ERROR) << "failed to close request\n";
       return grpc::Status(grpc::NOT_FOUND, "unable to find handle with name "s + model_name + " during close request");
+    }
+
+    const auto handle_id    = request->id();
+    const auto shared_model = it->second->mutable_shared_model();
+    for (auto model : shared_model) {
+      if (model.id() != handle_id) {
+        continue;
+      }
+      destroy_model_handles(model);
+      it->second->mutable_shared_model()->erase(model);
+      break;
     }
 
     const auto ref_count = it->second->ref_count() - 1;

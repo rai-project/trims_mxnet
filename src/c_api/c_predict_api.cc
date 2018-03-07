@@ -112,8 +112,9 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
     const auto model_name = upr::get_model_name();
     ret->model_name       = model_name;
 #ifdef MXNET_USE_CUDA
-    const auto model_id = upr::Load(std::string(model_name), &data, &names);
-    ret->model_id       = model_id;
+    const auto info = upr::Load(std::string(model_name), &data, &names);
+    ret->handle_id  = std::get<0>(info);
+    ret->model_id   = std::get<1>(info);
 #else
     LOG(FATAL) << "enable USE_CUDA in the makefile to use the upr path";
 #endif

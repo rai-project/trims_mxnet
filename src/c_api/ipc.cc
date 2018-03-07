@@ -166,8 +166,9 @@ struct client {
       return;
     }
 
-    void Close(const std::string &model_id) {
+    void Close(const std::string &handle_id, const std::string &model_id) {
       ModelHandle request;
+      request.set_id(handle_id);
       request.set_model_id(model_id);
       return this->Close(request);
     }
@@ -188,12 +189,12 @@ struct client {
     defer(stop_span(span));
 
     auto client = client::get_connection();
-    client->Close(pred->model_id);
+    client->Close(pred->handle_id, pred->model_id);
 
     return;
   }
 
-  static std::string
+  static std::pair<std::string, std::string>
       Load(std::string model_name, std::vector<NDArray> *res_arrays, std::vector<std::string> *res_keys) {
     auto span_loading = start_span("open", span_category_load, span_props{{"model_name", model_name}});
     defer(stop_span(span_loading));
@@ -209,7 +210,7 @@ struct client {
 
     // LOG(INFO) << "Loaded model " << model_name;
 
-    return open_reply.model_id();
+    return std::make_pair(open_reply.id(), open_reply.model_id());
   }
 };
 
@@ -217,7 +218,8 @@ std::string client::server_host_name = server::host_name;
 int client::server_port              = server::port;
 std::string client::server_address   = server::address;
 
-std::string Load(std::string model_name, std::vector<NDArray> *data, std::vector<std::string> *keys) {
+std::pair<std::string, std::string>
+    Load(std::string model_name, std::vector<NDArray> *data, std::vector<std::string> *keys) {
 
   LOG(INFO) << "UPR:: loading in Client mode";
 
