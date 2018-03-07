@@ -72,47 +72,59 @@ static const auto HOME         = dmlc::GetEnv("HOME", std::string("/home/abduld"
 static const auto is_client    = dmlc::GetEnv("UPR_CLIENT", false);
 static const auto UPR_BASE_DIR = dmlc::GetEnv("UPR_BASE_DIR", HOME + std::string("/carml/data/mxnet/"));
 
-static std::map<std::string, std::string> model_directory_paths{{"bvlc_alexnet_1.0", UPR_BASE_DIR + "bvlc_alexnet_1.0"},
-                                                                {"bvlc_googlenet_1.0", UPR_BASE_DIR + "bvlc_googlenet_1.0"},
-                                                                {"bvlc_reference_caffenet_1.0", UPR_BASE_DIR + "bvlc_reference_caffenet_1.0"},
-                                                                {"bvlc_reference_rcnn_ilsvrc13_1.0", UPR_BASE_DIR + "bvlc_reference_rcnn_ilsvrc13_1.0"},
-                                                                {"dpn68_1.0", UPR_BASE_DIR + "dpn68_1.0"},
-                                                                {"dpn92_1.0", UPR_BASE_DIR + "dpn92_1.0"},
-                                                                {"inception_bn_3.0", UPR_BASE_DIR + "inception_bn_3.0"},
-                                                                {"inception_resnet_2.0", UPR_BASE_DIR + "inception_resnet_2.0"},
-                                                                {"inception_3.0", UPR_BASE_DIR + "inception_3.0"},
-                                                                {"inception_4.0", UPR_BASE_DIR + "inception_4.0"},
-                                                                {"inceptionbn_21k_1.0", UPR_BASE_DIR + "inceptionbn_21k_1.0"},
-                                                                {"locationnet_1.0", UPR_BASE_DIR + "locationnet_1.0"},
-                                                                {"network_in_network_1.0", UPR_BASE_DIR + "network_in_network_1.0"},
-                                                                {"o_resnet101_2.0", UPR_BASE_DIR + "o_resnet101_2.0"},
-                                                                {"o_resnet152_2.0", UPR_BASE_DIR + "o_resnet152_2.0"},
-                                                                {"o_vgg16_1.0", UPR_BASE_DIR + "o_vgg16_1.0"},
-                                                                {"o_vgg19_1.0", UPR_BASE_DIR + "o_vgg19_1.0"},
-                                                                {"resnet18_2.0", UPR_BASE_DIR + "resnet18_2.0"},
-                                                                {"resnet34_2.0", UPR_BASE_DIR + "resnet34_2.0"},
-                                                                {"resnet50_2.0", UPR_BASE_DIR + "resnet50_2.0"},
-                                                                {"resnet50_1.0", UPR_BASE_DIR + "resnet50_1.0"},
-                                                                {"resnet101_2.0", UPR_BASE_DIR + "resnet101_2.0"},
-                                                                {"resnet101_1.0", UPR_BASE_DIR + "resnet101_1.0"},
-                                                                {"resnet152_11k_1.0", UPR_BASE_DIR + "resnet152_11k_1.0"},
-                                                                {"resnet152_1.0", UPR_BASE_DIR + "resnet152_1.0"},
-                                                                {"resnet152_2.0", UPR_BASE_DIR + "resnet152_2.0"},
-                                                                {"resnet200_2.0", UPR_BASE_DIR + "resnet200_2.0"},
-                                                                {"resnet269_2.0", UPR_BASE_DIR + "resnet269_2.0"},
-                                                                {"resnext26_32x4d_1.0", UPR_BASE_DIR + "resnext26_32x4d_1.0"},
-                                                                {"resnext50_32x4d_1.0", UPR_BASE_DIR + "resnext50_32x4d_1.0"},
-                                                                {"resnext50_1.0", UPR_BASE_DIR + "resnext50_1.0"},                                                                
-                                                                {"resnext101_32x4d_1.0", UPR_BASE_DIR + "resnext101_32x4d_1.0"},
-                                                                {"resnext101_1.0", UPR_BASE_DIR + "resnext101_1.0"},
-                                                                {"squeezenet_1.0", UPR_BASE_DIR + "squeezenet_1.0"},
-                                                                {"squeezenet_1.1", UPR_BASE_DIR + "squeezenet_1.1"},
-                                                                {"vgg16_sod_1.0", UPR_BASE_DIR + "vgg16_sod_1.0"},                                                                
-                                                                {"vgg16_sos_1.0", UPR_BASE_DIR + "vgg16_sos_1.0"},                                                                
-                                                                {"vgg16_1.0", UPR_BASE_DIR + "vgg16_1.0"},                                                                
-                                                                {"vgg19_1.0", UPR_BASE_DIR + "vgg19_1.0"},                                                                
-                                                                {"xception_1.0", UPR_BASE_DIR + "xception_1.0"},                                                                
-                                                                {"wrn50_2.0", UPR_BASE_DIR + "wrn50_2.0"}};
+static const auto UPRD_EVICTION_POLICY   = dmlc::GetEnv("UPRD_EVICTION_POLICY", std::string("lru"));
+static const auto UPRD_MEMORY_PERCENTAGE = dmlc::GetEnv("UPRD_MEMORY_PERCENTAGE", 0.8);
+
+static const auto UPR_INPUT_CHANNELS = dmlc::GetEnv("UPR_INPUT_CHANNELS", 3);
+static const auto UPR_INPUT_WIDTH    = dmlc::GetEnv("UPR_INPUT_WIDTH", 224);
+static const auto UPR_INPUT_HEIGHT   = dmlc::GetEnv("UPR_INPUT_HEIGHT", 224);
+
+static const auto UPR_INPUT_MEAN_R = dmlc::GetEnv("UPR_INPUT_MEAN_R", 0);
+static const auto UPR_INPUT_MEAN_G = dmlc::GetEnv("UPR_INPUT_MEAN_G", 0);
+static const auto UPR_INPUT_MEAN_B = dmlc::GetEnv("UPR_INPUT_MEAN_B", 0);
+
+static std::map<std::string, std::string> model_directory_paths{
+    {"bvlc_alexnet_1.0", UPR_BASE_DIR + "bvlc_alexnet_1.0"},
+    {"bvlc_googlenet_1.0", UPR_BASE_DIR + "bvlc_googlenet_1.0"},
+    {"bvlc_reference_caffenet_1.0", UPR_BASE_DIR + "bvlc_reference_caffenet_1.0"},
+    {"bvlc_reference_rcnn_ilsvrc13_1.0", UPR_BASE_DIR + "bvlc_reference_rcnn_ilsvrc13_1.0"},
+    {"dpn68_1.0", UPR_BASE_DIR + "dpn68_1.0"},
+    {"dpn92_1.0", UPR_BASE_DIR + "dpn92_1.0"},
+    {"inception_bn_3.0", UPR_BASE_DIR + "inception_bn_3.0"},
+    {"inception_resnet_2.0", UPR_BASE_DIR + "inception_resnet_2.0"},
+    {"inception_3.0", UPR_BASE_DIR + "inception_3.0"},
+    {"inception_4.0", UPR_BASE_DIR + "inception_4.0"},
+    {"inceptionbn_21k_1.0", UPR_BASE_DIR + "inceptionbn_21k_1.0"},
+    {"locationnet_1.0", UPR_BASE_DIR + "locationnet_1.0"},
+    {"network_in_network_1.0", UPR_BASE_DIR + "network_in_network_1.0"},
+    {"o_resnet101_2.0", UPR_BASE_DIR + "o_resnet101_2.0"},
+    {"o_resnet152_2.0", UPR_BASE_DIR + "o_resnet152_2.0"},
+    {"o_vgg16_1.0", UPR_BASE_DIR + "o_vgg16_1.0"},
+    {"o_vgg19_1.0", UPR_BASE_DIR + "o_vgg19_1.0"},
+    {"resnet18_2.0", UPR_BASE_DIR + "resnet18_2.0"},
+    {"resnet34_2.0", UPR_BASE_DIR + "resnet34_2.0"},
+    {"resnet50_2.0", UPR_BASE_DIR + "resnet50_2.0"},
+    {"resnet50_1.0", UPR_BASE_DIR + "resnet50_1.0"},
+    {"resnet101_2.0", UPR_BASE_DIR + "resnet101_2.0"},
+    {"resnet101_1.0", UPR_BASE_DIR + "resnet101_1.0"},
+    {"resnet152_11k_1.0", UPR_BASE_DIR + "resnet152_11k_1.0"},
+    {"resnet152_1.0", UPR_BASE_DIR + "resnet152_1.0"},
+    {"resnet152_2.0", UPR_BASE_DIR + "resnet152_2.0"},
+    {"resnet200_2.0", UPR_BASE_DIR + "resnet200_2.0"},
+    {"resnet269_2.0", UPR_BASE_DIR + "resnet269_2.0"},
+    {"resnext26_32x4d_1.0", UPR_BASE_DIR + "resnext26_32x4d_1.0"},
+    {"resnext50_32x4d_1.0", UPR_BASE_DIR + "resnext50_32x4d_1.0"},
+    {"resnext50_1.0", UPR_BASE_DIR + "resnext50_1.0"},
+    {"resnext101_32x4d_1.0", UPR_BASE_DIR + "resnext101_32x4d_1.0"},
+    {"resnext101_1.0", UPR_BASE_DIR + "resnext101_1.0"},
+    {"squeezenet_1.0", UPR_BASE_DIR + "squeezenet_1.0"},
+    {"squeezenet_1.1", UPR_BASE_DIR + "squeezenet_1.1"},
+    {"vgg16_sod_1.0", UPR_BASE_DIR + "vgg16_sod_1.0"},
+    {"vgg16_sos_1.0", UPR_BASE_DIR + "vgg16_sos_1.0"},
+    {"vgg16_1.0", UPR_BASE_DIR + "vgg16_1.0"},
+    {"vgg19_1.0", UPR_BASE_DIR + "vgg19_1.0"},
+    {"xception_1.0", UPR_BASE_DIR + "xception_1.0"},
+    {"wrn50_2.0", UPR_BASE_DIR + "wrn50_2.0"}};
 
 /**
  * @brief Ensures the CUDA runtime has fully initialized
@@ -139,15 +151,15 @@ static std::string span_category_serialization = "serialization";
 static std::string span_category_ipc           = "ipc";
 static std::string span_category_grpc          = "grpc";
 static std::string span_category_mxnet_init    = "init";
-static std::string span_category_ignore    = "ignore";
+static std::string span_category_ignore        = "ignore";
 
 using span_props = std::map<std::string, std::string>;
 
-static inline engine::OprExecStat *start_span(const std::string &name, std::string category ) {
+static inline engine::OprExecStat *start_span(const std::string &name, std::string category) {
 #if MXNET_USE_PROFILER
-  const auto ctx = get_ctx();
-  auto opr_stat  = engine::Profiler::Get()->AddOprStat(ctx.dev_type, ctx.dev_id);
-  uint64_t tid   = std::hash<std::thread::id>()(std::this_thread::get_id());
+  const auto ctx     = get_ctx();
+  auto opr_stat      = engine::Profiler::Get()->AddOprStat(ctx.dev_type, ctx.dev_id);
+  uint64_t tid       = std::hash<std::thread::id>()(std::this_thread::get_id());
   opr_stat->opr_name = name;
   engine::SetOprCategory(opr_stat, category);
   engine::SetOprStart(opr_stat);
@@ -157,8 +169,7 @@ static inline engine::OprExecStat *start_span(const std::string &name, std::stri
 #endif
 }
 
-static inline engine::OprExecStat *start_span(const std::string &name, 
-                                              std::string category, span_props props) {
+static inline engine::OprExecStat *start_span(const std::string &name, std::string category, span_props props) {
 #if MXNET_USE_PROFILER
   auto span = start_span(name, category);
   for (const auto kv : props) {
@@ -290,6 +301,20 @@ static std::string get_synset_path(std::string model_name = "") {
                                 model_name, path));
 
   return "";
+}
+
+static size_t memory_free() {
+  size_t device_free_physmem{0};
+  size_t device_total_physmem{0};
+  cudaMemGetInfo(&device_free_physmem, &device_total_physmem);
+  return device_free_physmem;
+}
+
+static size_t memory_total() {
+  size_t device_free_physmem{0};
+  size_t device_total_physmem{0};
+  cudaMemGetInfo(&device_free_physmem, &device_total_physmem);
+  return device_total_physmem;
 }
 
 struct server {

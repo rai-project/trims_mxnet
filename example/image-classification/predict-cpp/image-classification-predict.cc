@@ -183,16 +183,16 @@ int main(int argc, char *argv[]) {
   BufferFile param_data(param_file);
 
   // Parameters
-  int dev_type             = 2; // 1: cpu, 2: gpu
+  int dev_type             = 2;  // 1: cpu, 2: gpu
   int dev_id               = -1; // arbitrary.
-  mx_uint num_input_nodes  = 1; // 1 for feedforward
+  mx_uint num_input_nodes  = 1;  // 1 for feedforward
   const char *input_key[1] = {"data"};
   const char **input_keys  = input_key;
 
   // Image size and channels
-  int width    = 224;
-  int height   = 224;
-  int channels = 3;
+  const int width    = UPR_INPUT_WIDTH;
+  const int height   = UPR_INPUT_HEIGHT;
+  const int channels = UPR_INPUT_CHANNELS;
 
   const mx_uint input_shape_indptr[2] = {0, 4};
   const mx_uint input_shape_data[4]   = {1, static_cast<mx_uint>(channels), static_cast<mx_uint>(height),
@@ -209,6 +209,9 @@ int main(int argc, char *argv[]) {
   std::vector<mx_float> image_data = std::vector<mx_float>(image_size);
 
   GetImageFile(test_file, image_data.data(), channels, cv::Size(width, height));
+
+  size_t size = 1000;
+  std::vector<float> data(1000);
 
   const std::string profile_default_path{model_name + "_profile_" + profile_path_suffix + ".json"};
   const auto profile_path = dmlc::GetEnv("UPR_PROFILE_TARGET", profile_default_path);
@@ -227,20 +230,6 @@ int main(int argc, char *argv[]) {
 
   // Do Predict Forward
   MXPredForward(pred_hnd);
-
-  mx_uint output_index = 0;
-
-  mx_uint *shape = 0;
-  mx_uint shape_len;
-
-  // Get Output Result
-  MXPredGetOutputShape(pred_hnd, output_index, &shape, &shape_len);
-
-  size_t size = 1;
-  for (mx_uint i = 0; i < shape_len; ++i)
-    size *= shape[i];
-
-  std::vector<float> data(size);
 
   MXPredGetOutput(pred_hnd, output_index, &(data[0]), size);
 

@@ -62,25 +62,18 @@ struct MXAPINDList {
   std::vector<mx_float> data;
 };
 
-int MXPredCreate(const char *symbol_json_str, const void *param_bytes,
-                 int param_size, int dev_type, int dev_id,
-                 mx_uint num_input_nodes, const char **input_keys,
-                 const mx_uint *input_shape_indptr,
+int MXPredCreate(const char *symbol_json_str, const void *param_bytes, int param_size, int dev_type, int dev_id,
+                 mx_uint num_input_nodes, const char **input_keys, const mx_uint *input_shape_indptr,
                  const mx_uint *input_shape_data, PredictorHandle *out) {
-  return MXPredCreatePartialOut(symbol_json_str, param_bytes, param_size,
-                                dev_type, dev_id, num_input_nodes, input_keys,
-                                input_shape_indptr, input_shape_data, 0, NULL,
-                                out);
+  return MXPredCreatePartialOut(symbol_json_str, param_bytes, param_size, dev_type, dev_id, num_input_nodes, input_keys,
+                                input_shape_indptr, input_shape_data, 0, NULL, out);
 }
 namespace mxnet {} // namespace mxnet
 
-int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
-                           int param_size, int dev_type, int dev_id,
-                           mx_uint num_input_nodes, const char **input_keys,
-                           const mx_uint *input_shape_indptr,
-                           const mx_uint *input_shape_data,
-                           mx_uint num_output_nodes, const char **output_keys,
-                           PredictorHandle *out) {
+int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes, int param_size, int dev_type,
+                           int dev_id, mx_uint num_input_nodes, const char **input_keys,
+                           const mx_uint *input_shape_indptr, const mx_uint *input_shape_data, mx_uint num_output_nodes,
+                           const char **output_keys, PredictorHandle *out) {
   using nnvm::Symbol;
 
   MXAPIPredictor *ret = new MXAPIPredictor();
@@ -96,11 +89,11 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
   {
     nnvm::Graph g;
     g.attrs["json"] = std::make_shared<nnvm::any>(std::string(symbol_json_str));
-    sym.outputs = nnvm::ApplyPass(g, "LoadLegacyJSON").outputs;
+    sym.outputs     = nnvm::ApplyPass(g, "LoadLegacyJSON").outputs;
   }
   // looks likely to output the internal results
   if (num_output_nodes != 0) {
-    Symbol internal = sym.GetInternals();
+    Symbol internal                  = sym.GetInternals();
     std::vector<std::string> all_out = internal.ListOutputNames();
     std::vector<Symbol> out_syms(num_output_nodes);
     for (mx_uint i = 0; i < num_output_nodes; ++i) {
@@ -121,10 +114,8 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
   std::unordered_map<std::string, NDArray> arg_params, aux_params;
   {
     std::unordered_set<std::string> arg_names, aux_names;
-    std::vector<std::string> arg_names_vec =
-        sym.ListInputNames(Symbol::kReadOnlyArgs);
-    std::vector<std::string> aux_names_vec =
-        sym.ListInputNames(Symbol::kAuxiliaryStates);
+    std::vector<std::string> arg_names_vec = sym.ListInputNames(Symbol::kReadOnlyArgs);
+    std::vector<std::string> aux_names_vec = sym.ListInputNames(Symbol::kAuxiliaryStates);
     for (size_t i = 0; i < arg_names_vec.size(); ++i) {
       arg_names.insert(arg_names_vec[i]);
     }
@@ -134,13 +125,11 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
     std::vector<NDArray> data;
     std::vector<std::string> names;
 
-    LOG(INFO) << "UPR:: loading model...";
-
     const auto model_name = upr::get_model_name();
 #ifdef MXNET_USE_CUDA
     upr::Load(std::string(model_name), &data, &names);
 #else
-   LOG(FATAL) << "enable USE_CUDA in the makefile to use the upr path";
+    LOG(FATAL) << "enable USE_CUDA in the makefile to use the upr path";
 #endif
     CHECK_EQ(names.size(), data.size()) << "Invalid param file format";
     for (size_t i = 0; i < names.size(); ++i) {
@@ -163,18 +152,15 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
   std::unordered_map<std::string, TShape> known_shape;
   for (mx_uint i = 0; i < num_input_nodes; ++i) {
     known_shape[std::string(input_keys[i])] =
-        TShape(input_shape_data + input_shape_indptr[i],
-               input_shape_data + input_shape_indptr[i + 1]);
+        TShape(input_shape_data + input_shape_indptr[i], input_shape_data + input_shape_indptr[i + 1]);
   }
-  std::vector<std::string> arg_names =
-      sym.ListInputNames(Symbol::kReadOnlyArgs);
-  std::vector<std::string> aux_names =
-      sym.ListInputNames(Symbol::kAuxiliaryStates);
+  std::vector<std::string> arg_names = sym.ListInputNames(Symbol::kReadOnlyArgs);
+  std::vector<std::string> aux_names = sym.ListInputNames(Symbol::kAuxiliaryStates);
   std::vector<TShape> out_shapes(sym.ListOutputNames().size());
   std::vector<TShape> aux_shapes(aux_names.size());
   std::vector<TShape> arg_shapes;
   for (size_t i = 0; i < arg_names.size(); ++i) {
-    std::string key = arg_names[i];
+    std::string key   = arg_names[i];
     ret->key2arg[key] = i;
   }
 
@@ -188,20 +174,16 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
       }
     }
     nnvm::Graph g;
-    g.outputs = sym.outputs;
-    g = mxnet::exec::InferShape(std::move(g), std::move(in_shapes),
-                                "__shape__");
+    g.outputs           = sym.outputs;
+    g                   = mxnet::exec::InferShape(std::move(g), std::move(in_shapes), "__shape__");
     bool infer_complete = (g.GetAttr<size_t>("shape_num_unknown_nodes") == 0);
-    CHECK(infer_complete)
-        << "The shape information of is not enough to get the shapes";
-    CopyAttr(g.indexed_graph(), g.GetAttr<nnvm::ShapeVector>("shape"),
-             &arg_shapes, &out_shapes, &aux_shapes);
+    CHECK(infer_complete) << "The shape information of is not enough to get the shapes";
+    CopyAttr(g.indexed_graph(), g.GetAttr<nnvm::ShapeVector>("shape"), &arg_shapes, &out_shapes, &aux_shapes);
   } catch (const mxnet::op::InferShapeError &err) {
     throw dmlc::Error(err.msg);
   }
 
-  Context ctx =
-      Context::Create(static_cast<Context::DeviceType>(dev_type), dev_id);
+  Context ctx = Context::Create(static_cast<Context::DeviceType>(dev_type), dev_id);
 
   std::vector<NDArray> arg_arrays, aux_arrays;
   for (size_t i = 0; i < arg_shapes.size(); ++i) {
@@ -225,8 +207,7 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
     std::vector<NDArray> grad_store(arg_arrays.size());
     std::vector<OpReqType> grad_req(arg_arrays.size(), kNullOp);
 
-    ret->exec.reset(Executor::Bind(sym, ctx, ctx_map, arg_arrays, grad_store,
-                                   grad_req, aux_arrays));
+    ret->exec.reset(Executor::Bind(sym, ctx, ctx_map, arg_arrays, grad_store, grad_req, aux_arrays));
     ret->out_shapes = out_shapes;
     ret->out_arrays = ret->exec->outputs();
   }
@@ -234,8 +215,7 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
   API_END_HANDLE_ERROR(delete ret);
 }
 
-int MXPredGetOutputShape(PredictorHandle handle, mx_uint out_index,
-                         mx_uint **shape_data, mx_uint *shape_ndim) {
+int MXPredGetOutputShape(PredictorHandle handle, mx_uint out_index, mx_uint **shape_data, mx_uint *shape_ndim) {
   MXAPIPredictor *p = static_cast<MXAPIPredictor *>(handle);
   API_BEGIN();
   CHECK_LT(out_index, p->out_arrays.size()) << "Index exceed number of outputs";
@@ -248,8 +228,7 @@ int MXPredGetOutputShape(PredictorHandle handle, mx_uint out_index,
   API_END();
 }
 
-int MXPredSetInput(PredictorHandle handle, const char *key,
-                   const mx_float *data, mx_uint size) {
+int MXPredSetInput(PredictorHandle handle, const char *key, const mx_float *data, mx_uint size) {
   MXAPIPredictor *p = static_cast<MXAPIPredictor *>(handle);
   API_BEGIN();
   auto it = p->key2arg.find(key);
@@ -275,8 +254,7 @@ int MXPredPartialForward(PredictorHandle handle, int step, int *step_left) {
   API_END();
 }
 
-int MXPredGetOutput(PredictorHandle handle, mx_uint index, mx_float *data,
-                    mx_uint size) {
+int MXPredGetOutput(PredictorHandle handle, mx_uint index, mx_float *data, mx_uint size) {
   MXAPIPredictor *p = static_cast<MXAPIPredictor *>(handle);
   API_BEGIN();
   CHECK_LT(index, p->out_arrays.size()) << "Output index out of range";
@@ -291,12 +269,11 @@ int MXPredFree(PredictorHandle handle) {
   API_END();
 }
 
-int MXNDListCreate(const char *nd_file_bytes, int nd_file_size,
-                   NDListHandle *out, mx_uint *out_length) {
+int MXNDListCreate(const char *nd_file_bytes, int nd_file_size, NDListHandle *out, mx_uint *out_length) {
   MXAPINDList *ret = new MXAPINDList();
   API_BEGIN();
   std::vector<NDArray> arrays;
-  dmlc::MemoryFixedSizeStream fi((void *)nd_file_bytes,
+  dmlc::MemoryFixedSizeStream fi((void *) nd_file_bytes,
                                  nd_file_size); // NOLINT(*)
   NDArray::Load(&fi, &(arrays), &(ret->keys));
   if (ret->keys.size() == 0) {
@@ -306,30 +283,29 @@ int MXNDListCreate(const char *nd_file_bytes, int nd_file_size,
   for (size_t i = 0; i < arrays.size(); ++i) {
     TShape shape = arrays[i].shape();
     size_t begin = ret->data.size();
-    size_t size = shape.Size();
+    size_t size  = shape.Size();
     ret->shapes.push_back(shape);
     ret->data.resize(begin + size);
     arrays[i].SyncCopyToCPU(dmlc::BeginPtr(ret->data) + begin, size);
     ret->indptr.push_back(begin + size);
   }
-  *out = ret;
+  *out        = ret;
   *out_length = static_cast<mx_uint>(arrays.size());
   API_END();
 }
 
-int MXNDListGet(NDListHandle handle, mx_uint index, const char **out_key,
-                const mx_float **out_data, const mx_uint **out_shape,
-                mx_uint *out_ndim) {
+int MXNDListGet(NDListHandle handle, mx_uint index, const char **out_key, const mx_float **out_data,
+                const mx_uint **out_shape, mx_uint *out_ndim) {
   MXAPINDList *p = static_cast<MXAPINDList *>(handle);
   API_BEGIN();
   CHECK_LT(index, p->shapes.size()) << "Index out of range";
-  *out_key = p->keys[index].c_str();
-  *out_data = dmlc::BeginPtr(p->data) + p->indptr[index];
+  *out_key        = p->keys[index].c_str();
+  *out_data       = dmlc::BeginPtr(p->data) + p->indptr[index];
   const TShape &s = p->shapes[index];
   p->shapes_buffer.resize(s.ndim());
   nnvm::ShapeTypeCast(s.begin(), s.end(), p->shapes_buffer.data());
   *out_shape = p->shapes_buffer.data();
-  *out_ndim = p->shapes[index].ndim();
+  *out_ndim  = p->shapes[index].ndim();
   API_END();
 }
 

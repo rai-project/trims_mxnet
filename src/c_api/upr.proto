@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "google/protobuf/timestamp.proto";
+
 package upr;
 
 option go_package = "upr";
@@ -56,6 +58,14 @@ message Model {
   ModelHandle owned_model = 5;
   // the set of shared models
   repeated ModelHandle shared_model = 6;
+  // lru tag
+  google.protobuf.Timestamp lru_timestamp = 7;
+  // order (for fifo)
+  int64 fifo_order = 8;
+  // use history
+  repeated google.protobuf.Timestamp history = 9;
+  // whether to disable eviction of the model
+  bool always_resident = 10;
 }
 
 message ModelRequest {
