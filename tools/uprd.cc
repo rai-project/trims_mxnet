@@ -46,12 +46,27 @@ std::vector<K> keys(const std::map<K, V> &m) {
 class RegistryImpl final : public Registry::Service {
 private:
   struct ModelDeleter {
+
+    void destroy_layer(const Layer &layer) {
+      const void *dptr = (void *) layer.device_raw_ptr();
+      if (dptr != nullptr) {
+        cudaFree(dptr);
+      }
+    }
+
+    void destroy_owned_handle(const ModelHandle &handle) {
+      for (auto layer : handle.layer()) {
+        destroy_layer(layer);
+      }
+    }
+
     void operator()(Model *ptr) const {
       std::cout << "Model ptr" << ptr->id() << "\n";
+      destroy_owned_handle(ptr->owned_model());
     }
   };
   using memory_db_t = std::map<std::string, std::unique_ptr<Model, ModelDeleter>>;
-  std::map<std::string /* id::name */, cudaIpcMemHandle_t> open_handles{};
+  // std::map<std::string /* id::name */, cudaIpcMemHandle_t> open_handles{};
 
   std::string get_ipc_id(const std::string &id, const std::string &layer_name) {
     auto name = layer_name;
@@ -77,7 +92,7 @@ private:
 
     CUDA_CHECK_CALL(cudaIpcGetMemHandle(&handle, (void *) device_ptr), "failed to create a handle ref");
 
-    open_handles.insert({ipc_id, handle});
+    // open_handles.insert({ipc_id, handle});
 
     layer->set_ipc_handle(handle.reserved, CUDA_IPC_HANDLE_SIZE);
     // LOG(INFO) << "setting ipc handle " << utils::base64_encode(layer->ipc_handle()) << " for layer " << layer->name()
@@ -94,17 +109,17 @@ private:
     make_ipc_handle(layer, layer->id(), layer->name(), array);
   }
 
-  void close_ipc_handle(std::string id, std::string name) {
-    const auto ipc_id = get_ipc_id(id, name);
-    const auto it     = open_handles.find(ipc_id);
-    if (it == open_handles.end()) {
-      LOG(INFO) << "the ipc with id = " << ipc_id << " was not found";
-      return;
-    }
-    // LOG(INFO) << "TODO:: the ipc with id = " << ipc_id << " needs to be closed";
-    open_handles.erase(ipc_id);
-    return;
-  }
+  // void close_ipc_handle(std::string id, std::string name) {
+  //   const auto ipc_id = get_ipc_id(id, name);
+  //   const auto it     = open_handles.find(ipc_id);
+  //   if (it == open_handles.end()) {
+  //     LOG(INFO) << "the ipc with id = " << ipc_id << " was not found";
+  //     return;
+  //   }
+  //   // LOG(INFO) << "TODO:: the ipc with id = " << ipc_id << " needs to be closed";
+  //   open_handles.erase(ipc_id);
+  //   return;
+  // }
 
   void to_shape(Shape *res, TShape shape) {
     res->set_rank(shape.ndim());
@@ -344,7 +359,7 @@ public:
 
       evict_if_needed(request);
 
-      Model * model = new Model();
+      Model *model = new Model();
       model->set_id(uuid);
       model->set_name(request->name());
       model->set_ref_count(0);
@@ -411,31 +426,15 @@ public:
   }
 
   std::string find_model_name_by_model_id(std::string model_id) {
-    const auto loc = std::find_if(memory_db_.begin(), memory_db_.end(), [&model_id](const memory_db_t::value_type &k) {
-      return k.second->id() == model_id;
-    });
+    const auto loc = std::find_if(memory_db_.begin(), memory_db_.end(),
+                                  [&model_id](const memory_db_t::value_type &k) { return k.second->id() == model_id; });
     if (loc == memory_db_.end()) {
       return "";
     }
     return loc->second->name();
   }
 
-  // void destroy_layer(const Layer &layer) {
-  //   const auto ipc_handle = layer.ipc_handle();
-  //   if (ipc_handle == "") {
-  //     const auto msg = fmt::format("unable to get device ptr from {}. make sure handle is not empty", ipc_handle);
-  //     LOG(ERROR) << msg;
-  //     return;
-  //   }
-
-  // }
-
   void destroy_model_handles(const ModelHandle &handle) {
-    // const auto layers = handle.layer();
-
-    // for (const auto layer : layers) {
-    //   destroy_layer(layer);
-    // }
   }
 
   grpc::Status Close(grpc::ServerContext *context, const ModelHandle *request, Void *reply) override {
