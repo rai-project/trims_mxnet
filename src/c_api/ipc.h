@@ -202,8 +202,8 @@ static inline void stop_span(engine::OprExecStat *stat) {
 
 #define TIME_IT(...)                                                                                                   \
   auto SPAN_PRIVATE_NAME = upr::start_span(#__VA_ARGS__, "statement",                                                  \
-                                           {{"function", std::to_string(__PRETTY_FUNCTION__)},                         \
-                                            {"file", std::to_string(__FILE__)},                                        \
+                                           span_props{{"function", __PRETTY_FUNCTION__},                         \
+                                            {"file", __FILE__},                                        \
                                             {"line", std::to_string(__LINE__)}});                                      \
   __VA_ARGS__;                                                                                                         \
   upr::stop_span(SPAN_PRIVATE_NAME);

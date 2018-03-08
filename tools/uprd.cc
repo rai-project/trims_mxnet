@@ -413,7 +413,7 @@ private:
   // - LCU -- least commnly used
   // - EAGER
   // - ALL
-  bool perform_eviction(const ModelRequest *request, const size_t c, const size_t memory_to_free) {
+  bool perform_eviction(const ModelRequest *request, const size_t estimated_model_size, const size_t memory_to_free) {
     static const auto eviction_policy = UPRD_EVICTION_POLICY;
 
     auto span = start_span("perform_eviction"s, "load",
@@ -585,7 +585,7 @@ public:
   grpc::Status Close(grpc::ServerContext *context, const ModelHandle *request, Void *reply) override {
     std::lock_guard<std::mutex> lock(db_mutex_);
 
-    auto span = start_span("close"s, "grpc", span_props{{"model_name", request->name()}});
+    auto span = start_span("close"s, "grpc", span_props{{"id", request->id()}, {"model_id", request->model_id()}});
     defer(stop_span(span));
 
     const auto model_name = find_model_name_by_model_id(request->model_id());
