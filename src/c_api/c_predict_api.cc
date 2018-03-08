@@ -46,7 +46,7 @@ struct MXAPINDList {
   std::vector<mx_float> data;
 };
 
-int MXInit() {
+int MXPredInit() {
   return MXPredCreate(nullptr, nullptr, 0, 0, 0, 0, nullptr, nullptr, nullptr, nullptr);
 }
 

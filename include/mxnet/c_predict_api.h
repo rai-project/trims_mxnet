@@ -50,7 +50,7 @@ typedef void* PredictorHandle;
 /*! \brief handle to NDArray list */
 typedef void* NDListHandle;
 
-MXNET_DLL int MXInit();
+MXNET_DLL int MXPredInit();
 
 /*!
  * \brief Get the last error happeneed.
