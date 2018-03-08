@@ -258,7 +258,7 @@ private:
 
     auto span = start_span(
         "from_owned_modelhandle"s, "load",
-        span_props{{"ref_count", std::to_string(ref_count)}, {"model_id", std::to_string(owned.model_id())}});
+        span_props{{"ref_count", std::to_string(ref_count)}, {"model_id", owned.model_id()}});
     defer(stop_span(span));
 
     handle->set_id(uuid);
@@ -413,13 +413,13 @@ private:
   // - LCU -- least commnly used
   // - EAGER
   // - ALL
-  bool perform_eviction(const ModelRequest *request, const size_t estimated_model_size, const size_t memory_to_free) {
+  bool perform_eviction(const ModelRequest *request, const size_t c, const size_t memory_to_free) {
     static const auto eviction_policy = UPRD_EVICTION_POLICY;
 
     auto span = start_span("perform_eviction"s, "load",
                            span_props{{"policy", eviction_policy},
                                       {"model_name", request->name()},
-                                      {"memory_size_request", std::to_string(memory_size_request)},
+                                      {"estimated_model_size", std::to_string(estimated_model_size)},
                                       {"memory_to_free", std::to_string(memory_to_free)}});
     defer(stop_span(span));
 
