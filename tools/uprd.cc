@@ -98,6 +98,10 @@ private:
   }
 
   void make_ipc_handle(Layer *layer, const std::string &id, const std::string &name, NDArray &array) {
+
+    auto span = start_span("make_ipc_handle"s, "ipc", span_props{{"id", id}, {"name", name}});
+    defer(stop_span(span));
+
     const auto blob = array.data();
     auto data       = blob.dptr<float>();
     make_ipc_handle(layer, id, name, data);
@@ -114,14 +118,14 @@ private:
     }
   }
   void to_layer(Layer *layer, std::string name, NDArray cpu_array, int64_t ref_count) {
+    auto span =
+        start_span("to_layer"s, "convert", span_props{{"ref_count", std::to_string(ref_count)}, {"name", name}});
+    defer(stop_span(span));
+
     // LOG(INFO) << "converting " << name << " ndarray to protobuf
     // representation with ref_count = " << ref_count;
     const auto ctx = get_ctx();
     const auto id  = sole::uuid4().str();
-
-    auto span =
-        start_span("to_layer"s, "convert", span_props{{"ref_count", std::to_string(ref_count)}, {"name", name}});
-    defer(stop_span(span));
 
     auto array = cpu_array.Copy(ctx);
     TIME_IT(array.WaitToRead()); // TODO:: REVISIT THIS
@@ -575,7 +579,7 @@ public:
     return loc->second->name();
   }
 
-  void destroy_model_handles(const ModelHandle &handle) {
+  void destroy_model_handle(const ModelHandle &handle) {
   }
 
   grpc::Status Close(grpc::ServerContext *context, const ModelHandle *request, Void *reply) override {
@@ -603,7 +607,7 @@ public:
       if (model.id() != handle_id) {
         continue;
       }
-      destroy_model_handles(model);
+      destroy_model_handle(model);
       model_entry->second->mutable_shared_model()->erase(it);
       break;
     }
@@ -616,6 +620,7 @@ public:
       if (eviction_policy == "eager") {
         const auto byte_count = model_entry->second->owned_model().byte_count();
         memory_usage_ -= byte_count;
+        model_entry->second.reset(nullptr);
         memory_db_.erase(model_entry);
       }
     }
