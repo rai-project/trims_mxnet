@@ -105,7 +105,8 @@ The server is part of the MXNet build process.
 | UPR_INPUT_MEAN_G           |             | 0             |
 | UPR_INPUT_MEAN_B           |             | 0             |
 | -------------------------- | ----------- | ------------- |
-| UPRD_EVICTION_POLICY       |             | NONE          |
+| UPRD_EVICTION_POLICY       |             | LRU           |
+| UPRD_ESTIMATION_RATE       |             | 1.5           |
 | UPRD_MEMORY_PERCENTAGE     |             | 0.8           |
 
 ## How it Works

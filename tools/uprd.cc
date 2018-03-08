@@ -253,10 +253,11 @@ private:
   }
 
   size_t estimate_model_size(const ModelRequest *request) {
+    static const auto estimation_rate = UPRD_ESTIMATION_RATE;
     const auto model_name = request->name();
     const auto params_path = get_model_params_path(model_name);
     std::ifstream in(params_path, std::ifstream::ate | std::ifstream::binary);
-    return in.tellg();
+    return in.tellg() * estimation_rate;
   }
 
   bool perform_no_eviction(const ModelRequest *request,
@@ -646,6 +647,7 @@ void RunServer() {
 
 int main(int argc, const char *argv[]) {
   static const auto eviction_policy = UPRD_EVICTION_POLICY;
+  static const auto estimation_rate = UPRD_ESTIMATION_RATE;
   static const auto max_memory_to_use = UPRD_MEMORY_PERCENTAGE * memory_total();
   int version = 0;
   const auto err = MXGetVersion(&version);
@@ -654,7 +656,10 @@ int main(int argc, const char *argv[]) {
   }
   LOG(INFO) << "in uprd. using mxnet version = " << version
             << " running on address  = " << server::address << "\n";
-
+  LOG(INFO) << "eviction_policy = " << eviction_policy << "\n"
+            << "estimation_rate = " << estimation_rate << "\n"
+            << "max_memory_to_use = " << max_memory_to_use << "\n";
+            
   RunServer();
 
   return 0;
