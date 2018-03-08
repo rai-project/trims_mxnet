@@ -1,6 +1,9 @@
 #include "fmt/format.h"
 #include "ipc.h"
 
+
+#include <csignal>
+#include <future>
 #include <algorithm>
 #include <dmlc/base.h>
 #include <dmlc/io.h>
@@ -645,7 +648,35 @@ private:
   std::mutex db_mutex_;
 };
 
-void RunServer() {
+std::promise<void> exit_requested;
+
+int main(int argc, const char *argv[]) {
+  static const auto eviction_policy   = UPRD_EVICTION_POLICY;
+  static const auto estimation_rate   = UPRD_ESTIMATION_RATE;
+  static const auto max_memory_to_use = UPRD_MEMORY_PERCENTAGE * memory_total();
+  int version                         = 0;
+  const auto err                      = MXGetVersion(&version);
+  if (err) {
+    std::cerr << "error :: " << err << " while getting mxnet version\n";
+  }
+
+  const std::string profile_default_path{"server_profile.json"};
+  const auto profile_path = dmlc::GetEnv("UPR_PROFILE_TARGET", profile_default_path);
+  LOG(INFO) << "in uprd. using mxnet version = " << version << " running on address  = " << server::address << "\n";
+  LOG(INFO) << "eviction_policy = " << eviction_policy << "\n"
+            << "estimation_rate = " << estimation_rate << "\n"
+            << "max_memory_to_use = " << max_memory_to_use << "\n"
+            << "profile_path = " << profile_path << "\n";
+
+  force_runtime_initialization();
+
+  MXPredInit();
+
+  MXSetProfilerConfig(1, profile_default_path.c_str());
+
+  // Start profiling
+  MXSetProfilerState(1);
+
   std::string server_address(server::address);
   RegistryImpl service;
 
@@ -661,37 +692,29 @@ void RunServer() {
 
   // Wait for the server to shutdown. Note that some other thread must be
   // responsible for shutting down the server for this call to ever return.
-  server->Wait();
-}
+  auto serveFn = [&]() {
+     server->Wait();
+  };
 
-int main(int argc, const char *argv[]) {
-  static const auto eviction_policy   = UPRD_EVICTION_POLICY;
-  static const auto estimation_rate   = UPRD_ESTIMATION_RATE;
-  static const auto max_memory_to_use = UPRD_MEMORY_PERCENTAGE * memory_total();
-  int version                         = 0;
-  const auto err                      = MXGetVersion(&version);
-  if (err) {
-    std::cerr << "error :: " << err << " while getting mxnet version\n";
-  }
-  LOG(INFO) << "in uprd. using mxnet version = " << version << " running on address  = " << server::address << "\n";
-  LOG(INFO) << "eviction_policy = " << eviction_policy << "\n"
-            << "estimation_rate = " << estimation_rate << "\n"
-            << "max_memory_to_use = " << max_memory_to_use << "\n";
+  std::thread serving_thread(serveFn); 
 
-  force_runtime_initialization();
+  auto signal_handler = [](int s) {
+    exit_requested.set_value();
+  };
+  std::signal(SIGINT, signal_handler);
+  std::signal(SIGTERM, signal_handler);
+  std::signal(SIGQUIT, signal_handler);
 
-  MXPredInit();
 
-  const std::string profile_default_path{"server_profile.json"};
-  const auto profile_path = dmlc::GetEnv("UPR_PROFILE_TARGET", profile_default_path);
-  MXSetProfilerConfig(1, profile_default_path.c_str());
-
-  // Start profiling
-  MXSetProfilerState(1);
-
-  RunServer();
+  auto f = exit_requested.get_future();
+  f.wait();
 
   MXSetProfilerState(0);
+
+  server->Shutdown();
+  serving_thread.join();
+
+
 
   return 0;
 }

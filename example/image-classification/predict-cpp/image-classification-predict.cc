@@ -214,6 +214,7 @@ int main(int argc, char *argv[]) {
 
   size_t size = 1000;
   std::vector<float> data(1000);
+  mx_uint output_index = 0;
 
   const std::string profile_default_path{model_name + "_profile_" + profile_path_suffix + ".json"};
   const auto profile_path = dmlc::GetEnv("UPR_PROFILE_TARGET", profile_default_path);
