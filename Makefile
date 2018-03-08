@@ -429,11 +429,11 @@ $(GIT_COMMIT_FILE): force
 
 # NOTE: to statically link libmxnet.a we need the option
 # --Wl,--whole-archive -lmxnet --Wl,--no-whole-archive
-lib/libmxnet.a: $(GIT_COMMIT_FILE) $(ALLX_DEP) 
+lib/libmxnet.a: $(ALLX_DEP) # $(GIT_COMMIT_FILE) 
 	@mkdir -p $(@D)
 	ar crv $@ $(filter %.o, $?)
 
-lib/libmxnet.so: $(GIT_COMMIT_FILE) $(ALLX_DEP) 
+lib/libmxnet.so: $(ALLX_DEP) # $(GIT_COMMIT_FILE) 
 	@mkdir -p $(@D)
 	$(CXX) $(CFLAGS) -shared -o $@ $(filter-out %libnnvm.a, $(filter %.o %.a, $^)) $(LDFLAGS) \
 	-Wl,${WHOLE_ARCH} $(filter %libnnvm.a, $^) -Wl,${NO_WHOLE_ARCH}

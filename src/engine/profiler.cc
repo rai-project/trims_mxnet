@@ -235,6 +235,12 @@ namespace engine {
 
     json metadata;
 
+#ifndef HOST_NAME_MAX
+#define HOST_NAME_MAX 128
+#endif
+#ifndef LOGIN_NAME_MAX
+#define LOGIN_NAME_MAX 128
+#endif
     try {
       using namespace std::chrono;
       char hostname[HOST_NAME_MAX];
@@ -247,19 +253,23 @@ namespace engine {
       gethostname(hostname, HOST_NAME_MAX);
       getlogin_r(username, LOGIN_NAME_MAX);
 
-      metadata = json({{"hostname", std::string(hostname)},
-                       {"username", std::string(username)},
-                       {"git", {{"commit", std::string(build_git_sha)}, {"date", std::string(build_git_time)}}},
-                       {"start_at", format_time(start_time)},
-                       {"end_at", format_time(now)},
-                       {"is_client", upr::is_client},
-                       {"UPR_BASE_DIR", upr::UPR_BASE_DIR},
-                       {"eager_mode", dmlc::GetEnv("UPR_INITIALIZE_EAGER", false)},
-                       {"eager_mode_async", dmlc::GetEnv("UPR_INITIALIZE_EAGER_ASYNC", false)},
-                       {"model_name", upr::get_model_name()},
-                       {"model_path", upr::get_model_directory_path()},
-                       {"model_params", upr::get_model_params_path()},
-                       {"symbol_params", upr::get_model_symbol_path()}});
+      metadata =
+          json({{"hostname", std::string(hostname)},
+                {"username", std::string(username)},
+                {"git", {{"commit", std::string(build_git_sha)}, {"date", std::string(build_git_time)}}},
+                {"start_at", format_time(start_time)},
+                {"end_at", format_time(now)},
+                {"is_client", upr::is_client},
+                {"UPR_BASE_DIR", upr::UPR_BASE_DIR},
+                {"input",
+                 {{"dimensions", json::array({upr::UPR_INPUT_CHANNELS, upr::UPR_INPUT_WIDTH, upr::UPR_INPUT_HEIGHT})},
+                  {"mean", json::array({upr::UPR_INPUT_MEAN_R, upr::UPR_INPUT_MEAN_G, upr::UPR_INPUT_MEAN_B})}}},
+                {"eager_mode", dmlc::GetEnv("UPR_INITIALIZE_EAGER", false)},
+                {"eager_mode_async", dmlc::GetEnv("UPR_INITIALIZE_EAGER_ASYNC", false)},
+                {"model_name", upr::get_model_name()},
+                {"model_path", upr::get_model_directory_path()},
+                {"model_params", upr::get_model_params_path()},
+                {"symbol_params", upr::get_model_symbol_path()}});
     } catch (dmlc::Error &e) {
       metadata = json({{"error", e.what()}});
     } catch (const std::exception &e) {

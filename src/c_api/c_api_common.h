@@ -34,16 +34,19 @@
 #include <string>
 #include <vector>
 
+#include <mxnet/executor.h>
+#include <mxnet/ndarray.h>
+
 /*! \brief  macro to guard beginning and end section of all functions */
 #define API_BEGIN() try {
 /*! \brief every function starts with API_BEGIN();
      and finishes with API_END() or API_END_HANDLE_ERROR */
-#define API_END()                                                              \
-  }                                                                            \
-  catch (dmlc::Error & _except_) {                                             \
-    LOG(INFO) << "error in mxnet api call :: " << _except_.what();             \
-    return MXAPIHandleException(_except_);                                     \
-  }                                                                            \
+#define API_END()                                                                                                      \
+  }                                                                                                                    \
+  catch (dmlc::Error & _except_) {                                                                                     \
+    LOG(INFO) << "error in mxnet api call :: " << _except_.what();                                                     \
+    return MXAPIHandleException(_except_);                                                                             \
+  }                                                                                                                    \
   return 0; // NOLINT(*)
 /*!
  * \brief every function starts with API_BEGIN();
@@ -51,12 +54,12 @@
  *   The finally clause contains procedure to cleanup states when an error
  * happens.
  */
-#define API_END_HANDLE_ERROR(Finalize)                                         \
-  }                                                                            \
-  catch (dmlc::Error & _except_) {                                             \
-    Finalize;                                                                  \
-    return MXAPIHandleException(_except_);                                     \
-  }                                                                            \
+#define API_END_HANDLE_ERROR(Finalize)                                                                                 \
+  }                                                                                                                    \
+  catch (dmlc::Error & _except_) {                                                                                     \
+    Finalize;                                                                                                          \
+    return MXAPIHandleException(_except_);                                                                             \
+  }                                                                                                                    \
   return 0; // NOLINT(*)
 
 /*!
@@ -103,9 +106,9 @@ struct MXAPIThreadLocalEntry {
   /*! \brief bool buffer */
   std::vector<bool> save_inputs, save_outputs;
   // helper function to setup return value of shape array
-  inline static void SetupShapeArrayReturnWithBuffer(
-      const std::vector<TShape> &shapes, std::vector<mx_uint> *ndim,
-      std::vector<const mx_uint *> *data, std::vector<uint32_t> *buffer) {
+  inline static void SetupShapeArrayReturnWithBuffer(const std::vector<TShape> &shapes, std::vector<mx_uint> *ndim,
+                                                     std::vector<const mx_uint *> *data,
+                                                     std::vector<uint32_t> *buffer) {
     ndim->resize(shapes.size());
     data->resize(shapes.size());
     size_t size = 0;
@@ -116,7 +119,7 @@ struct MXAPIThreadLocalEntry {
     for (size_t i = 0; i < shapes.size(); ++i) {
       ndim->at(i) = shapes[i].ndim();
       data->at(i) = ptr;
-      ptr = nnvm::ShapeTypeCast(shapes[i].begin(), shapes[i].end(), ptr);
+      ptr         = nnvm::ShapeTypeCast(shapes[i].begin(), shapes[i].end(), ptr);
     }
   }
 };
@@ -127,10 +130,8 @@ typedef dmlc::ThreadLocalStore<MXAPIThreadLocalEntry> MXAPIThreadLocalStore;
 namespace mxnet {
 // copy attributes from inferred vector back to the vector of each type.
 template <typename AttrType>
-inline void
-CopyAttr(const nnvm::IndexedGraph &idx, const std::vector<AttrType> &attr_vec,
-         std::vector<AttrType> *in_attr, std::vector<AttrType> *out_attr,
-         std::vector<AttrType> *aux_attr) {
+inline void CopyAttr(const nnvm::IndexedGraph &idx, const std::vector<AttrType> &attr_vec,
+                     std::vector<AttrType> *in_attr, std::vector<AttrType> *out_attr, std::vector<AttrType> *aux_attr) {
   in_attr->clear();
   out_attr->clear();
   aux_attr->clear();
@@ -148,6 +149,29 @@ CopyAttr(const nnvm::IndexedGraph &idx, const std::vector<AttrType> &attr_vec,
 
 // stores keys that will be converted to __key__
 extern const std::vector<std::string> kHiddenKeys;
+
+// predictor interface
+struct MXAPIPredictor {
+  // output arrays
+  std::vector<NDArray> out_arrays;
+  // argument arrays
+  std::vector<NDArray> arg_arrays;
+  // output shapes
+  std::vector<TShape> out_shapes;
+  // uint32_t buffer for output shapes
+  std::vector<uint32_t> out_shapes_buffer;
+  // key to arguments
+  std::unordered_map<std::string, size_t> key2arg;
+  // executor
+  std::unique_ptr<Executor> exec;
+  // handle id
+  std::string handle_id;
+  // model name
+  std::string model_name;
+  // model id to be used when opening / closing
+  std::string model_id;
+};
+
 } // namespace mxnet
 
 #endif // MXNET_C_API_C_API_COMMON_H_

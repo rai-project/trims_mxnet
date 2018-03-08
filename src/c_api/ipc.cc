@@ -53,7 +53,7 @@ static void *get_device_ptr(const Layer &layer) {
                   fmt::format("failed to open cuda ipc mem handle from {}", utils::base64_encode(ipc_handle)));
   stop_span(span);
 
-  LOG(INFO) << "get device_ptr = " << device_ptr;
+  // LOG(INFO) << "get device_ptr = " << device_ptr;
 
   return device_ptr;
 }
@@ -77,7 +77,7 @@ static void to_ndarray(std::vector<NDArray> *arrays, const Layer &layer) {
   defer(stop_span(span_creating));
 
   TBlob blob(device_ptr, shape, dev_mask, dev_id);
-  arrays->emplace_back(blob, dev_id);
+  arrays->emplace_back(blob, dev_id, /* is_shared = */ true);
 
   return;
 }
@@ -85,14 +85,14 @@ static void to_ndarray(std::vector<NDArray> *arrays, const Layer &layer) {
 static void to_ndarrays(std::vector<NDArray> *arrays, std::vector<std::string> *keys, const ModelHandle &reply) {
   const auto layers = reply.layer();
 
-  LOG(INFO) << "got " << layers.size() << " layers form reply, before to_ndarray";
+  // LOG(INFO) << "got " << layers.size() << " layers form reply, before to_ndarray";
 
   for (const auto layer : layers) {
     keys->emplace_back(layer.name());
     to_ndarray(arrays, layer);
   }
 
-  LOG(INFO) << "finished nd_array conversion";
+  // LOG(INFO) << "finished nd_array conversion";
 
   return;
 }
@@ -166,30 +166,51 @@ struct client {
       return;
     }
 
+    void Close(const std::string &handle_id, const std::string &model_id) {
+      ModelHandle request;
+      request.set_id(handle_id);
+      request.set_model_id(model_id);
+      return this->Close(request);
+    }
+
   private:
     std::unique_ptr<Registry::Stub> stub_;
   };
 
-  static void Load(std::string model_name, std::vector<NDArray> *res_arrays, std::vector<std::string> *res_keys) {
-    auto span_loading = start_span("load_nd_array", span_category_load, span_props{{"model_name", model_name}});
+  static RegistryClient *get_connection() {
+    static RegistryClient *client =
+        new RegistryClient(grpc::CreateChannel(server_address, grpc::InsecureChannelCredentials()));
+    return client;
+  }
+
+  static void Unload(MXAPIPredictor *pred) {
+    auto span = start_span(
+        "close", span_category_close, span_props{{"model_name", pred->model_name}, {"model_id", pred->model_id}});
+    defer(stop_span(span));
+
+    auto client = client::get_connection();
+    client->Close(pred->handle_id, pred->model_id);
+
+    return;
+  }
+
+  static std::pair<std::string, std::string>
+      Load(std::string model_name, std::vector<NDArray> *res_arrays, std::vector<std::string> *res_keys) {
+    auto span_loading = start_span("open", span_category_load, span_props{{"model_name", model_name}});
     defer(stop_span(span_loading));
+    auto client           = client::get_connection();
+    const auto open_reply = client->Open(model_name); // The actual RPC call!
 
-    RegistryClient client(grpc::CreateChannel(server_address, grpc::InsecureChannelCredentials()));
-
-    const auto open_reply = client.Open(model_name); // The actual RPC call!
-
-    LOG(INFO) << "Client received open reply: " << open_reply.id();
-
-    auto span_cudaFree = start_span("cudaFree(0)", span_category_ignore);
-    cudaFree(0);
-    stop_span(span_cudaFree);
+    // LOG(INFO) << "Client received open reply: " << open_reply.id();
 
     auto span_converting = start_span("convering_to_nd_array", span_category_serialization);
     defer(stop_span(span_converting));
 
     to_ndarrays(res_arrays, res_keys, open_reply);
 
-    LOG(INFO) << "Loaded model " << model_name;
+    // LOG(INFO) << "Loaded model " << model_name;
+
+    return std::make_pair(open_reply.id(), open_reply.model_id());
   }
 };
 
@@ -197,12 +218,19 @@ std::string client::server_host_name = server::host_name;
 int client::server_port              = server::port;
 std::string client::server_address   = server::address;
 
-void Load(std::string model_name, std::vector<NDArray> *data, std::vector<std::string> *keys) {
+std::pair<std::string, std::string>
+    Load(std::string model_name, std::vector<NDArray> *data, std::vector<std::string> *keys) {
 
   LOG(INFO) << "UPR:: loading in Client mode";
 
-  client::Load(model_name, data, keys);
+  return client::Load(model_name, data, keys);
+}
+
+void Unload(MXAPIPredictor *pred) {
+  LOG(INFO) << "UPR:: closing in Client mode";
+  client::Unload(pred);
   return;
 }
+
 } // namespace upr
 #endif // MXNET_USE_CUDA

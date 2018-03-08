@@ -1,6 +1,7 @@
 #include "fmt/format.h"
 #include "ipc.h"
 
+#include <algorithm>
 #include <dmlc/base.h>
 #include <dmlc/io.h>
 #include <dmlc/logging.h>
@@ -8,6 +9,7 @@
 #include <dmlc/omp.h>
 #include <dmlc/recordio.h>
 #include <dmlc/type_traits.h>
+#include <fstream>
 #include <nnvm/node.h>
 
 #include "mxnet/c_api.h"
@@ -21,12 +23,15 @@
 #include <grpc/support/log.h>
 #include <iostream>
 
+#include <google/protobuf/util/time_util.h>
+
 #include <cuda_runtime_api.h>
 
 using namespace upr;
 using namespace mxnet;
 using namespace std::string_literals;
 using namespace grpc;
+using namespace google::protobuf::util;
 
 static const auto element_size = sizeof(float);
 
@@ -41,7 +46,21 @@ template <typename K, typename V> std::vector<K> keys(const std::map<K, V> &m) {
 
 class RegistryImpl final : public Registry::Service {
 private:
-  std::map<std::string /* id::name */, cudaIpcMemHandle_t> open_handles{};
+  struct ModelDeleter {
+
+    void operator()(Model *ptr) const {
+      std::cout << "Model ptr" << ptr->id() << "\n";
+      for (auto layer : ptr->owned_model().layer()) {
+        void *dptr = (void *)layer.device_raw_ptr();
+        if (dptr != nullptr) {
+          cudaFree(dptr);
+        }
+      }
+    }
+  };
+  using memory_db_t =
+      std::map<std::string, std::unique_ptr<Model, ModelDeleter>>;
+  // std::map<std::string /* id::name */, cudaIpcMemHandle_t> open_handles{};
 
   std::string get_ipc_id(const std::string &id, const std::string &layer_name) {
     auto name = layer_name;
@@ -65,21 +84,15 @@ private:
     const auto ipc_id = get_ipc_id(id, name);
 
     cudaIpcMemHandle_t handle;
-
-    LOG(INFO) << "getting ipc mem handle using device_ptr = "
-              << (size_t)device_ptr;
-
     CUDA_CHECK_CALL(cudaIpcGetMemHandle(&handle, (void *)device_ptr),
                     "failed to create a handle ref");
-    LOG(INFO) << "got ipc mem handle";
 
-    open_handles.insert({ipc_id, handle});
-    
     layer->set_ipc_handle(handle.reserved, CUDA_IPC_HANDLE_SIZE);
-    LOG(INFO) << "setting ipc handle "
-              << utils::base64_encode(layer->ipc_handle()) << " for layer "
-              << layer->name() << " with device_ptr = " << device_ptr
-              << " and handle = " << handle;
+    // LOG(INFO) << "setting ipc handle " <<
+    // utils::base64_encode(layer->ipc_handle()) << " for layer " <<
+    // layer->name()
+    //           << " with device_ptr = " << device_ptr << " and handle = " <<
+    //           handle;
   }
 
   void make_ipc_handle(Layer *layer, const std::string &id,
@@ -93,18 +106,6 @@ private:
     make_ipc_handle(layer, layer->id(), layer->name(), array);
   }
 
-  void close_ipc_handle(std::string id, std::string name) {
-    const auto ipc_id = get_ipc_id(id, name);
-    const auto it = open_handles.find(ipc_id);
-    if (it == open_handles.end()) {
-      LOG(INFO) << "the ipc with id = " << ipc_id << " was not found";
-      return;
-    }
-    LOG(INFO) << "TODO:: the ipc with id = " << ipc_id << " needs to be closed";
-    open_handles.erase(ipc_id);
-    return;
-  }
-
   void to_shape(Shape *res, TShape shape) {
     res->set_rank(shape.ndim());
     for (const auto dim : shape) {
@@ -113,14 +114,13 @@ private:
   }
   void to_layer(Layer *layer, std::string name, NDArray cpu_array,
                 int64_t ref_count) {
-    LOG(INFO) << "converting " << name
-              << " ndarray to protobuf representation with ref_count = "
-              << ref_count;
+    // LOG(INFO) << "converting " << name << " ndarray to protobuf
+    // representation with ref_count = " << ref_count;
     const auto ctx = get_ctx();
     const auto id = sole::uuid4().str();
 
     auto array = cpu_array.Copy(ctx);
-    array.WaitToRead();
+    array.WaitToRead(); // TODO:: REVISIT THIS
 
     const auto blob = array.data();
     const auto shape = layer->mutable_shape();
@@ -135,7 +135,7 @@ private:
     } else {
       make_ipc_handle(layer, array);
     }
-    LOG(INFO) << "setting device_ptr = " << (int64_t)blob.dptr<float>();
+    // LOG(INFO) << "setting device_ptr = " << (int64_t) blob.dptr<float>();
     layer->set_device_raw_ptr((int64_t)blob.dptr<float>());
     layer->set_ref_count(ref_count);
   }
@@ -146,9 +146,8 @@ private:
     auto directory_path = request->directory_path();
     const auto model_name = request->name();
 
-    LOG(INFO) << fmt::format(
-        "loading ndarray directory_path = {} and model_name = {}",
-        directory_path, model_name);
+    // LOG(INFO) << fmt::format("loading ndarray directory_path = {} and
+    // model_name = {}", directory_path, model_name);
     if (directory_path == "" && model_name == "") {
       const auto msg =
           "either the filepath or the model name must be specified in the open request"s;
@@ -158,9 +157,8 @@ private:
     if (directory_path == "" && model_name != "") {
       // we need to load the model from the map
       directory_path = get_model_directory_path(model_name);
-      LOG(INFO) << fmt::format(
-          "using {} as the base directory for the model_name = {}",
-          directory_path, model_name);
+      // LOG(INFO) << fmt::format("using {} as the base directory for the
+      // model_name = {}", directory_path, model_name);
     }
     if (directory_path != "" && !directory_exists(directory_path)) {
       const auto msg =
@@ -169,8 +167,7 @@ private:
       throw std::runtime_error(msg);
     }
 
-    const auto params_path = directory_path + "/model.params";
-
+    const auto params_path = get_model_params_path(model_name);
     if (!file_exists(params_path)) {
       const auto msg =
           fmt::format("the parameter file was not found in {}", params_path);
@@ -178,7 +175,7 @@ private:
       throw std::runtime_error(msg);
     }
 
-    const auto symbol_path = directory_path + "/model.symbol";
+    const auto symbol_path = get_model_symbol_path(model_name);
     if (!file_exists(symbol_path)) {
       const auto msg =
           fmt::format("the symbol file was not found in {}", symbol_path);
@@ -194,16 +191,15 @@ private:
       throw std::runtime_error(msg);
     }
 
-    LOG(INFO) << fmt::format(
-        "performing an ndarray load with params={} and symbol={} paths",
-        params_path, symbol_path);
+    // LOG(INFO) << fmt::format("performing an ndarray load with params={} and
+    // symbol={} paths", params_path, symbol_path);
 
     std::vector<NDArray> arrays{};
     std::vector<std::string> layer_names{};
     NDArray::Load(fi, &arrays, &layer_names);
 
-    LOG(INFO) << "starting to convert " << arrays.size()
-              << " ndarrays to protobuf representation";
+    // LOG(INFO) << "starting to convert " << arrays.size() << " ndarrays to
+    // protobuf representation";
 
     size_t ii = 0;
     for (const auto array : arrays) {
@@ -218,8 +214,8 @@ private:
     const auto id = sole::uuid4().str();
     const auto shape = layer->mutable_shape();
 
-    LOG(INFO) << "loading from owned layer for layer " << owned.name()
-              << " with ref_count = " << ref_count;
+    // LOG(INFO) << "loading from owned layer for layer " << owned.name() << "
+    // with ref_count = " << ref_count;
 
     layer->set_id(id);
     layer->set_name(owned.name());
@@ -229,11 +225,11 @@ private:
       shape->add_dim(dim);
     }
     layer->set_byte_count(owned.byte_count());
-    LOG(INFO) << "creating ipc handle using device_ptr = "
-              << owned.device_raw_ptr();
+    // LOG(INFO) << "creating ipc handle using device_ptr = " <<
+    // owned.device_raw_ptr();
     make_ipc_handle(layer, id, owned.name(), (float *)owned.device_raw_ptr());
-    LOG(INFO) << "created ipc handle using device_ptr = "
-              << owned.device_raw_ptr();
+    // LOG(INFO) << "created ipc handle using device_ptr = " <<
+    // owned.device_raw_ptr();
     layer->set_device_raw_ptr(owned.device_raw_ptr());
     layer->set_ref_count(ref_count);
   }
@@ -246,37 +242,248 @@ private:
     handle->set_model_id(owned.model_id());
     handle->set_byte_count(owned.byte_count());
 
-    LOG(INFO) << "loading from owned model";
+    // LOG(INFO) << "loading from owned model";
 
     auto layers = handle->mutable_layer();
 
     for (const auto owned_layer : owned.layer()) {
       auto trgt_layer = layers->Add();
-      LOG(INFO) << "HERE ONCE";
       from_owned_layer(trgt_layer, owned_layer, ref_count);
     }
   }
 
+  size_t estimate_model_size(const ModelRequest *request) {
+    static const auto estimation_rate = UPRD_ESTIMATION_RATE;
+    const auto model_name = request->name();
+    const auto params_path = get_model_params_path(model_name);
+    std::ifstream in(params_path, std::ifstream::ate | std::ifstream::binary);
+    return in.tellg() * estimation_rate;
+  }
+
+  bool perform_no_eviction(const ModelRequest *request,
+                           const size_t memory_size_request,
+                           const size_t memory_to_free) {
+    return false;
+  }
+
+  bool perform_lru_eviction(const ModelRequest *request,
+                            const size_t memory_size_request,
+                            const size_t memory_to_free) {
+    size_t memory_freed = 0;
+    bool ret = false;
+    while (memory_freed < memory_to_free) {
+      if (memory_db_.empty()) {
+        break;
+      }
+      auto min_element = std::min_element(
+          memory_db_.begin(), memory_db_.end(),
+          [](const memory_db_t::value_type &s1,
+             const memory_db_t::value_type &s2) {
+            if (s1.second->ref_count() > 0) {
+              return false;
+            }
+            return s1.second->lru_timestamp() < s2.second->lru_timestamp();
+          });
+      if (min_element == memory_db_.end()) {
+        break;
+      }
+      const auto byte_count = min_element->second->owned_model().byte_count();
+      memory_usage_ -= byte_count;
+      memory_freed += byte_count;
+      memory_db_.erase(min_element);
+    }
+
+    if (memory_freed >= memory_to_free) {
+      ret = true;
+    }
+
+    return ret;
+  }
+
+  bool perform_fifo_eviction(const ModelRequest *request,
+                             const size_t memory_size_request,
+                             const size_t memory_to_free) {
+    size_t memory_freed = 0;
+    bool ret = false;
+
+    while (memory_freed < memory_to_free) {
+      if (memory_db_.empty()) {
+        break;
+      }
+      auto min_element = std::min_element(
+          memory_db_.begin(), memory_db_.end(),
+          [](const memory_db_t::value_type &s1,
+             const memory_db_t::value_type &s2) {
+            if (s1.second->ref_count() > 0) {
+              return false;
+            }
+            return s1.second->fifo_order() < s2.second->fifo_order();
+          });
+      if (min_element == memory_db_.end()) {
+        break;
+      }
+      const auto byte_count = min_element->second->owned_model().byte_count();
+      memory_usage_ -= byte_count;
+      memory_freed += byte_count;
+      memory_db_.erase(min_element);
+    }
+
+    if (memory_freed >= memory_to_free) {
+      ret = true;
+    }
+
+    return ret;
+  }
+
+  bool perform_flush_eviction(const ModelRequest *request,
+                              const size_t memory_size_request,
+                              const size_t memory_to_free) {
+    size_t memory_freed = 0;
+    for (auto &&elem : memory_db_) {
+      const auto byte_count = elem.second->owned_model().byte_count();
+      memory_usage_ -= byte_count;
+      memory_freed += byte_count;
+    }
+    memory_db_.clear();
+
+    return memory_freed >= memory_to_free;
+  }
+
+  bool perform_lcu_eviction(const ModelRequest *request,
+                            const size_t memory_size_request,
+                            const size_t memory_to_free) {
+    size_t memory_freed = 0;
+    bool ret = false;
+
+    while (memory_freed < memory_to_free) {
+      if (memory_db_.empty()) {
+        break;
+      }
+      auto min_element =
+          std::min_element(memory_db_.begin(), memory_db_.end(),
+                           [](const memory_db_t::value_type &s1,
+                              const memory_db_t::value_type &s2) {
+                             if (s1.second->ref_count() > 0) {
+                               return false;
+                             }
+                             return s1.second->use_history().size() <
+                                    s2.second->use_history().size();
+                           });
+      if (min_element == memory_db_.end()) {
+        break;
+      }
+      const auto byte_count = min_element->second->owned_model().byte_count();
+      memory_usage_ -= byte_count;
+      memory_freed += byte_count;
+      memory_db_.erase(min_element);
+    }
+
+    if (memory_freed >= memory_to_free) {
+      ret = true;
+    }
+
+    return ret;
+  }
+
+  // A eviction few strategies
+  // - NEVER
+  // - LRU
+  // - FIFO
+  // - RANDOM
+  // - NEVER
+  // - LCU -- least commnly used
+  // - EAGER
+  // - ALL
+  bool perform_eviction(const ModelRequest *request,
+                        const size_t estimated_model_size,
+                        const size_t memory_to_free) {
+    static const auto eviction_policy = UPRD_EVICTION_POLICY;
+    if (eviction_policy == "never") {
+      return perform_no_eviction(request, estimated_model_size, memory_to_free);
+    }
+    if (eviction_policy == "lru") {
+      return perform_lru_eviction(request, estimated_model_size,
+                                  memory_to_free);
+    }
+    if (eviction_policy == "fifo") {
+      return perform_fifo_eviction(request, estimated_model_size,
+                                   memory_to_free);
+    }
+    if (eviction_policy == "flush" || eviction_policy == "all") {
+      return perform_flush_eviction(request, estimated_model_size,
+                                    memory_to_free);
+    }
+    if (eviction_policy == "lcu") { // least commnly used
+      return perform_lcu_eviction(request, estimated_model_size,
+                                  memory_to_free);
+    }
+
+    const auto msg =
+        fmt::format("the eviction policy {} is not valid", eviction_policy);
+    LOG(ERROR) << msg;
+    throw std::runtime_error(msg);
+  }
+
+  void evict_if_needed(const ModelRequest *request) {
+    static const auto max_memory_to_use =
+        UPRD_MEMORY_PERCENTAGE * memory_total();
+    const auto estimated_model_size = estimate_model_size(request);
+    if (estimated_model_size > max_memory_to_use) {
+      const auto msg =
+          fmt::format("cannot allocate memory. requsting an estimated {} bytes "
+                      "of memory, while only {} is allocated to be used",
+                      estimated_model_size, max_memory_to_use);
+      throw std::runtime_error(msg);
+    }
+    if (memory_usage_ + estimated_model_size > max_memory_to_use) {
+      const auto memory_to_free =
+          estimated_model_size + memory_usage_ - max_memory_to_use;
+      const auto ok =
+          perform_eviction(request, estimated_model_size, memory_to_free);
+      if (!ok) {
+        static const auto eviction_policy = UPRD_EVICTION_POLICY;
+        const auto msg = fmt::format(
+            "cannot fulfill memory allocation. requesting an estimated {} "
+            "bytes of memory to be freed, while only {} is allocated to be "
+            "used using the {} eviction strategy",
+            memory_to_free, max_memory_to_use, eviction_policy);
+        throw std::runtime_error(msg);
+      }
+      return;
+    }
+    return;
+  }
+
+  size_t fifo_order{0};
+
 public:
+  // control memory usage by percentage of gpu
   grpc::Status Open(grpc::ServerContext *context, const ModelRequest *request,
                     ModelHandle *reply) override {
     std::lock_guard<std::mutex> lock(db_mutex_);
 
-    LOG(INFO) << "opening " << request->name();
+    // LOG(INFO) << "opening " << request->name();
 
     auto it = memory_db_.find(request->name());
     if (it == memory_db_.end()) {
       const auto uuid = sole::uuid4().str();
 
-      Model model;
-      model.set_id(uuid);
-      model.set_name(request->name());
-      model.set_ref_count(0);
+      try {
+        evict_if_needed(request);
+      } catch (const std::runtime_error &error) {
+        return grpc::Status(grpc::RESOURCE_EXHAUSTED, error.what());
+      }
 
-      auto owned_model = model.mutable_owned_model();
+      Model *model = new Model();
+      model->set_id(uuid);
+      model->set_name(request->name());
+      model->set_ref_count(0);
+
+      auto owned_model = model->mutable_owned_model();
       owned_model->set_id("owned-by-" + uuid);
-      owned_model->set_model_id(model.id());
+      owned_model->set_model_id(model->id());
       owned_model->set_byte_count(0);
+
       load_ndarray(owned_model->mutable_layer(), request, /*ref_count=*/-1);
 
       int64_t byte_count = 0;
@@ -286,11 +493,13 @@ public:
 
       owned_model->set_byte_count(byte_count);
 
-      memory_db_[request->name()] = std::make_unique<Model>(model);
+      model->set_fifo_order(fifo_order++);
+
+      memory_db_[request->name()] = std::unique_ptr<Model, ModelDeleter>(model);
+      memory_usage_ += byte_count;
     }
 
-    LOG(INFO) << "done with creating owned model";
-    // std::cout << "keys = " << keys(memory_db_) << "\n";
+    // LOG(INFO) << "done with creating owned model";
 
     it = memory_db_.find(request->name());
     CHECK(it != memory_db_.end()) << "expecting the model to be there";
@@ -299,15 +508,21 @@ public:
 
     // now we need to use the owned array to create
     // new memory handles
-    LOG(INFO) << "creating shared handle from owned memory";
+    // LOG(INFO) << "creating shared handle from owned memory";
     it->second->set_ref_count(it->second->ref_count() + 1);
     auto handle = it->second->mutable_shared_model()->Add();
     from_owned_modelhandle(handle, it->second->owned_model(),
                            it->second->ref_count());
-    LOG(INFO) << "sending " << it->second->owned_model().layer().size()
-              << " layers to client";
+    // LOG(INFO) << "sending " << it->second->owned_model().layer().size() << "
+    // layers to client";
 
-    LOG(INFO) << "finished satisfying open request";
+    // LOG(INFO) << "finished satisfying open request";
+
+    auto h = it->second->mutable_use_history()->Add();
+    h->CopyFrom(TimeUtil::GetCurrentTime());
+
+    auto t = it->second->mutable_lru_timestamp();
+    t->CopyFrom(TimeUtil::GetCurrentTime());
 
     reply->CopyFrom(*handle);
 
@@ -320,9 +535,9 @@ public:
 
     auto it = memory_db_.find(request->name());
     if (it == memory_db_.end()) {
-      std::cout << "failed to info request. cannot find " << request->name()
-                << " in cache. "
-                << " cache = " << keys(memory_db_) << " \n";
+      LOG(ERROR) << "failed to info request. cannot find " << request->name()
+                 << " in cache. "
+                 << " cache = " << keys(memory_db_) << " \n";
       return grpc::Status(grpc::NOT_FOUND, "unable to find handle with name "s +
                                                request->name() +
                                                " during info request");
@@ -333,32 +548,63 @@ public:
     return grpc::Status::OK;
   }
 
+  std::string find_model_name_by_model_id(std::string model_id) {
+    const auto loc =
+        std::find_if(memory_db_.begin(), memory_db_.end(),
+                     [&model_id](const memory_db_t::value_type &k) {
+                       return k.second->id() == model_id;
+                     });
+    if (loc == memory_db_.end()) {
+      return "";
+    }
+    return loc->second->name();
+  }
+
+  void destroy_model_handles(const ModelHandle &handle) {}
+
   grpc::Status Close(grpc::ServerContext *context, const ModelHandle *request,
                      Void *reply) override {
     std::lock_guard<std::mutex> lock(db_mutex_);
 
-    auto it = memory_db_.find(request->model_id());
-    if (it == memory_db_.end()) {
-      std::cout << "failed to close request\n";
+    const auto model_name = find_model_name_by_model_id(request->model_id());
+    if (model_name == "") {
+      LOG(ERROR) << "failed to close request\n";
+      return grpc::Status(grpc::NOT_FOUND,
+                          "unable to find model name with id "s +
+                              request->model_id() + " during close request");
+    }
+    auto model_entry = memory_db_.find(model_name);
+    if (model_entry == memory_db_.end()) {
+      LOG(ERROR) << "failed to close request\n";
       return grpc::Status(grpc::NOT_FOUND, "unable to find handle with name "s +
-                                               request->model_id() +
+                                               model_name +
                                                " during close request");
     }
 
-#ifdef REF_COUNT_ENABLED
-    const auto path = request->file_path();
+    const auto handle_id = request->id();
+    const auto shared_model = model_entry->second->mutable_shared_model();
+    for (auto it = shared_model->begin(); it != shared_model->end(); it++) {
+      auto model = *it;
+      if (model.id() != handle_id) {
+        continue;
+      }
+      destroy_model_handles(model);
+      model_entry->second->mutable_shared_model()->erase(it);
+      break;
+    }
 
-    const auto ref_count = it->second->ref_count() - 1;
-    it->second->set_ref_count(ref_count);
+    const auto ref_count = model_entry->second->ref_count() - 1;
+    model_entry->second->set_ref_count(ref_count);
 
     if (ref_count == 0) {
-      // cudaFree((void *)it->second->raw_ptr());
-      memory_db_.erase(it);
+      static const auto eviction_policy = UPRD_EVICTION_POLICY;
+      if (eviction_policy == "eager") {
+        const auto byte_count = model_entry->second->owned_model().byte_count();
+        memory_usage_ -= byte_count;
+        memory_db_.erase(model_entry);
+      }
     }
-    std::cout << "receive close request\n";
-#else
-    std::cerr << "TODO:: enable decremenet refcount on close\n";
-#endif
+
     return grpc::Status::OK;
   }
 
@@ -371,7 +617,9 @@ private:
   }
 
   // The actual database.
-  std::map<std::string, std::unique_ptr<Model>> memory_db_;
+
+  memory_db_t memory_db_;
+  int64_t memory_usage_{0};
 
   // Mutex serializing access to the map.
   std::mutex db_mutex_;
@@ -398,6 +646,9 @@ void RunServer() {
 }
 
 int main(int argc, const char *argv[]) {
+  static const auto eviction_policy = UPRD_EVICTION_POLICY;
+  static const auto estimation_rate = UPRD_ESTIMATION_RATE;
+  static const auto max_memory_to_use = UPRD_MEMORY_PERCENTAGE * memory_total();
   int version = 0;
   const auto err = MXGetVersion(&version);
   if (err) {
@@ -405,7 +656,10 @@ int main(int argc, const char *argv[]) {
   }
   LOG(INFO) << "in uprd. using mxnet version = " << version
             << " running on address  = " << server::address << "\n";
-
+  LOG(INFO) << "eviction_policy = " << eviction_policy << "\n"
+            << "estimation_rate = " << estimation_rate << "\n"
+            << "max_memory_to_use = " << max_memory_to_use << "\n";
+            
   RunServer();
 
   return 0;

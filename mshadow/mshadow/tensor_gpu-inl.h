@@ -89,7 +89,7 @@ inline void Copy(Tensor<A, dim, DType> _dst,
   CHECK_EQ(_dst.shape_, _src.shape_) << "Copy:shape mismatch";
   Tensor<A, 2, DType> dst = _dst.FlatTo2D();
   Tensor<B, 2, DType> src = _src.FlatTo2D();
-LOG(INFO) << "performing a cudaMemcpy2DAsync " << (size_t) src.dptr_ << " to " <<  (size_t) dst.dptr_;
+// LOG(INFO) << "performing a cudaMemcpy2DAsync " << (size_t) src.dptr_ << " to " <<  (size_t) dst.dptr_;
   MSHADOW_CUDA_CALL(cudaMemcpy2DAsync(dst.dptr_, dst.stride_ * sizeof(DType),
                                       src.dptr_, src.stride_ * sizeof(DType),
                                       dst.size(1) * sizeof(DType),

@@ -29,6 +29,7 @@
 #include <google/protobuf/repeated_field.h>  // IWYU pragma: export
 #include <google/protobuf/extension_set.h>  // IWYU pragma: export
 #include <google/protobuf/unknown_field_set.h>
+#include <google/protobuf/timestamp.pb.h>
 // @@protoc_insertion_point(includes)
 
 namespace protobuf_upr_2eproto {
@@ -712,6 +713,18 @@ class Model : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
   const ::google::protobuf::RepeatedPtrField< ::upr::ModelHandle >&
       shared_model() const;
 
+  // repeated .google.protobuf.Timestamp use_history = 9;
+  int use_history_size() const;
+  void clear_use_history();
+  static const int kUseHistoryFieldNumber = 9;
+  const ::google::protobuf::Timestamp& use_history(int index) const;
+  ::google::protobuf::Timestamp* mutable_use_history(int index);
+  ::google::protobuf::Timestamp* add_use_history();
+  ::google::protobuf::RepeatedPtrField< ::google::protobuf::Timestamp >*
+      mutable_use_history();
+  const ::google::protobuf::RepeatedPtrField< ::google::protobuf::Timestamp >&
+      use_history() const;
+
   // string id = 1;
   void clear_id();
   static const int kIdFieldNumber = 1;
@@ -796,11 +809,38 @@ class Model : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
       ::upr::ModelHandle* owned_model);
   ::upr::ModelHandle* unsafe_arena_release_owned_model();
 
+  // .google.protobuf.Timestamp lru_timestamp = 7;
+  bool has_lru_timestamp() const;
+  void clear_lru_timestamp();
+  static const int kLruTimestampFieldNumber = 7;
+  private:
+  void _slow_mutable_lru_timestamp();
+  public:
+  const ::google::protobuf::Timestamp& lru_timestamp() const;
+  ::google::protobuf::Timestamp* release_lru_timestamp();
+  ::google::protobuf::Timestamp* mutable_lru_timestamp();
+  void set_allocated_lru_timestamp(::google::protobuf::Timestamp* lru_timestamp);
+  void unsafe_arena_set_allocated_lru_timestamp(
+      ::google::protobuf::Timestamp* lru_timestamp);
+  ::google::protobuf::Timestamp* unsafe_arena_release_lru_timestamp();
+
   // int64 ref_count = 4;
   void clear_ref_count();
   static const int kRefCountFieldNumber = 4;
   ::google::protobuf::int64 ref_count() const;
   void set_ref_count(::google::protobuf::int64 value);
+
+  // int64 fifo_order = 8;
+  void clear_fifo_order();
+  static const int kFifoOrderFieldNumber = 8;
+  ::google::protobuf::int64 fifo_order() const;
+  void set_fifo_order(::google::protobuf::int64 value);
+
+  // bool always_resident = 10;
+  void clear_always_resident();
+  static const int kAlwaysResidentFieldNumber = 10;
+  bool always_resident() const;
+  void set_always_resident(bool value);
 
   // @@protoc_insertion_point(class_scope:upr.Model)
  private:
@@ -810,11 +850,15 @@ class Model : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   ::google::protobuf::RepeatedPtrField< ::upr::ModelHandle > shared_model_;
+  ::google::protobuf::RepeatedPtrField< ::google::protobuf::Timestamp > use_history_;
   ::google::protobuf::internal::ArenaStringPtr id_;
   ::google::protobuf::internal::ArenaStringPtr name_;
   ::google::protobuf::internal::ArenaStringPtr file_path_;
   ::upr::ModelHandle* owned_model_;
+  ::google::protobuf::Timestamp* lru_timestamp_;
   ::google::protobuf::int64 ref_count_;
+  ::google::protobuf::int64 fifo_order_;
+  bool always_resident_;
   mutable int _cached_size_;
   friend struct ::protobuf_upr_2eproto::TableStruct;
   friend void ::protobuf_upr_2eproto::InitDefaultsModelImpl();
@@ -2005,6 +2049,116 @@ inline const ::google::protobuf::RepeatedPtrField< ::upr::ModelHandle >&
 Model::shared_model() const {
   // @@protoc_insertion_point(field_list:upr.Model.shared_model)
   return shared_model_;
+}
+
+// .google.protobuf.Timestamp lru_timestamp = 7;
+inline bool Model::has_lru_timestamp() const {
+  return this != internal_default_instance() && lru_timestamp_ != NULL;
+}
+inline const ::google::protobuf::Timestamp& Model::lru_timestamp() const {
+  const ::google::protobuf::Timestamp* p = lru_timestamp_;
+  // @@protoc_insertion_point(field_get:upr.Model.lru_timestamp)
+  return p != NULL ? *p : *reinterpret_cast<const ::google::protobuf::Timestamp*>(
+      &::google::protobuf::_Timestamp_default_instance_);
+}
+inline ::google::protobuf::Timestamp* Model::release_lru_timestamp() {
+  // @@protoc_insertion_point(field_release:upr.Model.lru_timestamp)
+  
+  ::google::protobuf::Timestamp* temp = lru_timestamp_;
+  if (GetArenaNoVirtual() != NULL) {
+    temp = ::google::protobuf::internal::DuplicateIfNonNull(temp, NULL);
+  }
+  lru_timestamp_ = NULL;
+  return temp;
+}
+inline ::google::protobuf::Timestamp* Model::unsafe_arena_release_lru_timestamp() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:upr.Model.lru_timestamp)
+  
+  ::google::protobuf::Timestamp* temp = lru_timestamp_;
+  lru_timestamp_ = NULL;
+  return temp;
+}
+inline ::google::protobuf::Timestamp* Model::mutable_lru_timestamp() {
+  
+  if (lru_timestamp_ == NULL) {
+    _slow_mutable_lru_timestamp();
+  }
+  // @@protoc_insertion_point(field_mutable:upr.Model.lru_timestamp)
+  return lru_timestamp_;
+}
+inline void Model::set_allocated_lru_timestamp(::google::protobuf::Timestamp* lru_timestamp) {
+  ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
+  if (message_arena == NULL) {
+    delete reinterpret_cast< ::google::protobuf::MessageLite*>(lru_timestamp_);
+  }
+  if (lru_timestamp) {
+    ::google::protobuf::Arena* submessage_arena =
+      reinterpret_cast< ::google::protobuf::MessageLite*>(lru_timestamp)->GetArena();
+    if (message_arena != submessage_arena) {
+      lru_timestamp = ::google::protobuf::internal::GetOwnedMessage(
+          message_arena, lru_timestamp, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  lru_timestamp_ = lru_timestamp;
+  // @@protoc_insertion_point(field_set_allocated:upr.Model.lru_timestamp)
+}
+
+// int64 fifo_order = 8;
+inline void Model::clear_fifo_order() {
+  fifo_order_ = GOOGLE_LONGLONG(0);
+}
+inline ::google::protobuf::int64 Model::fifo_order() const {
+  // @@protoc_insertion_point(field_get:upr.Model.fifo_order)
+  return fifo_order_;
+}
+inline void Model::set_fifo_order(::google::protobuf::int64 value) {
+  
+  fifo_order_ = value;
+  // @@protoc_insertion_point(field_set:upr.Model.fifo_order)
+}
+
+// repeated .google.protobuf.Timestamp use_history = 9;
+inline int Model::use_history_size() const {
+  return use_history_.size();
+}
+inline const ::google::protobuf::Timestamp& Model::use_history(int index) const {
+  // @@protoc_insertion_point(field_get:upr.Model.use_history)
+  return use_history_.Get(index);
+}
+inline ::google::protobuf::Timestamp* Model::mutable_use_history(int index) {
+  // @@protoc_insertion_point(field_mutable:upr.Model.use_history)
+  return use_history_.Mutable(index);
+}
+inline ::google::protobuf::Timestamp* Model::add_use_history() {
+  // @@protoc_insertion_point(field_add:upr.Model.use_history)
+  return use_history_.Add();
+}
+inline ::google::protobuf::RepeatedPtrField< ::google::protobuf::Timestamp >*
+Model::mutable_use_history() {
+  // @@protoc_insertion_point(field_mutable_list:upr.Model.use_history)
+  return &use_history_;
+}
+inline const ::google::protobuf::RepeatedPtrField< ::google::protobuf::Timestamp >&
+Model::use_history() const {
+  // @@protoc_insertion_point(field_list:upr.Model.use_history)
+  return use_history_;
+}
+
+// bool always_resident = 10;
+inline void Model::clear_always_resident() {
+  always_resident_ = false;
+}
+inline bool Model::always_resident() const {
+  // @@protoc_insertion_point(field_get:upr.Model.always_resident)
+  return always_resident_;
+}
+inline void Model::set_always_resident(bool value) {
+  
+  always_resident_ = value;
+  // @@protoc_insertion_point(field_set:upr.Model.always_resident)
 }
 
 // -------------------------------------------------------------------
