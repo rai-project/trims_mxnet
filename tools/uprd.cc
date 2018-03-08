@@ -47,22 +47,15 @@ class RegistryImpl final : public Registry::Service {
 private:
   struct ModelDeleter {
 
-    void destroy_layer(const Layer &layer) {
-      const void *dptr = (void *) layer.device_raw_ptr();
-      if (dptr != nullptr) {
-        cudaFree(dptr);
-      }
-    }
-
-    void destroy_owned_handle(const ModelHandle &handle) {
-      for (auto layer : handle.layer()) {
-        destroy_layer(layer);
-      }
-    }
 
     void operator()(Model *ptr) const {
       std::cout << "Model ptr" << ptr->id() << "\n";
-      destroy_owned_handle(ptr->owned_model());
+      for (auto layer : ptr->owned_model().layer()) {
+      void *dptr = (void *) layer.device_raw_ptr();
+      if (dptr != nullptr) {
+        cudaFree(dptr);
+      }
+      }
     }
   };
   using memory_db_t = std::map<std::string, std::unique_ptr<Model, ModelDeleter>>;
@@ -298,8 +291,8 @@ private:
   bool perform_flush_eviction(const ModelRequest *request, const size_t memory_size_request,
                               const size_t memory_to_free) {
     size_t memory_freed = 0;
-    for (auto elem : memory_db_) {
-      const auto byte_count = elem->second->owned_model().byte_count();
+    for (auto && elem : memory_db_) {
+      const auto byte_count = elem.second->owned_model().byte_count();
       memory_usage_ -= byte_count;
       memory_freed += byte_count;
     }
@@ -366,8 +359,18 @@ private:
   void evict_if_needed(const ModelRequest *request) {
     static const auto max_memory_to_use = UPRD_MEMORY_PERCENTAGE * memory_total();
     const auto estimated_model_size     = estimate_model_size(request);
+    if (estimated_model_size > max_memory_to_use) {
+        const auto msg = fmt::format("cannot allocate memory. requsting an estimated {} bytes of memory, while only {} is allocated to be used", estimated_model_size, max_memory_to_use);
+        throw std::runtime_error(msg);
+    }
     if (memory_usage_ + estimated_model_size > max_memory_to_use) {
-      perform_eviction(request, estimated_model_size, memory_usage_ - estimated_model_size);
+const auto memory_to_free = estimated_model_size + memory_usage_ - max_memory_to_use;
+      const auto ok = perform_eviction(request, estimated_model_size,  memory_to_free);
+      if (!ok) {
+        static const auto eviction_policy = UPRD_EVICTION_POLICY;
+        const auto msg = fmt::format("cannot fulfill memory allocation. requesting an estimated {} bytes of memory to be freed, while only {} is allocated to be used using the {} eviction strategy", memory_to_free, max_memory_to_use, eviction_policy);
+        throw std::runtime_error(msg);
+      }
       return;
     }
     return;
@@ -386,7 +389,12 @@ public:
     if (it == memory_db_.end()) {
       const auto uuid = sole::uuid4().str();
 
-      evict_if_needed(request);
+      try {
+          evict_if_needed(request);
+      } catch (const std::runtime_error& error) {
+      return grpc::Status(grpc::RESOURCE_EXHAUSTED,
+                          error.what());
+      }
 
       Model *model = new Model();
       model->set_id(uuid);
@@ -430,9 +438,12 @@ public:
 
     // LOG(INFO) << "finished satisfying open request";
 
-    auto t = it->second->mutable_use_history()->Add();
+    auto h = it->second->mutable_use_history()->Add();
+    h->CopyFrom(TimeUtil::GetCurrentTime());
+    
+    auto t = it->second->mutable_lru_timestamp();
     t->CopyFrom(TimeUtil::GetCurrentTime());
-
+    
     reply->CopyFrom(*handle);
 
     return grpc::Status::OK;
@@ -497,7 +508,7 @@ public:
     model_entry->second->set_ref_count(ref_count);
 
     if (ref_count == 0) {
-      const auto eviction_policy = UPRD_EVICTION_POLICY;
+      static const auto eviction_policy = UPRD_EVICTION_POLICY;
       if (eviction_policy == "eager") {
         const auto byte_count = model_entry->second->owned_model().byte_count();
         memory_usage_ -= byte_count;
@@ -546,6 +557,8 @@ void RunServer() {
 }
 
 int main(int argc, const char *argv[]) {
+  static const auto eviction_policy = UPRD_EVICTION_POLICY;
+  static const auto max_memory_to_use = UPRD_MEMORY_PERCENTAGE * memory_total();
   int version    = 0;
   const auto err = MXGetVersion(&version);
   if (err) {
