@@ -90,16 +90,11 @@ The server is part of the MXNet build process.
 
 ## Environment Variables
 
-      const std::string run_id     = dmlc::GetEnv("UPR_RUN_ID", std::string("[undefined]"));
-      const std::string git_sha    = dmlc::GetEnv("UPR_GIT_SHA", std::string(build_git_sha));
-      const std::string git_branch = dmlc::GetEnv("UPR_GIT_BRANCH", std::string(build_git_branch));
-      const std::string git_date   = dmlc::GetEnv("UPR_GIT_DATE", std::string(build_git_time));
-
 | Name                       | Description | Default Value    |
 | -------------------------- | ----------- | ---------------- |
 | UPR_ENABLED                |             | false            |
 | UPR_RUN_ID                 |             | [undefined]      |
-| UPR_GIT_SHA                |             | build_git_sha    |
+| git                        |             | build_git_sha    |
 | UPR_GIT_BRANCH             |             | build_git_branch |
 | UPR_GIT_TIME               |             | build_git_time   |
 | UPR_CLIENT                 |             |                  |
