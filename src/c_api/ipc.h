@@ -75,7 +75,7 @@ static const auto is_client    = dmlc::GetEnv("UPR_CLIENT", false);
 static const auto UPR_BASE_DIR = dmlc::GetEnv("UPR_BASE_DIR", HOME + std::string("/carml/data/mxnet/"));
 
 static const auto UPRD_EVICTION_POLICY   = dmlc::GetEnv("UPRD_EVICTION_POLICY", std::string("lru"));
-static const auto UPRD_ESTIMATION_RATE   = dmlc::GetEnv("UPRD_ESTIMATION_RATE", 1.5);
+static const auto UPRD_ESTIMATION_RATE   = dmlc::GetEnv("UPRD_ESTIMATION_RATE", 3.0);
 static const auto UPRD_MEMORY_PERCENTAGE = dmlc::GetEnv("UPRD_MEMORY_PERCENTAGE", 0.8);
 
 static const auto UPR_INPUT_CHANNELS = dmlc::GetEnv("UPR_INPUT_CHANNELS", 3);
@@ -202,8 +202,8 @@ static inline void stop_span(engine::OprExecStat *stat) {
 
 #define TIME_IT(...)                                                                                                   \
   auto SPAN_PRIVATE_NAME = upr::start_span(#__VA_ARGS__, "statement",                                                  \
-                                           {{"function", std::to_string(__PRETTY_FUNCTION__)},                         \
-                                            {"file", std::to_string(__FILE__)},                                        \
+                                           span_props{{"function", __PRETTY_FUNCTION__},                         \
+                                            {"file", __FILE__},                                        \
                                             {"line", std::to_string(__LINE__)}});                                      \
   __VA_ARGS__;                                                                                                         \
   upr::stop_span(SPAN_PRIVATE_NAME);

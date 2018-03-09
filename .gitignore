@@ -162,4 +162,5 @@ example/image-classification/predict-cpp/image-classification-predict
 *nvprof
 mxnet.srctr*
 
-profile
+profile.json
+server_profile.json
