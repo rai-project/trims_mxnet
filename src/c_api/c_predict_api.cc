@@ -118,15 +118,19 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
     std::vector<NDArray> data;
     std::vector<std::string> names;
 
-    const auto model_name = upr::get_model_name();
-    ret->model_name       = model_name;
+    if (upr::UPR_ENABLED) {
+      const auto model_name = upr::get_model_name();
+      ret->model_name       = model_name;
 #ifdef MXNET_USE_CUDA
-    const auto info = upr::Load(std::string(model_name), &data, &names);
-    ret->handle_id  = std::get<0>(info);
-    ret->model_id   = std::get<1>(info);
+      const auto info = upr::Load(std::string(model_name), &data, &names);
+      ret->handle_id  = std::get<0>(info);
+      ret->model_id   = std::get<1>(info);
 #else
-    LOG(FATAL) << "enable USE_CUDA in the makefile to use the upr path";
+      LOG(FATAL) << "enable USE_CUDA in the makefile to use the upr path";
 #endif
+    } else {
+      NDArray::Load(&fi, &data, &names);
+    }
     CHECK_EQ(names.size(), data.size()) << "Invalid param file format";
     for (size_t i = 0; i < names.size(); ++i) {
       if (!strncmp(names[i].c_str(), "aux:", 4)) {

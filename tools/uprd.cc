@@ -1,10 +1,8 @@
 #include "fmt/format.h"
 #include "ipc.h"
 
-
-#include <csignal>
-#include <future>
 #include <algorithm>
+#include <csignal>
 #include <dmlc/base.h>
 #include <dmlc/io.h>
 #include <dmlc/logging.h>
@@ -13,6 +11,7 @@
 #include <dmlc/recordio.h>
 #include <dmlc/type_traits.h>
 #include <fstream>
+#include <future>
 #include <nnvm/node.h>
 
 #include "mxnet/c_api.h"
@@ -259,9 +258,8 @@ private:
 
     const auto uuid = sole::uuid4().str();
 
-    auto span = start_span(
-        "from_owned_modelhandle"s, "load",
-        span_props{{"ref_count", std::to_string(ref_count)}, {"model_id", owned.model_id()}});
+    auto span = start_span("from_owned_modelhandle"s, "load",
+                           span_props{{"ref_count", std::to_string(ref_count)}, {"model_id", owned.model_id()}});
     defer(stop_span(span));
 
     handle->set_id(uuid);
@@ -692,19 +690,14 @@ int main(int argc, const char *argv[]) {
 
   // Wait for the server to shutdown. Note that some other thread must be
   // responsible for shutting down the server for this call to ever return.
-  auto serveFn = [&]() {
-     server->Wait();
-  };
+  auto serveFn = [&]() { server->Wait(); };
 
-  std::thread serving_thread(serveFn); 
+  std::thread serving_thread(serveFn);
 
-  auto signal_handler = [](int s) {
-    exit_requested.set_value();
-  };
+  auto signal_handler = [](int s) { exit_requested.set_value(); };
   std::signal(SIGINT, signal_handler);
   std::signal(SIGTERM, signal_handler);
   std::signal(SIGQUIT, signal_handler);
-
 
   auto f = exit_requested.get_future();
   f.wait();
@@ -713,8 +706,6 @@ int main(int argc, const char *argv[]) {
 
   server->Shutdown();
   serving_thread.join();
-
-
 
   return 0;
 }

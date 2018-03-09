@@ -90,24 +90,34 @@ The server is part of the MXNet build process.
 
 ## Environment Variables
 
-| Name                       | Description | Default Value |
-| -------------------------- | ----------- | ------------- |
-| UPR_CLIENT                 |             |               |
-| UPR_BASE_DIR               |             |               |
-| UPR_MODEL_NAME             |             |               |
-| UPR_PROFILE_TARGET         |             | profile.json  |
-| UPR_INITIALIZE_EAGER       |             | false         |
-| UPR_INITIALIZE_EAGER_ASYNC |             | false         |
-| UPR_INPUT_CHANNELS         |             | 3             |
-| UPR_INPUT_WIDTH            |             | 224           |
-| UPR_INPUT_HEIGHT           |             | 224           |
-| UPR_INPUT_MEAN_R           |             | 0             |
-| UPR_INPUT_MEAN_G           |             | 0             |
-| UPR_INPUT_MEAN_B           |             | 0             |
-| -------------------------- | ----------- | ------------- |
-| UPRD_EVICTION_POLICY       |             | LRU           |
-| UPRD_ESTIMATION_RATE       |             | 3.0           |
-| UPRD_MEMORY_PERCENTAGE     |             | 0.8           |
+      const std::string run_id     = dmlc::GetEnv("UPR_RUN_ID", std::string("[undefined]"));
+      const std::string git_sha    = dmlc::GetEnv("UPR_GIT_SHA", std::string(build_git_sha));
+      const std::string git_branch = dmlc::GetEnv("UPR_GIT_BRANCH", std::string(build_git_branch));
+      const std::string git_date   = dmlc::GetEnv("UPR_GIT_DATE", std::string(build_git_time));
+
+| Name                       | Description | Default Value    |
+| -------------------------- | ----------- | ---------------- |
+| UPR_ENABLED                |             | false            |
+| UPR_RUN_ID                 |             | [undefined]      |
+| UPR_GIT_SHA                |             | build_git_sha    |
+| UPR_GIT_BRANCH             |             | build_git_branch |
+| UPR_GIT_TIME               |             | build_git_time   |
+| UPR_CLIENT                 |             |                  |
+| UPR_BASE_DIR               |             |                  |
+| UPR_MODEL_NAME             |             |                  |
+| UPR_PROFILE_TARGET         |             | profile.json     |
+| UPR_INITIALIZE_EAGER       |             | false            |
+| UPR_INITIALIZE_EAGER_ASYNC |             | false            |
+| UPR_INPUT_CHANNELS         |             | 3                |
+| UPR_INPUT_WIDTH            |             | 224              |
+| UPR_INPUT_HEIGHT           |             | 224              |
+| UPR_INPUT_MEAN_R           |             | 0                |
+| UPR_INPUT_MEAN_G           |             | 0                |
+| UPR_INPUT_MEAN_B           |             | 0                |
+| -------------------------- | ----------- | -------------    |
+| UPRD_EVICTION_POLICY       |             | LRU              |
+| UPRD_ESTIMATION_RATE       |             | 3.0              |
+| UPRD_MEMORY_PERCENTAGE     |             | 0.8              |
 
 ## How it Works
 

@@ -71,6 +71,7 @@ namespace upr {
 using namespace mxnet;
 
 static const auto HOME         = dmlc::GetEnv("HOME", std::string("/home/abduld"));
+static const auto UPR_ENABLED  = dmlc::GetEnv("UPR_ENABLED", false);
 static const auto is_client    = dmlc::GetEnv("UPR_CLIENT", false);
 static const auto UPR_BASE_DIR = dmlc::GetEnv("UPR_BASE_DIR", HOME + std::string("/carml/data/mxnet/"));
 
@@ -201,10 +202,9 @@ static inline void stop_span(engine::OprExecStat *stat) {
 #define SPAN_PRIVATE_CONCAT2(a, b) a##b
 
 #define TIME_IT(...)                                                                                                   \
-  auto SPAN_PRIVATE_NAME = upr::start_span(#__VA_ARGS__, "statement",                                                  \
-                                           span_props{{"function", __PRETTY_FUNCTION__},                         \
-                                            {"file", __FILE__},                                        \
-                                            {"line", std::to_string(__LINE__)}});                                      \
+  auto SPAN_PRIVATE_NAME = upr::start_span(                                                                            \
+      #__VA_ARGS__, "statement",                                                                                       \
+      span_props{{"function", __PRETTY_FUNCTION__}, {"file", __FILE__}, {"line", std::to_string(__LINE__)}});          \
   __VA_ARGS__;                                                                                                         \
   upr::stop_span(SPAN_PRIVATE_NAME);
 

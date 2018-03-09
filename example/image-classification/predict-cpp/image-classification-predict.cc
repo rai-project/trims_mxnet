@@ -52,7 +52,7 @@ public:
     ifs.seekg(0, std::ios::end);
     length_ = ifs.tellg();
     ifs.seekg(0, std::ios::beg);
-    //std::cout << file_path.c_str() << " ... " << length_ << " bytes\n";
+    // std::cout << file_path.c_str() << " ... " << length_ << " bytes\n";
 
     buffer_ = new char[sizeof(char) * length_];
     ifs.read(buffer_, length_);
@@ -179,7 +179,7 @@ int main(int argc, char *argv[]) {
   std::string param_file  = get_model_params_path();
   std::string synset_file = get_synset_path();
 
-  //printf("Predict using model %s\n", model_name.c_str());
+  // printf("Predict using model %s\n", model_name.c_str());
 
   BufferFile json_data(json_file);
   BufferFile param_data(param_file);
@@ -218,7 +218,7 @@ int main(int argc, char *argv[]) {
 
   const std::string profile_default_path{model_name + "_profile_" + profile_path_suffix + ".json"};
   const auto profile_path = dmlc::GetEnv("UPR_PROFILE_TARGET", profile_default_path);
-// std::cout << "saving profile to " << profile_default_path << "\n";
+  // std::cout << "saving profile to " << profile_default_path << "\n";
   MXSetProfilerConfig(1, profile_path.c_str());
 
   // Start profiling
@@ -233,13 +233,13 @@ int main(int argc, char *argv[]) {
   // Do Predict Forward
   MXPredForward(pred_hnd);
 
-
-    mx_uint *shape = 0;
-    mx_uint shape_len;
+  mx_uint *shape = 0;
+  mx_uint shape_len;
 
   MXPredGetOutputShape(pred_hnd, output_index, &shape, &shape_len);
-size = 1;
-for (mx_uint i = 0; i < shape_len; ++i) size *= shape[i];
+  size = 1;
+  for (mx_uint i = 0; i < shape_len; ++i)
+    size *= shape[i];
 
   MXPredGetOutput(pred_hnd, output_index, &(data[0]), size);
 
@@ -253,7 +253,7 @@ for (mx_uint i = 0; i < shape_len; ++i) size *= shape[i];
   std::vector<std::string> synset = LoadSynset(synset_file);
 
   // // Print Output Data
-  //PrintOutputResult(data, synset);
+  // PrintOutputResult(data, synset);
 
   return 0;
 }

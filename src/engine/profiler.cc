@@ -249,14 +249,24 @@ namespace engine {
       const auto init_time            = Profiler::Get()->GetInitTime();
       const auto duration_since_epoch = std::chrono::microseconds(init_time);
       const time_point<system_clock> tp_after_duration(duration_since_epoch);
-      const time_t start_time = system_clock::to_time_t(tp_after_duration);
+      const time_t start_time      = system_clock::to_time_t(tp_after_duration);
+      const std::string run_id     = dmlc::GetEnv("UPR_RUN_ID", std::string("[undefined]"));
+      const std::string git_sha    = dmlc::GetEnv("UPR_GIT_SHA", std::string(build_git_sha));
+      const std::string git_branch = dmlc::GetEnv("UPR_GIT_BRANCH", std::string("[undefined]"));
+      const std::string git_date   = dmlc::GetEnv("UPR_GIT_DATE", std::string(build_git_time));
+
       gethostname(hostname, HOST_NAME_MAX);
       getlogin_r(username, LOGIN_NAME_MAX);
 
       metadata =
-          json({{"hostname", std::string(hostname)},
+          json({{"run_id", run_id},
+                {"server",
+                 {{"eviction_policy", upr::UPRD_EVICTION_POLICY},
+                  {"estimation_rate", upr::UPRD_ESTIMATION_RATE},
+                  {"memory_percentage", upr::UPRD_MEMORY_PERCENTAGE}}},
+                {"hostname", std::string(hostname)},
                 {"username", std::string(username)},
-                {"git", {{"commit", std::string(build_git_sha)}, {"date", std::string(build_git_time)}}},
+                {"git", {{"commit", git_sha}, {"date", git_date}, {"branch", git_branch}}},
                 {"start_at", format_time(start_time)},
                 {"end_at", format_time(now)},
                 {"is_client", upr::is_client},
@@ -279,14 +289,14 @@ namespace engine {
     enable_output_ = false;
 
     std::ofstream outfile(filename_);
-    outfile << std::setw(4)
-            << json{{"traceEvents", trace_events},
-                    {"displayTimeUnit", "ms"},
-                    {
-                        "otherData",
-                        metadata,
-                    }}
-            << std::endl;
+    outfile //<< std::setw(4)
+        << json{{"traceEvents", trace_events},
+                {"displayTimeUnit", "ms"},
+                {
+                    "otherData",
+                    metadata,
+                }}
+        << std::endl;
     outfile.flush();
     outfile.close();
   }
