@@ -212,8 +212,8 @@ int main(int argc, char *argv[]) {
 
   GetImageFile(test_file, image_data.data(), channels, cv::Size(width, height));
 
-  size_t size = 1000;
-  std::vector<float> data(1000);
+  size_t size = 10000;
+  std::vector<float> data(size);
   mx_uint output_index = 0;
 
   const std::string profile_default_path{model_name + "_profile_" + profile_path_suffix + ".json"};
@@ -232,6 +232,14 @@ int main(int argc, char *argv[]) {
 
   // Do Predict Forward
   MXPredForward(pred_hnd);
+
+
+    mx_uint *shape = 0;
+    mx_uint shape_len;
+
+  MXPredGetOutputShape(pred_hnd, output_index, &shape, &shape_len);
+size = 1;
+for (mx_uint i = 0; i < shape_len; ++i) size *= shape[i];
 
   MXPredGetOutput(pred_hnd, output_index, &(data[0]), size);
 
