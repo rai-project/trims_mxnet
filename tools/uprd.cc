@@ -455,6 +455,7 @@ private:
       throw std::runtime_error(msg);
     }
     if (memory_usage_ + estimated_model_size > max_memory_to_use) {
+      std::unique_lock<std::shared_mutex> lock(db_mutex_);
       const auto memory_to_free = estimated_model_size + memory_usage_ - max_memory_to_use;
       const auto ok             = perform_eviction(request, estimated_model_size, memory_to_free);
       if (!ok) {
@@ -475,7 +476,7 @@ private:
 public:
   // control memory usage by percentage of gpu
   grpc::Status Open(grpc::ServerContext *context, const ModelRequest *request, ModelHandle *reply) override {
-    std::lock_guard<std::mutex> lock(db_mutex_);
+    std::shared_lock<std::shared_mutex> lock(db_mutex_);
 
     auto span = start_span("open"s, "grpc", span_props{{"model_name", request->name()}});
     defer(stop_span(span));
@@ -516,6 +517,7 @@ public:
 
       model->set_fifo_order(fifo_order++);
 
+      std::unique_lock<std::shared_mutex> lock(db_mutex_);
       memory_db_[request->name()] = std::unique_ptr<Model, ModelDeleter>(model);
       memory_usage_ += byte_count;
     }
@@ -553,7 +555,7 @@ public:
   }
 
   grpc::Status Info(grpc::ServerContext *context, const ModelRequest *request, Model *reply) override {
-    std::lock_guard<std::mutex> lock(db_mutex_);
+    std::shared_lock<std::shared_mutex> lock(db_mutex_);
 
     auto span = start_span("info"s, "grpc", span_props{{"model_name", request->name()}});
     defer(stop_span(span));
@@ -584,7 +586,7 @@ public:
   }
 
   grpc::Status Close(grpc::ServerContext *context, const ModelHandle *request, Void *reply) override {
-    std::lock_guard<std::mutex> lock(db_mutex_);
+    std::shared_lock<std::shared_mutex> lock(db_mutex_);
 
     auto span = start_span("close"s, "grpc", span_props{{"id", request->id()}, {"model_id", request->model_id()}});
     defer(stop_span(span));
@@ -617,6 +619,7 @@ public:
     model_entry->second->set_ref_count(ref_count);
 
     if (ref_count == 0) {
+      std::unique_lock<std::shared_mutex> lock(db_mutex_);
       static const auto eviction_policy = UPRD_EVICTION_POLICY;
       if (eviction_policy == "eager") {
         const auto byte_count = model_entry->second->owned_model().byte_count();
@@ -643,7 +646,7 @@ private:
   int64_t memory_usage_{0};
 
   // Mutex serializing access to the map.
-  std::mutex db_mutex_;
+  std::shared_mutex db_mutex_;
 };
 
 std::promise<void> exit_requested;
