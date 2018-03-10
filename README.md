@@ -93,6 +93,7 @@ The server is part of the MXNet build process.
 | Name                       | Description | Default Value    |
 | -------------------------- | ----------- | ---------------- |
 | UPR_ENABLED                |             | false            |
+| UPR_PROFILE_IO                |  only makes sense if UPR_ENABLED=false            | true            |
 | UPR_RUN_ID                 |             | [undefined]      |
 | git                        |             | build_git_sha    |
 | UPR_GIT_BRANCH             |             | build_git_branch |

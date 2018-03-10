@@ -5,9 +5,11 @@ export UPR_CLIENT=1
 export MXNET_CPU_PRIORITY_NTHREADS=1
 export OMP_NUM_THREADS=1
 
-# export GLOG_v=4
+export GLOG_v=0
+export GLOG_logtostderr=0
+export UPR_ENABLED=false
 export MXNET_ENGINE_TYPE=NaiveEngine
-export MXNET_GPU_WORKER_NTHREADS=2
+export MXNET_GPU_WORKER_NTHREADS=1
 export UPR_INITIALIZE_EAGER=true
 ./image-classification-predict
 ./image-classification-predict

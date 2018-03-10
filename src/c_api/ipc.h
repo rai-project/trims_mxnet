@@ -72,6 +72,7 @@ using namespace mxnet;
 
 static const auto HOME         = dmlc::GetEnv("HOME", std::string("/home/abduld"));
 static const auto UPR_ENABLED  = dmlc::GetEnv("UPR_ENABLED", true);
+static const auto UPR_PROFILE_IO = !UPR_ENABLED && dmlc::GetEnv("UPR_PROFILE_IO", true);
 static const auto is_client    = dmlc::GetEnv("UPR_CLIENT", false);
 static const auto UPR_BASE_DIR = dmlc::GetEnv("UPR_BASE_DIR", HOME + std::string("/carml/data/mxnet/"));
 

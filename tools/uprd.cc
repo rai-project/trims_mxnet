@@ -456,7 +456,7 @@ private:
       throw std::runtime_error(msg);
     }
     if (memory_usage_ + estimated_model_size > max_memory_to_use) {
-      std::unique_lock<std::shared_timed_mutex> lock(db_mutex_);
+      //std::unique_lock<std::shared_timed_mutex> lock(db_mutex_);
       const auto memory_to_free = estimated_model_size + memory_usage_ - max_memory_to_use;
       const auto ok             = perform_eviction(request, estimated_model_size, memory_to_free);
       if (!ok) {
@@ -518,7 +518,7 @@ public:
 
       model->set_fifo_order(fifo_order++);
 
-      std::unique_lock<std::shared_timed_mutex> lock(db_mutex_);
+      //std::unique_lock<std::shared_timed_mutex> lock(db_mutex_);
       memory_db_[request->name()] = std::unique_ptr<Model, ModelDeleter>(model);
       memory_usage_ += byte_count;
     }
@@ -594,7 +594,7 @@ public:
 
     const auto model_name = find_model_name_by_model_id(request->model_id());
     if (model_name == "") {
-      LOG(ERROR) << "failed to close request\n";
+      LOG(ERROR) << "failed to close request.  unable to find model name with id "s << request->model_id() << " during close request";
       return grpc::Status(grpc::NOT_FOUND,
                           "unable to find model name with id "s + request->model_id() + " during close request");
     }
@@ -620,7 +620,7 @@ public:
     model_entry->second->set_ref_count(ref_count);
 
     if (ref_count == 0) {
-      std::unique_lock<std::shared_timed_mutex> lock(db_mutex_);
+     // std::unique_lock<std::shared_timed_mutex> lock(db_mutex_);
       static const auto eviction_policy = UPRD_EVICTION_POLICY;
       if (eviction_policy == "eager") {
         const auto byte_count = model_entry->second->owned_model().byte_count();

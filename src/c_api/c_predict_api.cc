@@ -268,7 +268,9 @@ int MXPredGetOutput(PredictorHandle handle, mx_uint index, mx_float *data, mx_ui
 int MXPredFree(PredictorHandle handle) {
   API_BEGIN();
   auto pred = static_cast<MXAPIPredictor *>(handle);
-  upr::Unload(pred);
+  if (upr::UPR_ENABLED) {
+      upr::Unload(pred);
+  }
   delete pred;
   API_END();
 }

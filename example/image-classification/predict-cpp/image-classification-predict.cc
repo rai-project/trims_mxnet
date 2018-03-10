@@ -37,10 +37,12 @@ class BufferFile {
 public:
   std::string file_path_;
   int length_;
-  char *buffer_;
+  char *buffer_{nullptr};
 
-  explicit BufferFile(std::string file_path) : file_path_(file_path) {
-
+  explicit BufferFile()  {
+  }
+  void Load(std::string file_path)  {
+     file_path_=file_path;
     std::ifstream ifs(file_path.c_str(), std::ios::in | std::ios::binary);
     if (!ifs) {
       std::cerr << "Can't open the file. Please check " << file_path << ". \n";
@@ -180,9 +182,10 @@ int main(int argc, char *argv[]) {
   std::string synset_file = get_synset_path();
 
   // printf("Predict using model %s\n", model_name.c_str());
+  BufferFile json_data;
+  BufferFile param_data;
 
-  BufferFile json_data(json_file);
-  BufferFile param_data(param_file);
+  json_data.Load(json_file);
 
   // Parameters
   int dev_type             = 2;  // 1: cpu, 2: gpu
@@ -223,6 +226,17 @@ int main(int argc, char *argv[]) {
 
   // Start profiling
   MXSetProfilerState(1);
+
+  if (!upr::UPR_ENABLED && upr::UPR_PROFILE_IO) {
+      auto span = start_span("load_params", "io");
+      if (span == nullptr) {
+          std::cout << "span =  \n";
+      }
+      param_data.Load(param_file);
+      stop_span(span);
+  }
+
+
 
   MXPredCreate((const char *) json_data.GetBuffer(), (const char *) param_data.GetBuffer(), param_data.GetLength(),
                dev_type, dev_id, num_input_nodes, input_keys, input_shape_indptr, input_shape_data, &pred_hnd);
