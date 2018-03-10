@@ -32,11 +32,11 @@ CFLAGS+= -Xcompiler -finstrument-functions
 LDFLAGS+=$(MXNET_ROOT)/lib/libmxnet.so -Xcompiler -finstrument-functions 
 
 image-classification-predict: image-classification-predict.o
-	gcc -O3 -std=c++14 -o image-classification-predict image-classification-predict.o $(LDFLAGS)
+	nvcc -O3  -o image-classification-predict image-classification-predict.o $(LDFLAGS)
 
 image-classification-predict.o: image-classification-predict.cc
 	echo "CFLAGS = " $(CFLAGS)
-	gcc -O3 -std=c++14  -c image-classification-predict.cc $(CFLAGS)
+	nvcc -O3   -c image-classification-predict.cc $(CFLAGS)
 	
 clean: 
 	rm -f image-classification-predict
