@@ -29,6 +29,7 @@
 #include <dmlc/base.h>
 #include <dmlc/memory_io.h>
 #include <memory>
+#include <shared_mutex>
 #include <mxnet/c_predict_api.h>
 #include <mxnet/executor.h>
 #include <mxnet/ndarray.h>
@@ -129,6 +130,7 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
       LOG(FATAL) << "enable USE_CUDA in the makefile to use the upr path";
 #endif
     } else {
+      dmlc::MemoryFixedSizeStream fi((void*)param_bytes, param_size);  // NOLINT(*)
       NDArray::Load(&fi, &data, &names);
     }
     CHECK_EQ(names.size(), data.size()) << "Invalid param file format";
