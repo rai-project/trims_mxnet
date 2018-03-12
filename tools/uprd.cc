@@ -54,7 +54,7 @@ private:
           start_span("deleting_model"s, "destroy", span_props{{"model_id", ptr->id()}, {"model_name", ptr->name()}});
       defer(stop_span(span));
 
-      std::cout << "Model ptr" << ptr->id() << "\n";
+      LOG(INFO) << "deleting model id=" << ptr->id();
       for (auto layer : ptr->owned_model().layer()) {
         void *dptr = (void *) layer.device_raw_ptr();
         if (dptr != nullptr) {
