@@ -135,7 +135,8 @@ namespace engine {
     }
     /*! \brief add one operation execution record in
      *   corresponding device statistics */
-    OprExecStat *AddOprStat(int dev_type, uint32_t dev_id, std::string name = "undefined");
+    OprExecStat *AddOprStat(int dev_type, uint32_t dev_id, std::string name);
+    OprExecStat *AddOprStat(int dev_type, uint32_t dev_id);
     /*! \return Profiler singleton */
     static Profiler *Get();
 

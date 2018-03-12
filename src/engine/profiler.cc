@@ -103,7 +103,10 @@ namespace engine {
     this->filename_ = output_filename;
   }
 
-  OprExecStat *Profiler::AddOprStat(int dev_type, uint32_t dev_id, std::string opr_name = "undefined") {
+  OprExecStat *Profiler::AddOprStat(int dev_type, uint32_t dev_id) {
+      return this->AddOprStat(dev_type, dev_id, "undefined");
+  }
+  OprExecStat *Profiler::AddOprStat(int dev_type, uint32_t dev_id, std::string opr_name ) {
     std::unique_ptr<OprExecStat> opr_stat(new OprExecStat);
     opr_stat->category = "generic";
     opr_stat->dev_type = dev_type;
@@ -132,11 +135,8 @@ namespace engine {
   }
 
   static std::string _engine_type() {
-    const char *type          = getenv("MXNET_ENGINE_TYPE");
-    const bool default_engine = (type == nullptr);
-    if (type == nullptr)
-      type = "ThreadedEnginePerDevice";
-    return std::string(type);
+    static const auto stype = dmlc::GetEnv("MXNET_ENGINE_TYPE", std::string("NaiveEngine"));
+    return stype;
   }
 
   static std::string engine_type() {
@@ -179,10 +179,11 @@ namespace engine {
     auto tid            = opr_stat->thread_id;
     const auto args     = opr_stat->metadata;
 
-    if (engine_type() == "NaiveEngine") {
+    //if (engine_type() == "NaiveEngine") {
       pid = 0;
       tid = 0;
-    }
+    //}
+    //std::cout << "engine type = " << engine_type() << " \n";
     const auto init_time            = Profiler::Get()->GetInitTime();
     const auto duration_since_epoch = std::chrono::microseconds(init_time);
     const time_point<system_clock> tp_after_duration(duration_since_epoch);

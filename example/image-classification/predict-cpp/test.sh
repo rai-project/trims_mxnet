@@ -1,18 +1,23 @@
 #!/bin/bash
 
 DATE=`date '+%Y-%m-%d-%H-%M-%S'`
-export UPR_CLIENT=1
-export MXNET_CPU_PRIORITY_NTHREADS=1
 export OMP_NUM_THREADS=1
-
 export GLOG_v=0
 export GLOG_logtostderr=0
-export UPR_ENABLED=false
 export MXNET_ENGINE_TYPE=NaiveEngine
 export MXNET_GPU_WORKER_NTHREADS=1
+export MXNET_CPU_PRIORITY_NTHREADS=1
+
+export UPR_ENABLED=true
+export UPR_CLIENT=1
 export UPR_INITIALIZE_EAGER=true
-./image-classification-predict
-./image-classification-predict
+
+UPR_MODEL_NAME=bvlc_alexnet_1.0 ./image-classification-predict
+PR_MODEL_NAME=bvlc_googlenet_1.0 ./image-classification-predict
+UPR_MODEL_NAME=bvlc_alexnet_1.0 ./image-classification-predict&
+UPR_MODEL_NAME=bvlc_alexnet_1.0 ./image-classification-predict&
+UPR_MODEL_NAME=bvlc_googlenet_1.0 ./image-classification-predict &
+UPR_MODEL_NAME=bvlc_googlenet_1.0 ./image-classification-predict &
 
 exit
 # nvprof -f --track-memory-allocations on --print-api-trace --export-profile `hostname`_profile_0.timeline.nvprof ./image-classification-predict
