@@ -215,8 +215,8 @@ int main(int argc, char *argv[]) {
 
   GetImageFile(test_file, image_data.data(), channels, cv::Size(width, height));
 
-  size_t size = 10000;
-  std::vector<float> data(size);
+  size_t size = 100000;
+  float data[size];
   mx_uint output_index = 0;
 
   const std::string profile_default_path{model_name + "_profile_" + profile_path_suffix + ".json"};
@@ -252,10 +252,11 @@ int main(int argc, char *argv[]) {
 
   MXPredGetOutputShape(pred_hnd, output_index, &shape, &shape_len);
   size = 1;
-  for (mx_uint i = 0; i < shape_len; ++i)
+  for (mx_uint i = 0; i < shape_len; ++i) {
     size *= shape[i];
+}
 
-  MXPredGetOutput(pred_hnd, output_index, &(data[0]), size);
+  MXPredGetOutput(pred_hnd, output_index, data, size);
 
   // Release Predictor
   MXPredFree(pred_hnd);
@@ -264,7 +265,7 @@ int main(int argc, char *argv[]) {
   MXSetProfilerState(0);
 
   // // Synset path for your model, you have to modify it
-  std::vector<std::string> synset = LoadSynset(synset_file);
+ // std::vector<std::string> synset = LoadSynset(synset_file);
 
   // // Print Output Data
   // PrintOutputResult(data, synset);
