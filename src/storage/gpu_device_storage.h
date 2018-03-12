@@ -134,6 +134,7 @@ namespace storage {
     }
     POP_RANGE();
 
+#else
     LOG(FATAL) << "Please compile with CUDA enabled";
 #endif // MXNET_USE_CUDA
   }

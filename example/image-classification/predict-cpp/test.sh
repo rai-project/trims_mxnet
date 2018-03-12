@@ -14,11 +14,11 @@ export UPR_CLIENT=1
 export UPR_INITIALIZE_EAGER=true
 
 UPR_MODEL_NAME=bvlc_alexnet_1.0 ./image-classification-predict
-PR_MODEL_NAME=bvlc_googlenet_1.0 ./image-classification-predict
-UPR_MODEL_NAME=bvlc_alexnet_1.0 ./image-classification-predict&
-UPR_MODEL_NAME=bvlc_alexnet_1.0 ./image-classification-predict&
-UPR_MODEL_NAME=bvlc_googlenet_1.0 ./image-classification-predict &
-UPR_MODEL_NAME=bvlc_googlenet_1.0 ./image-classification-predict &
+# UPR_MODEL_NAME=bvlc_googlenet_1.0 ./image-classification-predict
+# UPR_MODEL_NAME=bvlc_alexnet_1.0 ./image-classification-predict&
+# UPR_MODEL_NAME=bvlc_alexnet_1.0 ./image-classification-predict&
+# UPR_MODEL_NAME=bvlc_googlenet_1.0 ./image-classification-predict &
+# UPR_MODEL_NAME=bvlc_googlenet_1.0 ./image-classification-predict &
 
 exit
 # nvprof -f --track-memory-allocations on --print-api-trace --export-profile `hostname`_profile_0.timeline.nvprof ./image-classification-predict
