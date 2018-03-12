@@ -33,6 +33,8 @@ make install
 
 ```
 wget https://github.com/google/protobuf/archive/v3.5.1.tar.gz
+tar -xf v3.5.1.tar.gz
+cd protobuf-3.5.1
 ./autogen.sh
 ./configure --prefix=$UPR_INSTALL_PREFIX --disable-dependency-tracking --disable-debug --with-zlib
 make
