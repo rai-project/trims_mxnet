@@ -90,30 +90,31 @@ The server is part of the MXNet build process.
 
 ## Environment Variables
 
-| Name                       | Description | Default Value    |
-| -------------------------- | ----------- | ---------------- |
-| UPR_ENABLED                |             | false            |
-| UPR_PROFILE_IO                |  only makes sense if UPR_ENABLED=false            | true            |
-| UPR_RUN_ID                 |             | [undefined]      |
-| git                        |             | build_git_sha    |
-| UPR_GIT_BRANCH             |             | build_git_branch |
-| UPR_GIT_TIME               |             | build_git_time   |
-| UPR_CLIENT                 |             |                  |
-| UPR_BASE_DIR               |             |                  |
-| UPR_MODEL_NAME             |             |                  |
-| UPR_PROFILE_TARGET         |             | profile.json     |
-| UPR_INITIALIZE_EAGER       |             | false            |
-| UPR_INITIALIZE_EAGER_ASYNC |             | false            |
-| UPR_INPUT_CHANNELS         |             | 3                |
-| UPR_INPUT_WIDTH            |             | 224              |
-| UPR_INPUT_HEIGHT           |             | 224              |
-| UPR_INPUT_MEAN_R           |             | 0                |
-| UPR_INPUT_MEAN_G           |             | 0                |
-| UPR_INPUT_MEAN_B           |             | 0                |
-| -------------------------- | ----------- | -------------    |
-| UPRD_EVICTION_POLICY       |             | LRU              |
-| UPRD_ESTIMATION_RATE       |             | 3.0              |
-| UPRD_MEMORY_PERCENTAGE     |             | 0.8              |
+| Name                       | Description                           | Default Value    |
+| -------------------------- | ------------------------------------- | ---------------- |
+| UPR_ENABLED                |                                       | false            |
+| UPR_PROFILE_IO             | only makes sense if UPR_ENABLED=false | true             |
+| UPR_RUN_ID                 |                                       | [undefined]      |
+| git                        |                                       | build_git_sha    |
+| UPR_GIT_BRANCH             |                                       | build_git_branch |
+| UPR_GIT_TIME               |                                       | build_git_time   |
+| UPR_CLIENT                 |                                       |                  |
+| UPR_BASE_DIR               |                                       |                  |
+| UPR_MODEL_NAME             |                                       |                  |
+| UPR_PROFILE_TARGET         |                                       | profile.json     |
+| UPR_INITIALIZE_EAGER       |                                       | false            |
+| UPR_INITIALIZE_EAGER_ASYNC |                                       | false            |
+| UPR_INPUT_CHANNELS         |                                       | 3                |
+| UPR_INPUT_WIDTH            |                                       | 224              |
+| UPR_INPUT_HEIGHT           |                                       | 224              |
+| UPR_INPUT_MEAN_R           |                                       | 0                |
+| UPR_INPUT_MEAN_G           |                                       | 0                |
+| UPR_INPUT_MEAN_B           |                                       | 0                |
+| UPR_ENABLE_MEMORY_PROFILE  |                                       | false            |
+| -------------------------- | -----------                           | -------------    |
+| UPRD_EVICTION_POLICY       |                                       | LRU              |
+| UPRD_ESTIMATION_RATE       |                                       | 3.0              |
+| UPRD_MEMORY_PERCENTAGE     |                                       | 0.8              |
 
 ## How it Works
 

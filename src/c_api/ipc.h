@@ -70,11 +70,13 @@ static std::ostream &operator<<(std::ostream &os, const cudaIpcMemHandle_t &hand
 namespace upr {
 using namespace mxnet;
 
-static const auto HOME         = dmlc::GetEnv("HOME", std::string("/home/abduld"));
-static const auto UPR_ENABLED  = dmlc::GetEnv("UPR_ENABLED", true);
+static const auto HOME           = dmlc::GetEnv("HOME", std::string("/home/abduld"));
+static const auto UPR_ENABLED    = dmlc::GetEnv("UPR_ENABLED", true);
 static const auto UPR_PROFILE_IO = !UPR_ENABLED && dmlc::GetEnv("UPR_PROFILE_IO", true);
-static const auto is_client    = dmlc::GetEnv("UPR_CLIENT", false);
-static const auto UPR_BASE_DIR = dmlc::GetEnv("UPR_BASE_DIR", HOME + std::string("/carml/data/mxnet/"));
+static const auto is_client      = dmlc::GetEnv("UPR_CLIENT", false);
+static const auto UPR_BASE_DIR   = dmlc::GetEnv("UPR_BASE_DIR", HOME + std::string("/carml/data/mxnet/"));
+
+static const auto UPR_ENABLE_MEMORY_PROFILE = dmlc::GetEnv("UPR_ENABLE_MEMORY_PROFILE", false);
 
 static const auto UPRD_EVICTION_POLICY   = dmlc::GetEnv("UPRD_EVICTION_POLICY", std::string("lru"));
 static const auto UPRD_ESTIMATION_RATE   = dmlc::GetEnv("UPRD_ESTIMATION_RATE", 3.0);
