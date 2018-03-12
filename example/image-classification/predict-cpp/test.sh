@@ -7,10 +7,11 @@ export OMP_NUM_THREADS=1
 
 export GLOG_v=0
 export GLOG_logtostderr=0
-export UPR_ENABLED=false
+#export UPR_ENABLED=false
 export MXNET_ENGINE_TYPE=NaiveEngine
 export MXNET_GPU_WORKER_NTHREADS=1
 export UPR_INITIALIZE_EAGER=true
+#export UPR_MODEL_NAME=locationnet_1.0
 ./image-classification-predict
 ./image-classification-predict
 
