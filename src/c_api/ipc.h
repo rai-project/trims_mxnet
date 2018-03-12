@@ -140,22 +140,23 @@ static std::map<std::string, size_t> model_internal_memory_usage{{"bvlc_alexnet_
                                                                  {"dpn68_1.0", 121952160},
                                                                  {"dpn92_1.0", 340148136},
                                                                  {"inception_bn_3.0", 141964264},
-                                                                 {"locationnet_1.0", 665974792},
                                                                  {"network_in_network_1.0", 131029280},
-                                                                 {"o_resnet101_2.0", 426182152},
-                                                                 {"o_resnet152_2.0", 553215488},
+                                                                 {"o_resnet101_2.0", 427697664},
+                                                                 {"o_resnet152_2.0", 553366032},
                                                                  {"o_vgg16_1.0", 1227778448},
                                                                  {"o_vgg19_1.0", 1270256016},
                                                                  {"resnet101_1.0", 422836416},
                                                                  {"resnet101_2.0", 427846016},
-                                                                 {"resnet152_11k_1.0", 719242608},
+                                                                 {"resnet152_1.0", 548354240},
+                                                                 {"resnet152_11k_1.0", 720908664},
                                                                  {"resnet152_2.0", 553363840},
-                                                                 {"resnet18_2.0", 154232128},
-                                                                 {"resnet200_2.0", 587744776},
+                                                                 {"resnet18_2.0", 154382672},
+                                                                 {"resnet200_2.0", 589410832},
                                                                  {"resnet269_2.0", 889219456},
+                                                                 {"resnet34_2.0", 235307344},
                                                                  {"resnet50_1.0", 270482112},
-                                                                 {"resnet50_2.0", 273827336},
-                                                                 {"resnext101_1.0", 375263496},
+                                                                 {"resnet50_2.0", 275493392},
+                                                                 {"resnext101_1.0", 375935240},
                                                                  {"resnext101_32x4d_1.0", 377705976},
                                                                  {"resnext26_32x4d_1.0", 146605560},
                                                                  {"resnext50_1.0", 221516040},
@@ -166,9 +167,7 @@ static std::map<std::string, size_t> model_internal_memory_usage{{"bvlc_alexnet_
                                                                  {"vgg16_sod_1.0", 1198280840},
                                                                  {"vgg16_sos_1.0", 1195166368},
                                                                  {"vgg19_1.0", 1270256016},
-                                                                 {"wrn50_2.0", 758331776},
-                                                                 {"resnet34_2.0", 235156800}};
-
+                                                                 {"wrn50_2.0", 758331776}};
 /**
  * @brief Ensures the CUDA runtime has fully initialized
  *
