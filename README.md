@@ -119,6 +119,7 @@ The server is part of the MXNet build process.
 | UPR_INPUT_MEAN_G           |                                       | 0                |
 | UPR_INPUT_MEAN_B           |                                       | 0                |
 | UPR_ENABLE_MEMORY_PROFILE  |                                       | false            |
+| UPR_ENABLE_CUDA_FREE       |                                       | false            |
 | -------------------------- | -----------                           | -------------    |
 | UPRD_EVICTION_POLICY       |                                       | LRU              |
 | UPRD_ESTIMATION_RATE       |                                       | 3.0              |

@@ -113,16 +113,18 @@ namespace storage {
     std::lock_guard<std::mutex> l(Storage::Get()->GetMutex(Context::kGPU));
 #endif // MXNET_USE_NCCL
     // throw special exception for caller to catch.
-    return;
+
     // LOG(INFO) << "freeing " << (size_t) ptr << " using naive cuda storage.";
     PUSH_RANGE("GPUDeviceStorage Free()", 1);
 
-    cudaError_t err;  
+    cudaError_t err = cudaSuccess;
     if (upr::UPR_ENABLE_MEMORY_PROFILE) {
       auto span = upr::start_span("cudaFree", "memory");
-      err = cudaFree(ptr);
+      if (upr::UPR_ENABLE_CUDA_FREE) {
+        err = cudaFree(ptr);
+      }
       upr::stop_span(span);
-    } else {
+    } else if (upr::UPR_ENABLE_CUDA_FREE) {
       err = cudaFree(ptr);
     }
 

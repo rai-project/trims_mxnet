@@ -4,6 +4,7 @@ DATE=`date '+%Y-%m-%d-%H-%M-%S'`
 export OMP_NUM_THREADS=1
 export GLOG_v=0
 export GLOG_logtostderr=0
+
 export MXNET_ENGINE_TYPE=NaiveEngine
 export MXNET_GPU_WORKER_NTHREADS=1
 export MXNET_CPU_PRIORITY_NTHREADS=1
