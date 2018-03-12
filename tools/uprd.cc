@@ -677,7 +677,7 @@ int main(int argc, const char *argv[]) {
 
   MXPredInit();
 
-  MXSetProfilerConfig(1, profile_default_path.c_str());
+  MXSetProfilerConfig(1, profile_path.c_str());
 
   // Start profiling
   MXSetProfilerState(1);
