@@ -11,6 +11,12 @@ export UPR_INSTALL_PREFIX=$HOME/.usr
 export UPR_BASE_DIR=$HOME/carml/data/mxnet
 ```
 
+Remember to update your `PKG_CONFIG_PATH`
+
+```
+export PKG_CONFIG_PATH=$UPR_INSTALL_PREFIX/lib/pkgconfig/:$PKG_CONFIG_PATH
+```
+
 make sure that both directories exist
 
 ```
