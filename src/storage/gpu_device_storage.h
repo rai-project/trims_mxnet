@@ -117,12 +117,13 @@ namespace storage {
     // LOG(INFO) << "freeing " << (size_t) ptr << " using naive cuda storage.";
     PUSH_RANGE("GPUDeviceStorage Free()", 1);
 
+    cudaError_t err;
     if (upr::UPR_ENABLE_MEMORY_PROFILE) {
       auto span = upr::start_span("cudaFree", "memory");
-      e         = cudaFree(ptr);
+      err       = cudaFree(ptr);
       upr::stop_span(span);
     } else {
-      e = cudaFree(ptr);
+      err = cudaFree(ptr);
     }
 
     // ignore unloading error, as memory has already been recycled
