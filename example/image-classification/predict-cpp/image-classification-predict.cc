@@ -224,15 +224,16 @@ int main(int argc, char *argv[]) {
   MXSetProfilerConfig(1, profile_path.c_str());
 
   // Start profiling
-  MXSetProfilerState(1);
-
   if (!upr::UPR_ENABLED && upr::UPR_PROFILE_IO) {
+    MXSetProfilerState(1);
     auto span = start_span("load_params", "io");
     if (span == nullptr) {
       std::cout << "span =  \n";
     }
     param_data.Load(param_file);
     stop_span(span);
+  } else {
+    MXSetProfilerState(1);
   }
 
   MXPredCreate((const char *) json_data.GetBuffer(), (const char *) param_data.GetBuffer(), param_data.GetLength(),
