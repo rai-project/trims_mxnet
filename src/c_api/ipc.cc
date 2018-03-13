@@ -45,7 +45,7 @@ static void *get_device_ptr(const Layer &layer) {
   cudaIpcMemHandle_t handle;
   memcpy((uint8_t *) &handle, ipc_handle.c_str(), sizeof(handle));
 
-  LOG(INFO) << "get handle = " << handle << "get base64 handle = " << utils::base64_encode(ipc_handle);
+  // LOG(INFO) << "get handle = " << handle << "get base64 handle = " << utils::base64_encode(ipc_handle);
 
   void *device_ptr;
   auto span = start_span("cudaIpcOpenMemHandle", span_category_ipc, span_props{{"layer", layer.name()}});
@@ -68,7 +68,7 @@ static void to_ndarray(std::vector<NDArray> *arrays, const Layer &layer) {
   const auto dev_mask = ctx.dev_mask();
   const auto dev_id   = ctx.dev_id;
 
-  LOG(INFO) << "in layer=" << layer.name() << " getting device ptr using ctx = " << ctx;
+  // LOG(INFO) << "in layer=" << layer.name() << " getting device ptr using ctx = " << ctx;
 
   auto device_ptr = get_device_ptr(layer);
 

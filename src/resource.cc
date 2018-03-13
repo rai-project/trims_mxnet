@@ -132,33 +132,17 @@ namespace resource {
       } else {
         CHECK_EQ(ctx.dev_mask(), Context::kGPU);
 #if MSHADOW_USE_CUDA
-#if 1
-        switch (req.type) {
-          case ResourceRequest::kRandom:
-          case ResourceRequest::kTempSpace:
-          case ResourceRequest::kParallelRandom: {
-            LOG(INFO) << "requesting random resource";
-            return gpu_rand_.Get(ctx.dev_id, [ctx, this]() { return new ResourceRandom<gpu>(ctx, global_seed_); })
-                ->resource;
-          }
-          default:
-            LOG(FATAL) << "Unknown supported type " << req.type;
-        }
-#else
         switch (req.type) {
           case ResourceRequest::kRandom: {
-            LOG(INFO) << "requesting random resource";
             return gpu_rand_.Get(ctx.dev_id, [ctx, this]() { return new ResourceRandom<gpu>(ctx, global_seed_); })
                 ->resource;
           }
           case ResourceRequest::kTempSpace: {
-            LOG(INFO) << "requesting tmp resource";
             return gpu_space_
                 .Get(ctx.dev_id, [ctx, this]() { return new ResourceTempSpace(ctx, gpu_temp_space_copy_); })
                 ->GetNext();
           }
           case ResourceRequest::kParallelRandom: {
-            LOG(INFO) << "requesting parallel random resource";
             return gpu_parallel_rand_
                 .Get(
                     ctx.dev_id,
@@ -168,7 +152,6 @@ namespace resource {
           default:
             LOG(FATAL) << "Unknown supported type " << req.type;
         }
-#endif
 #else
         LOG(FATAL) << MXNET_GPU_NOT_ENABLED_ERROR;
 #endif
