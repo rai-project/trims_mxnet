@@ -104,9 +104,9 @@ namespace engine {
   }
 
   OprExecStat *Profiler::AddOprStat(int dev_type, uint32_t dev_id) {
-      return this->AddOprStat(dev_type, dev_id, "undefined");
+    return this->AddOprStat(dev_type, dev_id, "undefined");
   }
-  OprExecStat *Profiler::AddOprStat(int dev_type, uint32_t dev_id, std::string opr_name ) {
+  OprExecStat *Profiler::AddOprStat(int dev_type, uint32_t dev_id, std::string opr_name) {
     std::unique_ptr<OprExecStat> opr_stat(new OprExecStat);
     opr_stat->category = "generic";
     opr_stat->dev_type = dev_type;
@@ -150,10 +150,11 @@ namespace engine {
     if (engine_type() == "NaiveEngine") {
       pid = 0;
     }
-    json j = {{"ph", "M"},
-              {"args", std::map<std::string, std::string>{{"name", name}}},
-              {"pid", pid},
-              {"name", "process_name"}};
+    json j = {
+      {"ph", "M"}, {"args",
+                    std::map<std::string, std::string>{{"name", name}, {"upr_enabled", upr::UPR_ENABLED}},
+                    {"pid", pid},
+                    {"name", "process_name"}};
     return j;
   }
 
@@ -177,13 +178,15 @@ namespace engine {
     const auto ts       = begin_end == "B" ? opr_stat->opr_start_rel_micros : opr_stat->opr_end_rel_micros;
     auto pid            = d.dev_id_;
     auto tid            = opr_stat->thread_id;
-    const auto args     = opr_stat->metadata;
+    auto args           = opr_stat->metadata;
 
-    //if (engine_type() == "NaiveEngine") {
-      pid = 0;
-      tid = 0;
+    args.insert({"upr_enabled", upr::UPR_ENABLED});
+
+    // if (engine_type() == "NaiveEngine") {
+    pid = 0;
+    tid = 0;
     //}
-    //std::cout << "engine type = " << engine_type() << " \n";
+    // std::cout << "engine type = " << engine_type() << " \n";
     const auto init_time            = Profiler::Get()->GetInitTime();
     const auto duration_since_epoch = std::chrono::microseconds(init_time);
     const time_point<system_clock> tp_after_duration(duration_since_epoch);
