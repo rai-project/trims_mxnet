@@ -42,7 +42,7 @@ using namespace google::protobuf::util;
 static const auto element_size = sizeof(float);
 
 template <typename K, typename V>
-std::vector<K> keys(const std::map<K, V> &m) {
+std::vector<K> keys(const tsl::hopscotch_sc_map<K, V> &m) {
   std::vector<K> res;
   std::transform(m.begin(), m.end(), std::back_inserter(res),
                  [](const typename std::map<K, V>::value_type &pair) { return pair.first; });
@@ -311,18 +311,19 @@ private:
       }
       auto min_element = std::min_element(memory_db_.begin(), memory_db_.end(),
                                           [](const memory_db_t::value_type &s1, const memory_db_t::value_type &s2) {
-                                            if (s1.value()->ref_count() > 0) {
+                                            if (s1.second->ref_count() > 0) {
                                               return false;
                                             }
-                                            return s1.value()->lru_timestamp() < s2.value()->lru_timestamp();
+                                            return s1.second->lru_timestamp() < s2.second->lru_timestamp();
                                           });
       if (min_element == memory_db_.end()) {
         break;
       }
-      const auto byte_count = min_element->value()->owned_model().byte_count();
+      auto model = min_element->second;
+      const auto byte_count = model->owned_model().byte_count();
       memory_usage_ -= byte_count;
       memory_freed += byte_count;
-      model_delete(min_element->value());
+      model_delete(model);
       memory_db_.erase(min_element);
     }
 
@@ -344,18 +345,19 @@ private:
       }
       auto min_element = std::min_element(memory_db_.begin(), memory_db_.end(),
                                           [](const memory_db_t::value_type &s1, const memory_db_t::value_type &s2) {
-                                            if (s1.value()->ref_count() > 0) {
+                                            if (s1.second->ref_count() > 0) {
                                               return false;
                                             }
-                                            return s1.value()->fifo_order() < s2.value()->fifo_order();
+                                            return s1.second->fifo_order() < s2.second->fifo_order();
                                           });
       if (min_element == memory_db_.end()) {
         break;
       }
-      const auto byte_count = min_element->value()->owned_model().byte_count();
+      auto model = min_element->second;
+      const auto byte_count = model->owned_model().byte_count();
       memory_usage_ -= byte_count;
       memory_freed += byte_count;
-      model_delete(min_element->value());
+      model_delete(model);
       memory_db_.erase(min_element);
     }
 
@@ -369,10 +371,12 @@ private:
   bool perform_flush_eviction(const ModelRequest *request, const size_t memory_size_request,
                               const size_t memory_to_free) {
     size_t memory_freed = 0;
-    for (const auto &&elem : memory_db_) {
-      const auto byte_count = elem.value()->owned_model().byte_count();
+    for (const auto &elem : memory_db_) {
+      auto model = elem.second;
+      const auto byte_count = model->owned_model().byte_count();
       memory_usage_ -= byte_count;
       memory_freed += byte_count;
+      model_delete(model);
     }
     memory_db_.clear();
 
@@ -390,18 +394,19 @@ private:
       }
       auto min_element = std::min_element(memory_db_.begin(), memory_db_.end(),
                                           [](const memory_db_t::value_type &s1, const memory_db_t::value_type &s2) {
-                                            if (s1.value()->ref_count() > 0) {
+                                            if (s1.second->ref_count() > 0) {
                                               return false;
                                             }
-                                            return s1.value()->use_history().size() < s2.value()->use_history().size();
+                                            return s1.second->use_history().size() < s2.second->use_history().size();
                                           });
       if (min_element == memory_db_.end()) {
         break;
       }
-      const auto byte_count = min_element->value()->owned_model().byte_count();
+      auto model = min_element->second;
+      const auto byte_count = model->owned_model().byte_count();
       memory_usage_ -= byte_count;
       memory_freed += byte_count;
-      model_delete(min_element->value());
+      model_delete(model);
       memory_db_.erase(min_element);
     }
 
@@ -536,9 +541,9 @@ public:
     it = memory_db_.find(request->name());
     CHECK(it != memory_db_.end()) << "expecting the model to be there";
 
-    CHECK(it->value() != nullptr) << "expecting a valid model";
 
-    auto model = it.value();
+    auto model = it->second;
+    CHECK(model != nullptr) << "expecting a valid model";
 
     // now we need to use the owned array to create
     // new memory handles
@@ -575,7 +580,7 @@ public:
                           "unable to find handle with name "s + request->name() + " during info request");
     }
 
-    reply->CopyFrom(*it->value());
+    reply->CopyFrom(*it->second);
 
     return grpc::Status::OK;
   }
@@ -612,15 +617,15 @@ public:
       return grpc::Status(grpc::NOT_FOUND, "unable to find handle with name "s + model_name + " during close request");
     }
 
-    auto model              = model_entry->value();
+    auto model              = model_entry->second;
     const auto handle_id    = request->id();
     const auto shared_model = model->mutable_shared_model();
     for (auto it = shared_model->begin(); it != shared_model->end(); it++) {
-      auto model = *it;
-      if (model.id() != handle_id) {
+      auto shared_model_handle = *it;
+      if (shared_model_handle.id() != handle_id) {
         continue;
       }
-      destroy_model_handle(model);
+      destroy_model_handle(shared_model_handle);
       model->mutable_shared_model()->erase(it);
       break;
     }
