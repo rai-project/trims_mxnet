@@ -30,6 +30,9 @@
 
 #include <cuda_runtime_api.h>
 
+#include <hopscotch/hopscotch_map.h>
+#include <hopscotch/hopscotch_sc_map.h>
+
 using namespace upr;
 using namespace mxnet;
 using namespace std::string_literals;
@@ -48,6 +51,7 @@ std::vector<K> keys(const std::map<K, V> &m) {
 
 class RegistryImpl final : public Registry::Service {
 private:
+  using memory_db_t = tsl::hopscotch_sc_map<std::string, Model *, std::hash<std::string>>;
   void model_delete(Model *ptr) {
     if (ptr == nullptr) {
       return;
@@ -64,8 +68,6 @@ private:
       }
     }
   }
-  using memory_db_t = std::map<std::string, Model *>;
-  // std::map<std::string /* id::name */, cudaIpcMemHandle_t> open_handles{};
 
   std::string get_ipc_id(const std::string &id, const std::string &layer_name) {
     auto name = layer_name;
@@ -309,18 +311,18 @@ private:
       }
       auto min_element = std::min_element(memory_db_.begin(), memory_db_.end(),
                                           [](const memory_db_t::value_type &s1, const memory_db_t::value_type &s2) {
-                                            if (s1.second->ref_count() > 0) {
+                                            if (s1.value()->ref_count() > 0) {
                                               return false;
                                             }
-                                            return s1.second->lru_timestamp() < s2.second->lru_timestamp();
+                                            return s1.value()->lru_timestamp() < s2.value()->lru_timestamp();
                                           });
       if (min_element == memory_db_.end()) {
         break;
       }
-      const auto byte_count = min_element->second->owned_model().byte_count();
+      const auto byte_count = min_element->value()->owned_model().byte_count();
       memory_usage_ -= byte_count;
       memory_freed += byte_count;
-      model_delete(min_element->second);
+      model_delete(min_element->value());
       memory_db_.erase(min_element);
     }
 
@@ -342,18 +344,18 @@ private:
       }
       auto min_element = std::min_element(memory_db_.begin(), memory_db_.end(),
                                           [](const memory_db_t::value_type &s1, const memory_db_t::value_type &s2) {
-                                            if (s1.second->ref_count() > 0) {
+                                            if (s1.value()->ref_count() > 0) {
                                               return false;
                                             }
-                                            return s1.second->fifo_order() < s2.second->fifo_order();
+                                            return s1.value()->fifo_order() < s2.value()->fifo_order();
                                           });
       if (min_element == memory_db_.end()) {
         break;
       }
-      const auto byte_count = min_element->second->owned_model().byte_count();
+      const auto byte_count = min_element->value()->owned_model().byte_count();
       memory_usage_ -= byte_count;
       memory_freed += byte_count;
-      model_delete(min_element->second);
+      model_delete(min_element->value());
       memory_db_.erase(min_element);
     }
 
@@ -367,8 +369,8 @@ private:
   bool perform_flush_eviction(const ModelRequest *request, const size_t memory_size_request,
                               const size_t memory_to_free) {
     size_t memory_freed = 0;
-    for (auto &&elem : memory_db_) {
-      const auto byte_count = elem.second->owned_model().byte_count();
+    for (const auto &&elem : memory_db_) {
+      const auto byte_count = elem.value()->owned_model().byte_count();
       memory_usage_ -= byte_count;
       memory_freed += byte_count;
     }
@@ -388,18 +390,18 @@ private:
       }
       auto min_element = std::min_element(memory_db_.begin(), memory_db_.end(),
                                           [](const memory_db_t::value_type &s1, const memory_db_t::value_type &s2) {
-                                            if (s1.second->ref_count() > 0) {
+                                            if (s1.value()->ref_count() > 0) {
                                               return false;
                                             }
-                                            return s1.second->use_history().size() < s2.second->use_history().size();
+                                            return s1.value()->use_history().size() < s2.value()->use_history().size();
                                           });
       if (min_element == memory_db_.end()) {
         break;
       }
-      const auto byte_count = min_element->second->owned_model().byte_count();
+      const auto byte_count = min_element->value()->owned_model().byte_count();
       memory_usage_ -= byte_count;
       memory_freed += byte_count;
-      model_delete(min_element->second);
+      model_delete(min_element->value());
       memory_db_.erase(min_element);
     }
 
@@ -463,7 +465,6 @@ private:
       throw std::runtime_error(msg);
     }
     if (memory_usage_ + estimated_model_size > max_memory_to_use) {
-      // std::unique_lock<std::shared_timed_mutex> lock(db_mutex_);
       const auto memory_to_free = estimated_model_size + memory_usage_ - max_memory_to_use;
       const auto ok             = perform_eviction(request, estimated_model_size, memory_to_free);
       if (!ok) {
@@ -484,8 +485,6 @@ private:
 public:
   // control memory usage by percentage of gpu
   grpc::Status Open(grpc::ServerContext *context, const ModelRequest *request, ModelHandle *reply) override {
-    std::shared_lock<std::shared_timed_mutex> lock(db_mutex_);
-
     auto span = start_span("open"s, "grpc", span_props{{"model_name", request->name()}});
     defer(stop_span(span));
 
@@ -525,8 +524,7 @@ public:
 
       model->set_fifo_order(fifo_order++);
 
-      // std::unique_lock<std::shared_timed_mutex> lock(db_mutex_);
-      memory_db_[request->name()] = model;
+      memory_db_.insert({request->name(), model});
       memory_usage_ += byte_count;
     }
 
@@ -538,23 +536,25 @@ public:
     it = memory_db_.find(request->name());
     CHECK(it != memory_db_.end()) << "expecting the model to be there";
 
-    CHECK(it->second != nullptr) << "expecting a valid model";
+    CHECK(it->value() != nullptr) << "expecting a valid model";
+
+    auto model = it.value();
 
     // now we need to use the owned array to create
     // new memory handles
     // LOG(INFO) << "creating shared handle from owned memory";
-    it->second->set_ref_count(it->second->ref_count() + 1);
-    auto handle = it->second->mutable_shared_model()->Add();
-    from_owned_modelhandle(handle, it->second->owned_model(), it->second->ref_count());
-    // LOG(INFO) << "sending " << it->second->owned_model().layer().size() << "
+    model->set_ref_count(model->ref_count() + 1);
+    auto handle = model->mutable_shared_model()->Add();
+    from_owned_modelhandle(handle, model->owned_model(), model->ref_count());
+    // LOG(INFO) << "sending " << model->owned_model().layer().size() << "
     // layers to client";
 
     // LOG(INFO) << "finished satisfying open request";
 
-    auto h = it->second->mutable_use_history()->Add();
+    auto h = model->mutable_use_history()->Add();
     h->CopyFrom(TimeUtil::GetCurrentTime());
 
-    auto t = it->second->mutable_lru_timestamp();
+    auto t = model->mutable_lru_timestamp();
     t->CopyFrom(TimeUtil::GetCurrentTime());
 
     reply->CopyFrom(*handle);
@@ -563,7 +563,6 @@ public:
   }
 
   grpc::Status Info(grpc::ServerContext *context, const ModelRequest *request, Model *reply) override {
-    std::shared_lock<std::shared_timed_mutex> lock(db_mutex_);
 
     auto span = start_span("info"s, "grpc", span_props{{"model_name", request->name()}});
     defer(stop_span(span));
@@ -576,7 +575,7 @@ public:
                           "unable to find handle with name "s + request->name() + " during info request");
     }
 
-    reply->CopyFrom(*it->second);
+    reply->CopyFrom(*it->value());
 
     return grpc::Status::OK;
   }
@@ -596,7 +595,6 @@ public:
   }
 
   grpc::Status Close(grpc::ServerContext *context, const ModelHandle *request, Void *reply) override {
-    std::unique_lock<std::shared_timed_mutex> lock(db_mutex_);
 
     auto span = start_span("close"s, "grpc", span_props{{"id", request->id()}, {"model_id", request->model_id()}});
     defer(stop_span(span));
@@ -614,28 +612,28 @@ public:
       return grpc::Status(grpc::NOT_FOUND, "unable to find handle with name "s + model_name + " during close request");
     }
 
+    auto model              = model_entry->value();
     const auto handle_id    = request->id();
-    const auto shared_model = model_entry->second->mutable_shared_model();
+    const auto shared_model = model->mutable_shared_model();
     for (auto it = shared_model->begin(); it != shared_model->end(); it++) {
       auto model = *it;
       if (model.id() != handle_id) {
         continue;
       }
       destroy_model_handle(model);
-      model_entry->second->mutable_shared_model()->erase(it);
+      model->mutable_shared_model()->erase(it);
       break;
     }
 
-    const auto ref_count = model_entry->second->ref_count() - 1;
-    model_entry->second->set_ref_count(ref_count);
+    const auto ref_count = model->ref_count() - 1;
+    model->set_ref_count(ref_count);
 
     if (ref_count == 0) {
-      // std::unique_lock<std::shared_timed_mutex> lock(db_mutex_);
       static const auto eviction_policy = UPRD_EVICTION_POLICY;
       if (eviction_policy == "eager") {
-        const auto byte_count = model_entry->second->owned_model().byte_count();
+        const auto byte_count = model->owned_model().byte_count();
         memory_usage_ -= byte_count;
-        model_delete(model_entry->second);
+        model_delete(model);
         memory_db_.erase(model_entry);
       }
     }
@@ -655,9 +653,6 @@ private:
 
   memory_db_t memory_db_;
   int64_t memory_usage_{0};
-
-  // Mutex serializing access to the map.
-  std::shared_timed_mutex db_mutex_;
 };
 
 std::promise<void> exit_requested;
