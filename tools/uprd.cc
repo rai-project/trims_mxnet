@@ -422,7 +422,7 @@ private:
   bool perform_eviction(const ModelRequest *request, const size_t estimated_model_size, const size_t memory_to_free) {
     static const auto eviction_policy = UPRD_EVICTION_POLICY;
 
-    auto span = start_span("perform_eviction"s, "load",
+    auto span = start_span("perform_eviction"s, "evict",
                            span_props{{"policy", eviction_policy},
                                       {"model_name", request->name()},
                                       {"estimated_model_size", std::to_string(estimated_model_size)},
