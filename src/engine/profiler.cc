@@ -297,6 +297,7 @@ namespace engine {
     std::ofstream outfile(filename_);
     outfile //<< std::setw(4)
         << json{{"traceEvents", trace_events},
+                {"upr_enabled", upr::UPR_ENABLED},
                 {"displayTimeUnit", "ms"},
                 {
                     "otherData",
