@@ -87,9 +87,9 @@ static const auto UPR_INPUT_CHANNELS = dmlc::GetEnv("UPR_INPUT_CHANNELS", 3);
 static const auto UPR_INPUT_WIDTH    = dmlc::GetEnv("UPR_INPUT_WIDTH", 224);
 static const auto UPR_INPUT_HEIGHT   = dmlc::GetEnv("UPR_INPUT_HEIGHT", 224);
 
-static const auto UPR_INPUT_MEAN_R = dmlc::GetEnv("UPR_INPUT_MEAN_R", 0);
-static const auto UPR_INPUT_MEAN_G = dmlc::GetEnv("UPR_INPUT_MEAN_G", 0);
-static const auto UPR_INPUT_MEAN_B = dmlc::GetEnv("UPR_INPUT_MEAN_B", 0);
+static const auto UPR_INPUT_MEAN_R = dmlc::GetEnv("UPR_INPUT_MEAN_R", 0.0f);
+static const auto UPR_INPUT_MEAN_G = dmlc::GetEnv("UPR_INPUT_MEAN_G", 0.0f);
+static const auto UPR_INPUT_MEAN_B = dmlc::GetEnv("UPR_INPUT_MEAN_B", 0.0f);
 
 static std::map<std::string, std::string> model_directory_paths{
     {"bvlc_alexnet_1.0", UPR_BASE_DIR + "bvlc_alexnet_1.0"},
