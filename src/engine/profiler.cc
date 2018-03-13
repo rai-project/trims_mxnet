@@ -152,7 +152,7 @@ namespace engine {
     }
     json j = {
       {"ph", "M"}, {"args",
-                    std::map<std::string, std::string>{{"name", name}, {"upr_enabled", upr::UPR_ENABLED}},
+                    std::map<std::string, std::string>{{"name", name}, {"upr_enabled", upr::UPR_ENABLED ? "true" : "false"}}},
                     {"pid", pid},
                     {"name", "process_name"}};
     return j;
@@ -180,7 +180,7 @@ namespace engine {
     auto tid            = opr_stat->thread_id;
     auto args           = opr_stat->metadata;
 
-    args.insert({"upr_enabled", upr::UPR_ENABLED});
+    args.insert({"upr_enabled", upr::UPR_ENABLED ? "true" : "false"});
 
     // if (engine_type() == "NaiveEngine") {
     pid = 0;
@@ -197,6 +197,7 @@ namespace engine {
               {"ts", ts},
               {"pid", pid},
               {"tid", tid},
+              {"upr_enabled", upr::UPR_ENABLED ? "true" : "false"},
               {"init_time", format_time(start_time)},
               {"args", args},
               {"start", opr_stat->opr_start_rel_micros},
