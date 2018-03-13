@@ -320,7 +320,7 @@ private:
       const auto byte_count = min_element->second->owned_model().byte_count();
       memory_usage_ -= byte_count;
       memory_freed += byte_count;
-      model_delete(min_element);
+      model_delete(min_element->second);
       memory_db_.erase(min_element);
     }
 
@@ -353,7 +353,7 @@ private:
       const auto byte_count = min_element->second->owned_model().byte_count();
       memory_usage_ -= byte_count;
       memory_freed += byte_count;
-      model_delete(min_element);
+      model_delete(min_element->second);
       memory_db_.erase(min_element);
     }
 
@@ -399,7 +399,7 @@ private:
       const auto byte_count = min_element->second->owned_model().byte_count();
       memory_usage_ -= byte_count;
       memory_freed += byte_count;
-      model_delete(min_element);
+      model_delete(min_element->second);
       memory_db_.erase(min_element);
     }
 
