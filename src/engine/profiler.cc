@@ -197,7 +197,7 @@ namespace engine {
               {"ts", ts},
               {"pid", pid},
               {"tid", tid},
-              {"upr_enabled", upr::UPR_ENABLED ? "true" : "false"},
+              {"upr_enabled", upr::UPR_ENABLED },
               {"init_time", format_time(start_time)},
               {"args", args},
               {"start", opr_stat->opr_start_rel_micros},
