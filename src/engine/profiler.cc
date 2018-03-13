@@ -89,11 +89,11 @@ namespace engine {
 
   void Profiler::SetState(ProfilerState state) {
     std::lock_guard<std::mutex> lock{this->m_};
-    this->state_ = state;
+    this->state_     = state;
+    this->init_time_ = NowInUsec();
     // once running, output will be enabled.
     if (state == kRunning) {
       this->enable_output_ = true;
-      this->init_time_     = NowInUsec();
     }
   }
 
@@ -150,11 +150,11 @@ namespace engine {
     if (engine_type() == "NaiveEngine") {
       pid = 0;
     }
-    json j = {
-      {"ph", "M"}, {"args",
-                    std::map<std::string, std::string>{{"name", name}, {"upr_enabled", upr::UPR_ENABLED ? "true" : "false"}}},
-                    {"pid", pid},
-                    {"name", "process_name"}};
+    json j = {{"ph", "M"},
+              {"args", std::map<std::string, std::string>{{"name", name},
+                                                          {"upr_enabled", upr::UPR_ENABLED ? "true" : "false"}}},
+              {"pid", pid},
+              {"name", "process_name"}};
     return j;
   }
 
@@ -197,7 +197,7 @@ namespace engine {
               {"ts", ts},
               {"pid", pid},
               {"tid", tid},
-              {"upr_enabled", upr::UPR_ENABLED },
+              {"upr_enabled", upr::UPR_ENABLED},
               {"init_time", format_time(start_time)},
               {"args", args},
               {"start", opr_stat->opr_start_rel_micros},
