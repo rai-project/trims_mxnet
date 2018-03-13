@@ -103,6 +103,7 @@ static std::map<std::string, std::string> model_directory_paths{
     {"inception_3.0", UPR_BASE_DIR + "inception_3.0"},
     {"inception_4.0", UPR_BASE_DIR + "inception_4.0"},
     {"inceptionbn_21k_1.0", UPR_BASE_DIR + "inceptionbn_21k_1.0"},
+    {"inceptionbn_21k_2.0", UPR_BASE_DIR + "inceptionbn_21k_2.0"},
     {"locationnet_1.0", UPR_BASE_DIR + "locationnet_1.0"},
     {"network_in_network_1.0", UPR_BASE_DIR + "network_in_network_1.0"},
     {"o_resnet101_2.0", UPR_BASE_DIR + "o_resnet101_2.0"},
