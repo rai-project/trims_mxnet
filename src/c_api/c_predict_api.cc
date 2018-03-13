@@ -191,21 +191,20 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
   for (size_t i = 0; i < arg_shapes.size(); ++i) {
     if (arg_params.count(arg_names[i]) != 0) {
       if (upr::UPR_ENABLED) {
-        arg_params.emplace_back(*arg_params.find(arg_names[i]));
+        arg_arrays.emplace_back(arg_params.find(arg_names[i])->second);
       } else {
         NDArray nd = NDArray(arg_shapes[i], ctx);
         CopyFromTo(arg_params[arg_names[i]], &nd);
-        arg_params.emplace_back(nd);
+        arg_arrays.emplace_back(nd);
       }
     } else {
       arg_arrays.emplace_back(arg_shapes[i], ctx);
     }
   }
   for (size_t i = 0; i < aux_shapes.size(); ++i) {
-    NDArray nd = NDArray(aux_shapes[i], ctx);
     if (aux_params.count(aux_names[i]) != 0) {
       if (upr::UPR_ENABLED) {
-        aux_arrays.emplace_back(*aux_params.find(aux_names[i]));
+        aux_arrays.emplace_back(aux_params.find(aux_names[i])->second);
       } else {
         NDArray nd = NDArray(aux_shapes[i], ctx);
         CopyFromTo(aux_params[aux_names[i]], &nd);
