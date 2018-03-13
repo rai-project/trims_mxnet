@@ -593,7 +593,7 @@ public:
   }
 
   grpc::Status Close(grpc::ServerContext *context, const ModelHandle *request, Void *reply) override {
-    std::shared_lock<std::shared_timed_mutex> lock(db_mutex_);
+    std::unique_lock<std::shared_timed_mutex> lock(db_mutex_);
 
     auto span = start_span("close"s, "grpc", span_props{{"id", request->id()}, {"model_id", request->model_id()}});
     defer(stop_span(span));
