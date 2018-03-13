@@ -63,6 +63,7 @@ private:
         cudaFree(dptr);
       }
     }
+}
     using memory_db_t = std::map<std::string, Model *>;
     // std::map<std::string /* id::name */, cudaIpcMemHandle_t> open_handles{};
 
