@@ -82,7 +82,7 @@ endif
 ifneq ($(DEBUG), 1)
 	CFLAGS += -DNDEBUG=1
 endif
-CFLAGS += -O3# -pg -p -g -ggdb 
+CFLAGS += -O3 -pg -p -g -ggdb 
 CGRPCFLAGS = `pkg-config --cflags protobuf grpc`
 LDGRPCFLAGS = `pkg-config --libs protobuf grpc++ grpc`
 # CGRPCFLAGS = -pthread -I/home/linuxbrew/.linuxbrew/Cellar/protobuf/3.5.1/include -I/home/linuxbrew/.linuxbrew/Cellar/grpc/1.9.0/include

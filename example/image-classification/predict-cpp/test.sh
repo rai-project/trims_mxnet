@@ -12,8 +12,9 @@ export MXNET_CPU_PRIORITY_NTHREADS=1
 export UPR_ENABLED=true
 export UPR_CLIENT=1
 export UPR_INITIALIZE_EAGER=true
+export UPR_ENABLE_MEMORY_PROFILE=true
 
-UPR_MODEL_NAME=bvlc_alexnet_1.0 ./image-classification-predict
+UPR_MODEL_NAME=bvlc_alexnet_1.0 gdb ./image-classification-predict
 # UPR_MODEL_NAME=bvlc_googlenet_1.0 ./image-classification-predict
 # UPR_MODEL_NAME=bvlc_alexnet_1.0 ./image-classification-predict&
 # UPR_MODEL_NAME=bvlc_alexnet_1.0 ./image-classification-predict&
