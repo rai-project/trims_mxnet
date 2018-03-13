@@ -579,10 +579,10 @@ public:
   }
 
   std::string find_model_name_by_model_id(std::string model_id) {
-    for (const auto &&kv : memory_db_) {
-      const auto &k = kv->first;
-      const auto &v = kv->second;
-      if (v.id() == model_id) {
+    for (const auto &kv : memory_db_) {
+      const auto &k = kv.first;
+      const auto &v = kv.second;
+      if (v->id() == model_id) {
         return k;
       }
     }
