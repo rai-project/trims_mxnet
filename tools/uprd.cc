@@ -320,8 +320,8 @@ private:
       const auto byte_count = min_element->second->owned_model().byte_count();
       memory_usage_ -= byte_count;
       memory_freed += byte_count;
-      auto model = memory_db_.erase(min_element);
-      model_delete(model->second);
+      model_delete(min_element);
+      memory_db_.erase(min_element);
     }
 
     if (memory_freed >= memory_to_free) {
@@ -353,8 +353,8 @@ private:
       const auto byte_count = min_element->second->owned_model().byte_count();
       memory_usage_ -= byte_count;
       memory_freed += byte_count;
-      auto model = memory_db_.erase(min_element);
-      model_delete(model->second);
+      model_delete(min_element);
+      memory_db_.erase(min_element);
     }
 
     if (memory_freed >= memory_to_free) {
@@ -399,8 +399,8 @@ private:
       const auto byte_count = min_element->second->owned_model().byte_count();
       memory_usage_ -= byte_count;
       memory_freed += byte_count;
-      auto model = memory_db_.erase(min_element);
-      model_delete(model->second);
+      model_delete(min_element);
+      memory_db_.erase(min_element);
     }
 
     if (memory_freed >= memory_to_free) {
@@ -632,8 +632,8 @@ public:
       if (eviction_policy == "eager") {
         const auto byte_count = model_entry->second->owned_model().byte_count();
         memory_usage_ -= byte_count;
-        auto entry = memory_db_.erase(model_entry);
-        model_delete(entry->second);
+        model_delete(model_entry->second);
+        memory_db_.erase(model_entry);
       }
     }
 
