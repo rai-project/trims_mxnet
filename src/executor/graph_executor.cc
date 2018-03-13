@@ -906,7 +906,7 @@ void GraphExecutor::FinishInitGraph(nnvm::Symbol symbol,
 
   g.attrs["saved_states"] = std::make_shared<nnvm::any>(std::move(saved_states_));
   g = AttachOpExecs(g);
-  // g = AttachOpResources(g);
+  g = AttachOpResources(g);
   graph_ = std::move(g);
 
   if (shared_exec != nullptr) {
