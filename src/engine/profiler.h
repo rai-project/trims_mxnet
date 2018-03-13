@@ -111,6 +111,7 @@ namespace engine {
   public:
     enum ProfilerMode { kOnlySymbolic = 0, kAllOperator = 1 };
     enum ProfilerState { kNotRunning = 0, kRunning = 1 };
+    enum ProfilerStatus { kNotStarted = 0, kStarted = 1 };
     /*! \brief set state of profiler */
     void SetState(ProfilerState state);
     /*! \return state of profiler */
@@ -151,6 +152,7 @@ namespace engine {
     std::mutex m_;
     /*! \brief indicate whether the profiler is running */
     ProfilerState state_;
+    ProfilerStatus status_;
     /*! \brief once running, enable profiler to output */
     bool enable_output_;
     /*! \brief indicate what operator the profiler will record */
@@ -170,7 +172,7 @@ namespace engine {
   /*! \return current clock time, time unit is microsecond (10^-6 s) */
   inline uint64_t NowInUsec();
   void AddOprMetadata(OprExecStat *opr_stat, const std::string &key, const std::string &value);
-  void SetOprCategory(OprExecStat *opr_stat, const std::string & category);
+  void SetOprCategory(OprExecStat *opr_stat, const std::string &category);
   /*! \brief set operation execution start timestamp */
   void SetOprStart(OprExecStat *opr_stat);
   /*! \brief set operation execution end timestamp */

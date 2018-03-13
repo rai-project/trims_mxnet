@@ -49,7 +49,7 @@ namespace engine {
 
   using json = nlohmann::json;
 
-  Profiler::Profiler() : state_(kNotRunning), enable_output_(false) {
+  Profiler::Profiler() : state_(kNotRunning), status_(kNotStarted), enable_output_(false) {
     filename_        = dmlc::GetEnv("UPR_PROFILE_TARGET", std::string("profile.json"));
     this->init_time_ = NowInUsec();
 
@@ -89,12 +89,15 @@ namespace engine {
 
   void Profiler::SetState(ProfilerState state) {
     std::lock_guard<std::mutex> lock{this->m_};
-    this->state_     = state;
-    this->init_time_ = NowInUsec();
     // once running, output will be enabled.
     if (state == kRunning) {
       this->enable_output_ = true;
     }
+    if (this->status_ == kNotStarted && state == kRunning) {
+      this->init_time_ = NowInUsec();
+      this->status_    = kStarted;
+    }
+    this->state_ = state;
   }
 
   void Profiler::SetConfig(ProfilerMode mode, std::string output_filename) {
