@@ -121,7 +121,7 @@ The server is part of the MXNet build process.
 | UPR_ENABLE_CUDA_FREE       |                                       | false            |
 | -------------------------- | -----------                           | -------------    |
 | UPRD_EVICTION_POLICY       |                                       | LRU              |
-| UPRD_ESTIMATION_RATE       |                                       | 3.0              |
+| UPRD_ESTIMATION_RATE       |                                       | 1.0              |
 | UPRD_MEMORY_PERCENTAGE     |                                       | 0.8              |
 
 ## How it Works
