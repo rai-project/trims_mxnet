@@ -429,6 +429,9 @@ private:
                                       {"memory_to_free", std::to_string(memory_to_free)}});
     defer(stop_span(span));
 
+    LOG(INFO) << "performing " << eviction_policy << " to get " << memory_to_free
+              << " of extra memory for the estimated model size " << estimated_model_size;
+
     if (eviction_policy == "never") {
       return perform_no_eviction(request, estimated_model_size, memory_to_free);
     }
