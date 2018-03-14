@@ -34,6 +34,7 @@
 #include <mxnet/engine.h>
 #include <mxnet/resource.h>
 #include <mxnet/storage.h>
+#include "./c_api/ipc.h"
 
 namespace mxnet {
 namespace resource {
@@ -200,9 +201,9 @@ namespace resource {
       inline void Seed(uint32_t global_seed) {
         uint32_t seed           = ctx.dev_id + global_seed * kRandMagic;
         mshadow::Random<xpu> *r = prnd;
-        Engine::Get()->PushAsync(
+       Engine::Get()->PushAsync(
             [r, seed](RunContext rctx, Engine::CallbackOnComplete on_complete) {
-              r->set_stream(rctx.get_stream<xpu>());
+             r->set_stream(rctx.get_stream<xpu>());
               r->Seed(seed);
               on_complete();
             },
@@ -274,10 +275,22 @@ namespace resource {
           const uint32_t seed                   = ctx.dev_id + i * kMaxNumGPUs + global_seed * kRandMagic;
           resource[i].var                       = Engine::Get()->NewVariable();
           common::random::RandGenerator<xpu> *r = new common::random::RandGenerator<xpu>();
+      auto span = upr::start_span("XXGFree", "memory");
+        cudaFree(0);
+      upr::stop_span(span);
+ 
           Engine::Get()->PushSync(
               [r, seed](RunContext rctx) {
-                common::random::RandGenerator<xpu>::AllocState(r);
+              
+      auto span = upr::start_span("GGGFree", "memory");
+       cudaFree(0);
+      upr::stop_span(span);
+      span = upr::start_span("AllocState", "memory");
+   common::random::RandGenerator<xpu>::AllocState(r);
+      upr::stop_span(span);
+      span = upr::start_span("Seed", "memory");
                 r->Seed(rctx.get_stream<xpu>(), seed);
+      upr::stop_span(span);
               },
               ctx, {}, {resource[i].var}, FnProperty::kNormal, 0, PROFILER_MESSAGE("ResourceParallelRandomSetSeed"));
           sampler[i]       = r;

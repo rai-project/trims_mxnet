@@ -100,7 +100,7 @@ template<typename DType>
 const int RandGenerator<cpu, DType>::kMinNumRandomPerThread = 64;
 
 template<typename DType>
-const int RandGenerator<cpu, DType>::kNumRandomStates = 1024;
+const int RandGenerator<cpu, DType>::kNumRandomStates = 64;
 
 #if MXNET_USE_CUDA
 
