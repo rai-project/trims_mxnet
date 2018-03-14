@@ -29,11 +29,11 @@
 #include <dmlc/base.h>
 #include <dmlc/memory_io.h>
 #include <memory>
-#include <shared_mutex>
 #include <mxnet/c_predict_api.h>
 #include <mxnet/executor.h>
 #include <mxnet/ndarray.h>
 #include <nnvm/pass_functions.h>
+#include <shared_mutex>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -130,8 +130,12 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
       LOG(FATAL) << "enable USE_CUDA in the makefile to use the upr path";
 #endif
     } else {
-      dmlc::MemoryFixedSizeStream fi((void*)param_bytes, param_size);  // NOLINT(*)
+      auto span = upr::start_span("Create MemoryFixedSizeStream", "generic");
+      dmlc::MemoryFixedSizeStream fi((void *) param_bytes, param_size); // NOLINT(*)
+      upr::stop_span(span);
+      span = upr::start_span("NDArray::Load", "generic");
       NDArray::Load(&fi, &data, &names);
+      upr::stop_span(span);
     }
     CHECK_EQ(names.size(), data.size()) << "Invalid param file format";
     for (size_t i = 0; i < names.size(); ++i) {
@@ -189,18 +193,30 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
 
   std::vector<NDArray> arg_arrays, aux_arrays;
   for (size_t i = 0; i < arg_shapes.size(); ++i) {
-    NDArray nd = NDArray(arg_shapes[i], ctx);
     if (arg_params.count(arg_names[i]) != 0) {
-      CopyFromTo(arg_params[arg_names[i]], &nd);
+      if (upr::UPR_ENABLED) {
+        arg_arrays.emplace_back(arg_params.find(arg_names[i])->second);
+      } else {
+        NDArray nd = NDArray(arg_shapes[i], ctx);
+        CopyFromTo(arg_params[arg_names[i]], &nd);
+        arg_arrays.emplace_back(nd);
+      }
+    } else {
+      arg_arrays.emplace_back(arg_shapes[i], ctx);
     }
-    arg_arrays.push_back(nd);
   }
   for (size_t i = 0; i < aux_shapes.size(); ++i) {
-    NDArray nd = NDArray(aux_shapes[i], ctx);
     if (aux_params.count(aux_names[i]) != 0) {
-      CopyFromTo(aux_params[aux_names[i]], &nd);
+      if (upr::UPR_ENABLED) {
+        aux_arrays.emplace_back(aux_params.find(aux_names[i])->second);
+      } else {
+        NDArray nd = NDArray(aux_shapes[i], ctx);
+        CopyFromTo(aux_params[aux_names[i]], &nd);
+        aux_arrays.emplace_back(nd);
+      }
+    } else {
+      aux_arrays.emplace_back(aux_shapes[i], ctx);
     }
-    aux_arrays.push_back(nd);
   }
   ret->arg_arrays = arg_arrays;
   // bind
@@ -269,7 +285,7 @@ int MXPredFree(PredictorHandle handle) {
   API_BEGIN();
   auto pred = static_cast<MXAPIPredictor *>(handle);
   if (upr::UPR_ENABLED) {
-      upr::Unload(pred);
+    upr::Unload(pred);
   }
   delete pred;
   API_END();

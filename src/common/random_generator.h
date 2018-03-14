@@ -97,10 +97,10 @@ class RandGenerator<cpu, DType> {
 };  // class RandGenerator<cpu, DType>
 
 template<typename DType>
-const int RandGenerator<cpu, DType>::kMinNumRandomPerThread = 64;
+const int RandGenerator<cpu, DType>::kMinNumRandomPerThread = 4;
 
 template<typename DType>
-const int RandGenerator<cpu, DType>::kNumRandomStates = 1024;
+const int RandGenerator<cpu, DType>::kNumRandomStates = 4;
 
 #if MXNET_USE_CUDA
 

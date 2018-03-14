@@ -49,7 +49,7 @@ namespace engine {
 
   using json = nlohmann::json;
 
-  Profiler::Profiler() : state_(kNotRunning), enable_output_(false) {
+  Profiler::Profiler() : state_(kNotRunning), status_(kNotStarted), enable_output_(false) {
     filename_        = dmlc::GetEnv("UPR_PROFILE_TARGET", std::string("profile.json"));
     this->init_time_ = NowInUsec();
 
@@ -89,12 +89,15 @@ namespace engine {
 
   void Profiler::SetState(ProfilerState state) {
     std::lock_guard<std::mutex> lock{this->m_};
-    this->state_ = state;
     // once running, output will be enabled.
     if (state == kRunning) {
       this->enable_output_ = true;
-      this->init_time_     = NowInUsec();
     }
+    if (this->status_ == kNotStarted && state == kRunning) {
+      this->init_time_ = NowInUsec();
+      this->status_    = kStarted;
+    }
+    this->state_ = state;
   }
 
   void Profiler::SetConfig(ProfilerMode mode, std::string output_filename) {
@@ -103,7 +106,10 @@ namespace engine {
     this->filename_ = output_filename;
   }
 
-  OprExecStat *Profiler::AddOprStat(int dev_type, uint32_t dev_id, std::string opr_name = "undefined") {
+  OprExecStat *Profiler::AddOprStat(int dev_type, uint32_t dev_id) {
+    return this->AddOprStat(dev_type, dev_id, "undefined");
+  }
+  OprExecStat *Profiler::AddOprStat(int dev_type, uint32_t dev_id, std::string opr_name) {
     std::unique_ptr<OprExecStat> opr_stat(new OprExecStat);
     opr_stat->category = "generic";
     opr_stat->dev_type = dev_type;
@@ -132,11 +138,8 @@ namespace engine {
   }
 
   static std::string _engine_type() {
-    const char *type          = getenv("MXNET_ENGINE_TYPE");
-    const bool default_engine = (type == nullptr);
-    if (type == nullptr)
-      type = "ThreadedEnginePerDevice";
-    return std::string(type);
+    static const auto stype = dmlc::GetEnv("MXNET_ENGINE_TYPE", std::string("NaiveEngine"));
+    return stype;
   }
 
   static std::string engine_type() {
@@ -151,7 +154,8 @@ namespace engine {
       pid = 0;
     }
     json j = {{"ph", "M"},
-              {"args", std::map<std::string, std::string>{{"name", name}}},
+              {"args", std::map<std::string, std::string>{{"name", name},
+                                                          {"upr_enabled", upr::UPR_ENABLED ? "true" : "false"}}},
               {"pid", pid},
               {"name", "process_name"}};
     return j;
@@ -177,12 +181,15 @@ namespace engine {
     const auto ts       = begin_end == "B" ? opr_stat->opr_start_rel_micros : opr_stat->opr_end_rel_micros;
     auto pid            = d.dev_id_;
     auto tid            = opr_stat->thread_id;
-    const auto args     = opr_stat->metadata;
+    auto args           = opr_stat->metadata;
 
-    if (engine_type() == "NaiveEngine") {
-      pid = 0;
-      tid = 0;
-    }
+    args.insert({"upr_enabled", upr::UPR_ENABLED ? "true" : "false"});
+
+    // if (engine_type() == "NaiveEngine") {
+    pid = 0;
+    tid = 0;
+    //}
+    // std::cout << "engine type = " << engine_type() << " \n";
     const auto init_time            = Profiler::Get()->GetInitTime();
     const auto duration_since_epoch = std::chrono::microseconds(init_time);
     const time_point<system_clock> tp_after_duration(duration_since_epoch);
@@ -193,6 +200,7 @@ namespace engine {
               {"ts", ts},
               {"pid", pid},
               {"tid", tid},
+              {"upr_enabled", upr::UPR_ENABLED},
               {"init_time", format_time(start_time)},
               {"args", args},
               {"start", opr_stat->opr_start_rel_micros},
@@ -292,6 +300,7 @@ namespace engine {
     std::ofstream outfile(filename_);
     outfile //<< std::setw(4)
         << json{{"traceEvents", trace_events},
+                {"upr_enabled", upr::UPR_ENABLED},
                 {"displayTimeUnit", "ms"},
                 {
                     "otherData",

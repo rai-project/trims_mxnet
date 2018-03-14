@@ -45,7 +45,7 @@ static void *get_device_ptr(const Layer &layer) {
   cudaIpcMemHandle_t handle;
   memcpy((uint8_t *) &handle, ipc_handle.c_str(), sizeof(handle));
 
-  LOG(INFO) << "get handle = " << handle << "get base64 handle = " << utils::base64_encode(ipc_handle);
+  // LOG(INFO) << "get handle = " << handle << "get base64 handle = " << utils::base64_encode(ipc_handle);
 
   void *device_ptr;
   auto span = start_span("cudaIpcOpenMemHandle", span_category_ipc, span_props{{"layer", layer.name()}});
@@ -68,7 +68,7 @@ static void to_ndarray(std::vector<NDArray> *arrays, const Layer &layer) {
   const auto dev_mask = ctx.dev_mask();
   const auto dev_id   = ctx.dev_id;
 
-  LOG(INFO) << "in layer=" << layer.name() << " getting device ptr using ctx = " << ctx;
+  // LOG(INFO) << "in layer=" << layer.name() << " getting device ptr using ctx = " << ctx;
 
   auto device_ptr = get_device_ptr(layer);
 
@@ -196,7 +196,7 @@ struct client {
 
   static std::pair<std::string, std::string>
       Load(std::string model_name, std::vector<NDArray> *res_arrays, std::vector<std::string> *res_keys) {
-    auto span_loading = start_span("open", span_category_load, span_props{{"model_name", model_name}});
+    auto span_loading = start_span("load_model", span_category_load, span_props{{"model_name", model_name}});
     defer(stop_span(span_loading));
     auto client           = client::get_connection();
     const auto open_reply = client->Open(model_name); // The actual RPC call!

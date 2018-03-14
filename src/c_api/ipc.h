@@ -77,18 +77,19 @@ static const auto is_client      = dmlc::GetEnv("UPR_CLIENT", false);
 static const auto UPR_BASE_DIR   = dmlc::GetEnv("UPR_BASE_DIR", HOME + std::string("/carml/data/mxnet/"));
 
 static const auto UPR_ENABLE_MEMORY_PROFILE = dmlc::GetEnv("UPR_ENABLE_MEMORY_PROFILE", false);
+static const auto UPR_ENABLE_CUDA_FREE      = dmlc::GetEnv("UPR_ENABLE_CUDA_FREE", false);
 
 static const auto UPRD_EVICTION_POLICY   = dmlc::GetEnv("UPRD_EVICTION_POLICY", std::string("lru"));
-static const auto UPRD_ESTIMATION_RATE   = dmlc::GetEnv("UPRD_ESTIMATION_RATE", 3.0);
+static const auto UPRD_ESTIMATION_RATE   = dmlc::GetEnv("UPRD_ESTIMATION_RATE", 1.0);
 static const auto UPRD_MEMORY_PERCENTAGE = dmlc::GetEnv("UPRD_MEMORY_PERCENTAGE", 0.8);
 
 static const auto UPR_INPUT_CHANNELS = dmlc::GetEnv("UPR_INPUT_CHANNELS", 3);
 static const auto UPR_INPUT_WIDTH    = dmlc::GetEnv("UPR_INPUT_WIDTH", 224);
 static const auto UPR_INPUT_HEIGHT   = dmlc::GetEnv("UPR_INPUT_HEIGHT", 224);
 
-static const auto UPR_INPUT_MEAN_R = dmlc::GetEnv("UPR_INPUT_MEAN_R", 0);
-static const auto UPR_INPUT_MEAN_G = dmlc::GetEnv("UPR_INPUT_MEAN_G", 0);
-static const auto UPR_INPUT_MEAN_B = dmlc::GetEnv("UPR_INPUT_MEAN_B", 0);
+static const auto UPR_INPUT_MEAN_R = dmlc::GetEnv("UPR_INPUT_MEAN_R", 0.0f);
+static const auto UPR_INPUT_MEAN_G = dmlc::GetEnv("UPR_INPUT_MEAN_G", 0.0f);
+static const auto UPR_INPUT_MEAN_B = dmlc::GetEnv("UPR_INPUT_MEAN_B", 0.0f);
 
 static std::map<std::string, std::string> model_directory_paths{
     {"bvlc_alexnet_1.0", UPR_BASE_DIR + "bvlc_alexnet_1.0"},
@@ -102,6 +103,7 @@ static std::map<std::string, std::string> model_directory_paths{
     {"inception_3.0", UPR_BASE_DIR + "inception_3.0"},
     {"inception_4.0", UPR_BASE_DIR + "inception_4.0"},
     {"inceptionbn_21k_1.0", UPR_BASE_DIR + "inceptionbn_21k_1.0"},
+    {"inceptionbn_21k_2.0", UPR_BASE_DIR + "inceptionbn_21k_2.0"},
     {"locationnet_1.0", UPR_BASE_DIR + "locationnet_1.0"},
     {"network_in_network_1.0", UPR_BASE_DIR + "network_in_network_1.0"},
     {"o_resnet101_2.0", UPR_BASE_DIR + "o_resnet101_2.0"},
@@ -133,6 +135,41 @@ static std::map<std::string, std::string> model_directory_paths{
     {"xception_1.0", UPR_BASE_DIR + "xception_1.0"},
     {"wrn50_2.0", UPR_BASE_DIR + "wrn50_2.0"}};
 
+static std::map<std::string, size_t> model_internal_memory_usage{{"bvlc_alexnet_1.0", 515367328},
+                                                                 {"bvlc_googlenet_1.0", 111213336},
+                                                                 {"bvlc_reference_caffenet_1.0", 511967136},
+                                                                 {"bvlc_reference_rcnn_ilsvrc13_1.0", 485747928},
+                                                                 {"dpn68_1.0", 121952160},
+                                                                 {"dpn92_1.0", 340148136},
+                                                                 {"inception_bn_3.0", 141964264},
+                                                                 {"network_in_network_1.0", 131029280},
+                                                                 {"o_resnet101_2.0", 427697664},
+                                                                 {"o_resnet152_2.0", 553366032},
+                                                                 {"o_vgg16_1.0", 1227778448},
+                                                                 {"o_vgg19_1.0", 1270256016},
+                                                                 {"resnet101_1.0", 422836416},
+                                                                 {"resnet101_2.0", 427846016},
+                                                                 {"resnet152_1.0", 548354240},
+                                                                 {"resnet152_11k_1.0", 720908664},
+                                                                 {"resnet152_2.0", 553363840},
+                                                                 {"resnet18_2.0", 154382672},
+                                                                 {"resnet200_2.0", 589410832},
+                                                                 {"resnet269_2.0", 889219456},
+                                                                 {"resnet34_2.0", 235307344},
+                                                                 {"resnet50_1.0", 270482112},
+                                                                 {"resnet50_2.0", 275493392},
+                                                                 {"resnext101_1.0", 375935240},
+                                                                 {"resnext101_32x4d_1.0", 377705976},
+                                                                 {"resnext26_32x4d_1.0", 146605560},
+                                                                 {"resnext50_1.0", 221516040},
+                                                                 {"resnext50_32x4d_1.0", 223958520},
+                                                                 {"squeezenet_1.0", 33859928},
+                                                                 {"squeezenet_1.1", 27743352},
+                                                                 {"vgg16_1.0", 1227778448},
+                                                                 {"vgg16_sod_1.0", 1198280840},
+                                                                 {"vgg16_sos_1.0", 1195166368},
+                                                                 {"vgg19_1.0", 1270256016},
+                                                                 {"wrn50_2.0", 758331776}};
 /**
  * @brief Ensures the CUDA runtime has fully initialized
  *
@@ -214,6 +251,17 @@ static inline void stop_span(engine::OprExecStat *stat) {
 static std::string get_model_name() {
   static const auto model_name = dmlc::GetEnv("UPR_MODEL_NAME", std::string(DEFAULT_MODEL));
   return model_name;
+}
+
+static size_t get_model_internal_memory_usage(std::string model_name = "") {
+  if (model_name == "") {
+    model_name = get_model_name();
+  }
+  const auto it = model_internal_memory_usage.find(model_name);
+  if (it == model_internal_memory_usage.end()) {
+    throw dmlc::Error(fmt::format("unable to find {} model in model_internal_memory_usage", model_name));
+  }
+  return it->second;
 }
 
 static std::string get_model_directory_path(std::string model_name = "") {

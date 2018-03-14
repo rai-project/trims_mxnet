@@ -30,8 +30,6 @@
 
 using namespace upr;
 
-const mx_float DEFAULT_MEAN = 0;
-
 // Read file to buffer
 class BufferFile {
 public:
@@ -39,10 +37,10 @@ public:
   int length_;
   char *buffer_{nullptr};
 
-  explicit BufferFile()  {
+  explicit BufferFile() {
   }
-  void Load(std::string file_path)  {
-     file_path_=file_path;
+  void Load(std::string file_path) {
+    file_path_ = file_path;
     std::ifstream ifs(file_path.c_str(), std::ios::in | std::ios::binary);
     if (!ifs) {
       std::cerr << "Can't open the file. Please check " << file_path << ". \n";
@@ -95,8 +93,9 @@ void GetImageFile(const std::string image_file, mx_float *image_data, const int 
   mx_float *ptr_image_g = image_data + size / 3;
   mx_float *ptr_image_b = image_data + size / 3 * 2;
 
-  float mean_b, mean_g, mean_r;
-  mean_b = mean_g = mean_r = DEFAULT_MEAN;
+  const auto mean_b = upr::UPR_INPUT_MEAN_B;
+  const auto mean_g = upr::UPR_INPUT_MEAN_G;
+  const auto mean_r = upr::UPR_INPUT_MEAN_R;
 
   for (int i = 0; i < im.rows; i++) {
     uchar *data = im.ptr<uchar>(i);
@@ -215,8 +214,8 @@ int main(int argc, char *argv[]) {
 
   GetImageFile(test_file, image_data.data(), channels, cv::Size(width, height));
 
-  size_t size = 10000;
-  std::vector<float> data(size);
+  size_t size = 100000;
+  float data[size];
   mx_uint output_index = 0;
 
   const std::string profile_default_path{model_name + "_profile_" + profile_path_suffix + ".json"};
@@ -225,18 +224,17 @@ int main(int argc, char *argv[]) {
   MXSetProfilerConfig(1, profile_path.c_str());
 
   // Start profiling
-  MXSetProfilerState(1);
-
   if (!upr::UPR_ENABLED && upr::UPR_PROFILE_IO) {
-      auto span = start_span("load_params", "io");
-      if (span == nullptr) {
-          std::cout << "span =  \n";
-      }
-      param_data.Load(param_file);
-      stop_span(span);
+    MXSetProfilerState(1);
+    auto span = start_span("load_params", "io");
+    if (span == nullptr) {
+      std::cout << "span =  \n";
+    }
+    param_data.Load(param_file);
+    stop_span(span);
+  } else {
+    MXSetProfilerState(1);
   }
-
-
 
   MXPredCreate((const char *) json_data.GetBuffer(), (const char *) param_data.GetBuffer(), param_data.GetLength(),
                dev_type, dev_id, num_input_nodes, input_keys, input_shape_indptr, input_shape_data, &pred_hnd);
@@ -252,10 +250,11 @@ int main(int argc, char *argv[]) {
 
   MXPredGetOutputShape(pred_hnd, output_index, &shape, &shape_len);
   size = 1;
-  for (mx_uint i = 0; i < shape_len; ++i)
+  for (mx_uint i = 0; i < shape_len; ++i) {
     size *= shape[i];
+  }
 
-  MXPredGetOutput(pred_hnd, output_index, &(data[0]), size);
+  MXPredGetOutput(pred_hnd, output_index, data, size);
 
   // Release Predictor
   MXPredFree(pred_hnd);
@@ -264,7 +263,7 @@ int main(int argc, char *argv[]) {
   MXSetProfilerState(0);
 
   // // Synset path for your model, you have to modify it
-  std::vector<std::string> synset = LoadSynset(synset_file);
+  // std::vector<std::string> synset = LoadSynset(synset_file);
 
   // // Print Output Data
   // PrintOutputResult(data, synset);

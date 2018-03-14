@@ -18,6 +18,12 @@ mkdir -p $UPR_INSTALL_PREFIX
 mkdir -p $UPR_BASE_DIR
 ```
 
+Remember to update your `PKG_CONFIG_PATH`
+
+```
+export PKG_CONFIG_PATH=$UPR_INSTALL_PREFIX/lib/pkgconfig/:$PKG_CONFIG_PATH
+```
+
 #### C-ARES
 
 ```
@@ -33,6 +39,8 @@ make install
 
 ```
 wget https://github.com/google/protobuf/archive/v3.5.1.tar.gz
+tar -xf v3.5.1.tar.gz
+cd protobuf-3.5.1
 ./autogen.sh
 ./configure --prefix=$UPR_INSTALL_PREFIX --disable-dependency-tracking --disable-debug --with-zlib
 make
@@ -52,11 +60,10 @@ make install
 #### GRPC
 
 ```
-cd /build
 wget https://github.com/grpc/grpc/archive/v1.9.1.tar.gz
 tar -xf v1.9.1
 cd v1.9.1
-make install prefix=$UPR_PREFIX
+make install prefix=$UPR_INSTALL_PREFIX
 make install-plugins prefix=$UPR_INSTALL_PREFIX
 ```
 
@@ -111,9 +118,10 @@ The server is part of the MXNet build process.
 | UPR_INPUT_MEAN_G           |                                       | 0                |
 | UPR_INPUT_MEAN_B           |                                       | 0                |
 | UPR_ENABLE_MEMORY_PROFILE  |                                       | false            |
+| UPR_ENABLE_CUDA_FREE       |                                       | false            |
 | -------------------------- | -----------                           | -------------    |
 | UPRD_EVICTION_POLICY       |                                       | LRU              |
-| UPRD_ESTIMATION_RATE       |                                       | 3.0              |
+| UPRD_ESTIMATION_RATE       |                                       | 1.0              |
 | UPRD_MEMORY_PERCENTAGE     |                                       | 0.8              |
 
 ## How it Works
