@@ -130,12 +130,12 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
       LOG(FATAL) << "enable USE_CUDA in the makefile to use the upr path";
 #endif
     } else {
-      const span = start_span("Create MemoryFixedSizeStream", "generic");
+      auto span = upr::start_span("Create MemoryFixedSizeStream", "generic");
       dmlc::MemoryFixedSizeStream fi((void *) param_bytes, param_size); // NOLINT(*)
-      stop_span(span);
-      const span = start_span("NDArray::Load", "generic");
+      upr::stop_span(span);
+      span = upr::start_span("NDArray::Load", "generic");
       NDArray::Load(&fi, &data, &names);
-      stop_span(span);
+      upr::stop_span(span);
     }
     CHECK_EQ(names.size(), data.size()) << "Invalid param file format";
     for (size_t i = 0; i < names.size(); ++i) {
