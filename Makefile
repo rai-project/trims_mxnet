@@ -90,11 +90,9 @@ LDGRPCFLAGS = `pkg-config --libs protobuf grpc++ grpc`
 CFLAGS += $(CGRPCFLAGS) -I$(ROOTDIR)/3rdparty -I$(ROOTDIR)/mshadow/ -I$(ROOTDIR)/dmlc-core/include -fPIC -I$(NNVM_PATH)/include -I$(DLPACK_PATH)/include -Iinclude $(MSHADOW_CFLAGS) -Isrc/
 LDFLAGS = -pthread $(MSHADOW_LDFLAGS) $(DMLC_LDFLAGS) $(LDGRPCFLAGS) -lnvToolsExt -lbfd
 ifeq ($(CUDA_DEBUG), 1)
-	NVCCFLAGS += -DFMT_HEADER_ONLY=1 -std=c++11 -Xcompiler -D_FORCE_INLINES -g -O0 -G -ccbin $(CXX) $(MSHADOW_NVCCFLAGS)
-	#NVCCFLAGS += -DFMT_HEADER_ONLY=1 -std=c++14 -Xcompiler -D_FORCE_INLINES -g -O0 -G -ccbin $(CXX) $(MSHADOW_NVCCFLAGS)
+	NVCCFLAGS += -DFMT_HEADER_ONLY=1 -std=c++14 -Xcompiler -D_FORCE_INLINES -g -O0 -G -ccbin $(CXX) $(MSHADOW_NVCCFLAGS)
 else
-	NVCCFLAGS += -DFMT_HEADER_ONLY=1 -std=c++11 -Xcompiler -D_FORCE_INLINES -O3 -ccbin $(CXX) $(MSHADOW_NVCCFLAGS)
-	#NVCCFLAGS += -DFMT_HEADER_ONLY=1 -std=c++14 -Xcompiler -D_FORCE_INLINES -O3 -ccbin $(CXX) $(MSHADOW_NVCCFLAGS)
+	NVCCFLAGS += -DFMT_HEADER_ONLY=1 -std=c++14 -Xcompiler -D_FORCE_INLINES -O3 -ccbin $(CXX) $(MSHADOW_NVCCFLAGS)
 endif
 
 # CFLAGS for profiler
@@ -395,7 +393,7 @@ ALLX_DEP= $(ALL_DEP)
 
 build/src/%.o: src/%.cc
 	@mkdir -p $(@D)
-	$(CXX) -std=c++11 -c $(CFLAGS) -MMD -c $< -o $@
+	$(CXX) -std=c++14 -c $(CFLAGS) -MMD -c $< -o $@
 	#$(CXX) -std=c++14 -c $(CFLAGS) -MMD -c $< -o $@
 
 build/src/%_gpu.o: src/%.cu
@@ -407,12 +405,12 @@ build/src/%_gpu.o: src/%.cu
 # Use CXX to generate dependency instead.
 build/plugin/%_gpu.o: plugin/%.cu
 	@mkdir -p $(@D)
-	$(CXX) -std=c++11 $(CFLAGS) -MM -MT build/plugin/$*_gpu.o $< >build/plugin/$*_gpu.d
+	$(CXX) -std=c++14 $(CFLAGS) -MM -MT build/plugin/$*_gpu.o $< >build/plugin/$*_gpu.d
 	$(NVCC) -c -o $@ $(NVCCFLAGS) $(CUDA_ARCH) -Xcompiler "$(CFLAGS)" $<
 
 build/plugin/%.o: plugin/%.cc
 	@mkdir -p $(@D)
-	$(CXX) -std=c++11 -c $(CFLAGS) -MMD -c $< -o $@
+	$(CXX) -std=c++14 -c $(CFLAGS) -MMD -c $< -o $@
 
 %_gpu.o: %.cu
 	@mkdir -p $(@D)
@@ -421,7 +419,7 @@ build/plugin/%.o: plugin/%.cc
 
 %.o: %.cc $(CORE_INC)
 	@mkdir -p $(@D)
-	$(CXX) -std=c++11 -c $(CFLAGS) -MMD -Isrc/operator -c $< -o $@
+	$(CXX) -std=c++14 -c $(CFLAGS) -MMD -Isrc/operator -c $< -o $@
 
 
 
@@ -460,7 +458,7 @@ bin/uprd: tools/uprd.cc lib/libmxnet.so
 
 $(BIN) :
 	@mkdir -p $(@D)
-	$(CXX) $(CFLAGS) -std=c++11  -o $@ $(filter %.cpp %.o %.c %.a %.cc, $^) $(LDFLAGS) lib/libmxnet.so -I include -I src/c_api -I src/
+	$(CXX) $(CFLAGS) -std=c++14  -o $@ $(filter %.cpp %.o %.c %.a %.cc, $^) $(LDFLAGS) lib/libmxnet.so -I include -I src/c_api -I src/
 	#$(CXX) $(CFLAGS) -std=c++14  -o $@ $(filter %.cpp %.o %.c %.a %.cc, $^) $(LDFLAGS) lib/libmxnet.so -I include -I src/c_api -I src/
 
 # CPP Package
