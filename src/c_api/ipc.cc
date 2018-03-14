@@ -19,7 +19,6 @@
 #include "fmt/format.h"
 
 using namespace mxnet;
-using namespace std::string_literals;
 using namespace grpc;
 
 namespace upr {
