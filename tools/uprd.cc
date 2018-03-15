@@ -35,7 +35,6 @@
 
 using namespace upr;
 using namespace mxnet;
-using namespace std::string_literals;
 using namespace grpc;
 using namespace google::protobuf::util;
 
@@ -57,7 +56,7 @@ private:
       return;
     }
     auto span =
-        start_span("deleting_model"s, "destroy", span_props{{"model_id", ptr->id()}, {"model_name", ptr->name()}});
+        start_span("deleting_model", "destroy", span_props{{"model_id", ptr->id()}, {"model_name", ptr->name()}});
     defer(stop_span(span));
 
     LOG(INFO) << "deleting model id=" << ptr->id();
@@ -89,7 +88,7 @@ private:
   void make_ipc_handle(Layer *layer, const std::string &id, const std::string &name, float *device_ptr) {
     const auto ipc_id = get_ipc_id(id, name);
 
-    auto span = start_span("ipc_get_memhandle"s, "ipc", span_props{{"id", id}, {"name", name}});
+    auto span = start_span("ipc_get_memhandle", "ipc", span_props{{"id", id}, {"name", name}});
     defer(stop_span(span));
 
     cudaIpcMemHandle_t handle;
@@ -105,7 +104,7 @@ private:
 
   void make_ipc_handle(Layer *layer, const std::string &id, const std::string &name, NDArray &array) {
 
-    auto span = start_span("make_ipc_handle"s, "ipc", span_props{{"id", id}, {"name", name}});
+    auto span = start_span("make_ipc_handle", "ipc", span_props{{"id", id}, {"name", name}});
     defer(stop_span(span));
 
     const auto blob = array.data();
@@ -125,7 +124,7 @@ private:
   }
   void to_layer(Layer *layer, std::string name, NDArray cpu_array, int64_t ref_count) {
     auto span =
-        start_span("to_layer"s, "convert", span_props{{"ref_count", std::to_string(ref_count)}, {"name", name}});
+        start_span("to_layer", "convert", span_props{{"ref_count", std::to_string(ref_count)}, {"name", name}});
     defer(stop_span(span));
 
     // LOG(INFO) << "converting " << name << " ndarray to protobuf
@@ -160,14 +159,14 @@ private:
     auto directory_path   = request->directory_path();
     const auto model_name = request->name();
 
-    auto span = start_span("load_ndarray"s, "load",
+    auto span = start_span("load_ndarray", "load",
                            span_props{{"ref_count", std::to_string(ref_count)}, {"mode_name", model_name}});
     defer(stop_span(span));
 
     // LOG(INFO) << fmt::format("loading ndarray directory_path = {} and
     // model_name = {}", directory_path, model_name);
     if (directory_path == "" && model_name == "") {
-      const auto msg = "either the filepath or the model name must be specified in the open request"s;
+      const std::string msg = "either the filepath or the model name must be specified in the open request";
       LOG(ERROR) << msg;
       throw std::runtime_error(msg);
     }
@@ -197,7 +196,7 @@ private:
       throw std::runtime_error(msg);
     }
 
-    auto stream_span = start_span("create_dmlc_stream"s, "load",
+    auto stream_span = start_span("create_dmlc_stream", "load",
                                   span_props{{"ref_count", std::to_string(ref_count)}, {"mode_name", model_name}});
 
     dmlc::Stream *fi(dmlc::Stream::Create(params_path.c_str(), "r", true));
@@ -218,7 +217,7 @@ private:
     // LOG(INFO) << "starting to convert " << arrays.size() << " ndarrays to
     // protobuf representation";
 
-    auto layers_span = start_span("to_layers"s, "load",
+    auto layers_span = start_span("to_layers", "load",
                                   span_props{{"ref_count", std::to_string(ref_count)}, {"mode_name", model_name}});
     size_t ii        = 0;
     for (const auto array : arrays) {
@@ -234,7 +233,7 @@ private:
     const auto id    = sole::uuid4().str();
     const auto shape = layer->mutable_shape();
 
-    auto span = start_span("from_owned_layer"s, "load",
+    auto span = start_span("from_owned_layer", "load",
                            span_props{{"ref_count", std::to_string(ref_count)}, {"name", layer->name()}});
     defer(stop_span(span));
 
@@ -262,7 +261,7 @@ private:
 
     const auto uuid = sole::uuid4().str();
 
-    auto span = start_span("from_owned_modelhandle"s, "load",
+    auto span = start_span("from_owned_modelhandle", "load",
                            span_props{{"ref_count", std::to_string(ref_count)}, {"model_id", owned.model_id()}});
     defer(stop_span(span));
 
@@ -286,7 +285,7 @@ private:
     const auto params_path            = get_model_params_path(model_name);
     const auto internal_memory_usage  = get_model_internal_memory_usage(model_name);
 
-    auto span = start_span("estimate_model_size"s, "load",
+    auto span = start_span("estimate_model_size", "load",
                            span_props{{"estimation_rate", std::to_string(estimation_rate)},
                                       {"model_name", request->name()},
                                       {"internal_memory_usage", std::to_string(internal_memory_usage)}});
@@ -429,7 +428,7 @@ private:
   bool perform_eviction(const ModelRequest *request, const size_t estimated_model_size, const size_t memory_to_free) {
     static const auto eviction_policy = UPRD_EVICTION_POLICY;
 
-    auto span = start_span("perform_eviction"s, "evict",
+    auto span = start_span("perform_eviction", "evict",
                            span_props{{"policy", eviction_policy},
                                       {"model_name", request->name()},
                                       {"estimated_model_size", std::to_string(estimated_model_size)},
@@ -490,7 +489,7 @@ private:
 public:
   // control memory usage by percentage of gpu
   grpc::Status Open(grpc::ServerContext *context, const ModelRequest *request, ModelHandle *reply) override {
-    auto span = start_span("open"s, "grpc", span_props{{"model_name", request->name()}});
+    auto span = start_span("open", "grpc", span_props{{"model_name", request->name()}});
     defer(stop_span(span));
 
     // LOG(INFO) << "opening " << request->name();
@@ -499,7 +498,7 @@ public:
     if (it == memory_db_.end()) {
       const auto uuid = sole::uuid4().str();
 
-      auto owned_span = start_span("load_owned"s, "load", span_props{{"model_name", request->name()}});
+      auto owned_span = start_span("load_owned", "load", span_props{{"model_name", request->name()}});
       defer(stop_span(owned_span));
 
       try {
@@ -533,7 +532,7 @@ public:
       memory_usage_ += byte_count;
     }
 
-    auto shared_span = start_span("make_shared"s, "share", span_props{{"model_name", request->name()}});
+    auto shared_span = start_span("make_shared", "share", span_props{{"model_name", request->name()}});
     defer(stop_span(shared_span));
 
     // LOG(INFO) << "done with creating owned model";
@@ -569,7 +568,7 @@ public:
 
   grpc::Status Info(grpc::ServerContext *context, const ModelRequest *request, Model *reply) override {
 
-    auto span = start_span("info"s, "grpc", span_props{{"model_name", request->name()}});
+    auto span = start_span("info", "grpc", span_props{{"model_name", request->name()}});
     defer(stop_span(span));
 
     auto it = memory_db_.find(request->name());
@@ -577,7 +576,7 @@ public:
       LOG(ERROR) << "failed to info request. cannot find " << request->name() << " in cache. "
                  << " cache = " << keys(memory_db_) << " \n";
       return grpc::Status(grpc::NOT_FOUND,
-                          "unable to find handle with name "s + request->name() + " during info request");
+                          std::string("unable to find handle with name ") + request->name() + " during info request");
     }
 
     reply->CopyFrom(*it->second);
@@ -601,20 +600,20 @@ public:
 
   grpc::Status Close(grpc::ServerContext *context, const ModelHandle *request, Void *reply) override {
 
-    auto span = start_span("close"s, "grpc", span_props{{"id", request->id()}, {"model_id", request->model_id()}});
+    auto span = start_span("close", "grpc", span_props{{"id", request->id()}, {"model_id", request->model_id()}});
     defer(stop_span(span));
 
     const auto model_name = find_model_name_by_model_id(request->model_id());
     if (model_name == "") {
-      LOG(ERROR) << "failed to close request.  unable to find model name with id "s << request->model_id()
+      LOG(ERROR) << "failed to close request.  unable to find model name with id " << request->model_id()
                  << " during close request";
       return grpc::Status(grpc::NOT_FOUND,
-                          "unable to find model name with id "s + request->model_id() + " during close request");
+                          std::string("unable to find model name with id ") + request->model_id() + " during close request");
     }
     auto model_entry = memory_db_.find(model_name);
     if (model_entry == memory_db_.end()) {
       LOG(ERROR) << "failed to close request\n";
-      return grpc::Status(grpc::NOT_FOUND, "unable to find handle with name "s + model_name + " during close request");
+      return grpc::Status(grpc::NOT_FOUND, std::string("unable to find handle with name ") + model_name + " during close request");
     }
 
     auto model              = model_entry->second;

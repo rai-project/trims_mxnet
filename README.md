@@ -67,6 +67,19 @@ make install prefix=$UPR_INSTALL_PREFIX
 make install-plugins prefix=$UPR_INSTALL_PREFIX
 ```
 
+#### OpenCV (Optional)
+
+```
+wget https://github.com/opencv/opencv/archive/3.4.1.tar.gz
+tar -xf 3.4.1.tar.gz
+cd opencv-3.4.1/
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=$UPR_INSTALL_PREFIX -DWITH_CUDA=OFF -DWITH_OPENCL=OFF ..
+make
+make install
+```
+
 #### From APT-GET
 
 Other requirements can be installed using APT . The base requirements are listed in the (MXNet installation guide)[https://mxnet.apache.org/install/index.html].

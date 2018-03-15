@@ -19,12 +19,11 @@
 #include "fmt/format.h"
 
 using namespace mxnet;
-using namespace std::string_literals;
 using namespace grpc;
 
 namespace upr {
 
-std::string server::host_name = "localhost"s;
+std::string server::host_name = "localhost";
 int server::port              = dmlc::GetEnv("PORT", 50051);
 std::string server::address   = fmt::format("{}:{}", host_name, port);
 
@@ -61,7 +60,7 @@ static void *get_device_ptr(const Layer &layer) {
 static void to_ndarray(std::vector<NDArray> *arrays, const Layer &layer) {
   const auto ctx = get_ctx();
 
-  auto span = start_span("to_nd_array"s, span_category_serialization, span_props{{"layer", layer.name()}});
+  auto span = start_span("to_nd_array", span_category_serialization, span_props{{"layer", layer.name()}});
   defer(stop_span(span));
 
   const auto shape    = to_shape(layer.shape());
@@ -73,7 +72,7 @@ static void to_ndarray(std::vector<NDArray> *arrays, const Layer &layer) {
   auto device_ptr = get_device_ptr(layer);
 
   auto span_creating =
-      start_span("creating_nd_array"s, span_category_serialization, span_props{{"layer", layer.name()}});
+      start_span("creating_nd_array", span_category_serialization, span_props{{"layer", layer.name()}});
   defer(stop_span(span_creating));
 
   TBlob blob(device_ptr, shape, dev_mask, dev_id);

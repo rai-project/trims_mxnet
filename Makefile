@@ -277,7 +277,7 @@ endif
 ifeq ($(USE_CUDA), 1)
 ifeq ($(CUDA_ARCH),)
 	# KNOWN_CUDA_ARCHS := 30 35 50 52 60 61 70
-	KNOWN_CUDA_ARCHS := 60 61
+	KNOWN_CUDA_ARCHS := 60 61 70
 	# Run nvcc on a zero-length file to check architecture-level support.
 	# Create args to include SASS in the fat binary for supported levels.
 	CUDA_ARCH := $(foreach arch,$(KNOWN_CUDA_ARCHS), \
@@ -394,6 +394,7 @@ ALLX_DEP= $(ALL_DEP)
 build/src/%.o: src/%.cc
 	@mkdir -p $(@D)
 	$(CXX) -std=c++14 -c $(CFLAGS) -MMD -c $< -o $@
+	#$(CXX) -std=c++14 -c $(CFLAGS) -MMD -c $< -o $@
 
 build/src/%_gpu.o: src/%.cu
 	@mkdir -p $(@D)
@@ -404,12 +405,12 @@ build/src/%_gpu.o: src/%.cu
 # Use CXX to generate dependency instead.
 build/plugin/%_gpu.o: plugin/%.cu
 	@mkdir -p $(@D)
-	$(CXX) -std=c++11 $(CFLAGS) -MM -MT build/plugin/$*_gpu.o $< >build/plugin/$*_gpu.d
+	$(CXX) -std=c++14 $(CFLAGS) -MM -MT build/plugin/$*_gpu.o $< >build/plugin/$*_gpu.d
 	$(NVCC) -c -o $@ $(NVCCFLAGS) $(CUDA_ARCH) -Xcompiler "$(CFLAGS)" $<
 
 build/plugin/%.o: plugin/%.cc
 	@mkdir -p $(@D)
-	$(CXX) -std=c++11 -c $(CFLAGS) -MMD -c $< -o $@
+	$(CXX) -std=c++14 -c $(CFLAGS) -MMD -c $< -o $@
 
 %_gpu.o: %.cu
 	@mkdir -p $(@D)
@@ -418,7 +419,7 @@ build/plugin/%.o: plugin/%.cc
 
 %.o: %.cc $(CORE_INC)
 	@mkdir -p $(@D)
-	$(CXX) -std=c++11 -c $(CFLAGS) -MMD -Isrc/operator -c $< -o $@
+	$(CXX) -std=c++14 -c $(CFLAGS) -MMD -Isrc/operator -c $< -o $@
 
 
 
@@ -458,6 +459,7 @@ bin/uprd: tools/uprd.cc lib/libmxnet.so
 $(BIN) :
 	@mkdir -p $(@D)
 	$(CXX) $(CFLAGS) -std=c++14  -o $@ $(filter %.cpp %.o %.c %.a %.cc, $^) $(LDFLAGS) lib/libmxnet.so -I include -I src/c_api -I src/
+	#$(CXX) $(CFLAGS) -std=c++14  -o $@ $(filter %.cpp %.o %.c %.a %.cc, $^) $(LDFLAGS) lib/libmxnet.so -I include -I src/c_api -I src/
 
 # CPP Package
 ifeq ($(USE_CPP_PACKAGE), 1)

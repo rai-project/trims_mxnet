@@ -15,6 +15,7 @@ LDFLAGS+=`pkg-config --libs opencv` -lglog
 export MXNET_ROOT=`pwd`/../../../../mxnet-mirror
 
 CFLAGS+=-I$(MXNET_ROOT)/include -I$(MXNET_ROOT)/src
+CFLAGS+=-I/usr/include/openblas
 CFLAGS+=-I$(MXNET_ROOT)/nnvm/include -I$(MXNET_ROOT)/mshadow
 CFLAGS+=-I$(MXNET_ROOT)/dlpack/include -I$(MXNET_ROOT)/dmlc-core/include
 CFLAGS+=-I$(MXNET_ROOT)/3rdparty
