@@ -298,8 +298,9 @@ static std::string get_model_directory_path(std::string model_name = "") {
   }
   const auto it = model_directory_paths.find(model_name);
   if (it == model_directory_paths.end()) {
-    throw dmlc::Error(fmt::format(
-        "unable to find {} model in model_directory_paths {}", model_name, UPR_BASE_DIR));
+    throw dmlc::Error(
+        fmt::format("unable to find {} model in model_directory_paths {}",
+                    model_name, UPR_BASE_DIR));
   }
   return it->second;
 }
