@@ -153,6 +153,7 @@ static std::map<std::string, size_t> model_internal_memory_usage{
     {"inception_4.0", 399452080},
     {"dpn68_1.0", 121952160},
     {"inception_bn_3.0", 141964264},
+    {"bvlc_reference_rcnn_ilsvrc13_1.0", 478867008},
     {"resnet152_2.0", 553363840},
     {"dpn92_1.0", 340148136},
     {"bvlc_googlenet_1.0", 111213336},
