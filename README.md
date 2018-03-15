@@ -75,7 +75,7 @@ tar -xf 3.4.1.tar.gz
 cd opencv-3.4.1/
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=$HOME/.usr -DWITH_CUDA=OFF -DWITH_OPENCL=OFF ..
+cmake -DCMAKE_INSTALL_PREFIX=$UPR_INSTALL_PREFIX -DWITH_CUDA=OFF -DWITH_OPENCL=OFF ..
 make
 make install
 ```
