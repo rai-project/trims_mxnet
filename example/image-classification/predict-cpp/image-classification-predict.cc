@@ -239,6 +239,9 @@ int main(int argc, char *argv[]) {
   MXPredCreate((const char *) json_data.GetBuffer(), (const char *) param_data.GetBuffer(), param_data.GetLength(),
                dev_type, dev_id, num_input_nodes, input_keys, input_shape_indptr, input_shape_data, &pred_hnd);
 
+
+  CHECK(pred_hnd != nullptr) << " got error=" << MXGetLastError();
+
   // Set Input Image
   MXPredSetInput(pred_hnd, "data", image_data.data(), image_size);
 
