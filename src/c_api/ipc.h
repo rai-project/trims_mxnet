@@ -299,7 +299,7 @@ static std::string get_model_directory_path(std::string model_name = "") {
   const auto it = model_directory_paths.find(model_name);
   if (it == model_directory_paths.end()) {
     throw dmlc::Error(fmt::format(
-        "unable to find {} model in model_direction_paths", model_name));
+        "unable to find {} model in model_directory_paths {}", model_name, UPR_BASE_DIR));
   }
   return it->second;
 }
@@ -350,8 +350,8 @@ static std::string get_model_params_path(std::string model_name = "") {
       "unable to find {} model params in model_directory_path. make sure "
       "that you have the model"
       "in the directory and it's called either model.params, "
-      "{}.params, or {}-0000.params",
-      model_name, model_name, model_name));
+      "{}.params, or {}-0000.params is in {}",
+      model_name, model_name, model_name, path));
 
   return "";
 }
@@ -378,8 +378,8 @@ static std::string get_model_symbol_path(std::string model_name = "") {
       "unable to find {} model symbol in model_directory_path. make sure "
       "that you have the model"
       "in the directory and it's called either model.symbol, "
-      "{}.symbol, or {}-symbol.json",
-      model_name, model_name, model_name));
+      "{}.symbol, or {}-symbol.json is in {}",
+      model_name, model_name, model_name, path));
 
   return "";
 }
