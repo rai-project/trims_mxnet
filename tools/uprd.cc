@@ -568,7 +568,7 @@ public:
 
   grpc::Status Info(grpc::ServerContext *context, const ModelRequest *request, Model *reply) override {
 
-    auto span = start_span("info"s, "grpc", span_props{{"model_name", request->name()}});
+    auto span = start_span("info", "grpc", span_props{{"model_name", request->name()}});
     defer(stop_span(span));
 
     auto it = memory_db_.find(request->name());
@@ -576,7 +576,7 @@ public:
       LOG(ERROR) << "failed to info request. cannot find " << request->name() << " in cache. "
                  << " cache = " << keys(memory_db_) << " \n";
       return grpc::Status(grpc::NOT_FOUND,
-                          "unable to find handle with name "s + request->name() + " during info request");
+                          std::string("unable to find handle with name ") + request->name() + " during info request");
     }
 
     reply->CopyFrom(*it->second);
@@ -600,20 +600,20 @@ public:
 
   grpc::Status Close(grpc::ServerContext *context, const ModelHandle *request, Void *reply) override {
 
-    auto span = start_span("close"s, "grpc", span_props{{"id", request->id()}, {"model_id", request->model_id()}});
+    auto span = start_span("close", "grpc", span_props{{"id", request->id()}, {"model_id", request->model_id()}});
     defer(stop_span(span));
 
     const auto model_name = find_model_name_by_model_id(request->model_id());
     if (model_name == "") {
-      LOG(ERROR) << "failed to close request.  unable to find model name with id "s << request->model_id()
+      LOG(ERROR) << "failed to close request.  unable to find model name with id " << request->model_id()
                  << " during close request";
       return grpc::Status(grpc::NOT_FOUND,
-                          "unable to find model name with id "s + request->model_id() + " during close request");
+                          std::string("unable to find model name with id ") + request->model_id() + " during close request");
     }
     auto model_entry = memory_db_.find(model_name);
     if (model_entry == memory_db_.end()) {
       LOG(ERROR) << "failed to close request\n";
-      return grpc::Status(grpc::NOT_FOUND, "unable to find handle with name "s + model_name + " during close request");
+      return grpc::Status(grpc::NOT_FOUND, std::string("unable to find handle with name ") + model_name + " during close request");
     }
 
     auto model              = model_entry->second;
