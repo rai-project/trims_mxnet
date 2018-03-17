@@ -37,7 +37,8 @@
 
 namespace mxnet {
 namespace op {
-#if MXNET_USE_CUDNN == 1
+#if 1
+MXNET_USE_CUDNN == 1
 
 /*!
  * \brief The Operator used to perform convolution using cuDNN kernels.
@@ -86,10 +87,10 @@ class CuDNNConvolutionOp : public Operator {
     if (!Supports(param, forward_compute_type, backward_compute_type, ctx))
       LOG(FATAL) << "Need CuDNN >= 6.0 for dilated convolution.";
 
-      auto span = start_span("InitDescriptors", "memory");
+    auto span = start_span("InitDescriptors", "memory");
     InitDescriptors(ctx, in_shape, out_shape,
                     cudnn_forward_compute_type, cudnn_backward_compute_type);
-stop_span(span);
+    stop_span(span);
     if (!param_.cudnn_tune) {
       param_.cudnn_tune = dmlc::GetEnv("MXNET_CUDNN_AUTOTUNE_DEFAULT", 0);
     }
@@ -99,10 +100,21 @@ stop_span(span);
     // approach keeps the treatment of convolution cases uniform and will
     // naturally respond to more algorithms supporting dilated convolutions in
     // future cuDNN releases.
-    span = start_span("SelectAlgo", "memory");
-    SelectAlgo(ctx, in_shape, out_shape,
-               cudnn_forward_compute_type, cudnn_backward_compute_type);
-stop_span(span);
+    span = start_span("set cudnn conv algo", "memory");
+    cudnnConvolutionFwdAlgo_t fastest_fwd_algo;
+    CUDNN_CALL(cudnnGetConvolutionForwardAlgorithm(s->dnn_handle_,
+                                              in_desc_,
+                                              filter_desc_,
+                                              forward_conv_desc_,
+                                              out_desc_,
+                                              CUDNN_CONVOLUTION_FWD_SPECIFY_WORKSPACE_LIMIT,
+                                              workspace_byte,
+                                              &fastest_fwd_algo));
+    forward_algo_.Set(fastest_fwd_algo, false);
+    // forward_algo_.Set(CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM, false);
+    /* SelectAlgo(ctx, in_shape, out_shape,
+                cudnn_forward_compute_type, cudnn_backward_compute_type); */
+    stop_span(span);
   }
 
   ~CuDNNConvolutionOp() {
@@ -608,11 +620,8 @@ stop_span(span);
           if (CUDNN_MAJOR == 6 && param_.layout.value() == mshadow::kNHWC) {
             // In cuDNNv6, for kNHWC, only CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM is
             // supported.  Hard-coded this since the algo find() or get() throws an FPE.
-            LOG(INFO)<<"CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM\n";
             forward_algo_.Set(CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM, false);
-          /* } else if (!param_.cudnn_tune.value()) { */
-          } else if (1) {
-            LOG(INFO)<<"!param_.cudnn_tune.value()\n";
+          } else if (!param_.cudnn_tune.value()) {
             cudnnConvolutionFwdAlgo_t fastest_fwd_algo;
             CUDNN_CALL(cudnnGetConvolutionForwardAlgorithm(s->dnn_handle_,
                                                      in_desc_,
