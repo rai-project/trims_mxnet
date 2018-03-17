@@ -33,6 +33,7 @@
 #include "../convolution-inl.h"
 #include "./cudnn_algoreg-inl.h"
 #include "../../../common/cuda_utils.h"
+#include "../../../engine/profiler.h"
 
 namespace mxnet {
 namespace op {
@@ -56,7 +57,7 @@ class CuDNNConvolutionOp : public Operator {
     auto cudnn_forward_compute_type = convertToCuDNNDataType(forward_compute_type);
     auto cudnn_backward_compute_type = convertToCuDNNDataType(backward_compute_type);
     // convert MB to words
-    param_.workspace = (param_.workspace << 20) / sizeof(DType);
+    param_.workspace = (param_.workspace << 21) / sizeof(DType);
     init_cudnn_ = false;
     init_temp_size_ = false;
     dtype_ = DataType<DType>::kCudnnFlag;
@@ -85,9 +86,10 @@ class CuDNNConvolutionOp : public Operator {
     if (!Supports(param, forward_compute_type, backward_compute_type, ctx))
       LOG(FATAL) << "Need CuDNN >= 6.0 for dilated convolution.";
 
+      auto span = start_span("InitDescriptors", "memory");
     InitDescriptors(ctx, in_shape, out_shape,
                     cudnn_forward_compute_type, cudnn_backward_compute_type);
-
+stop_span(span);
     if (!param_.cudnn_tune) {
       param_.cudnn_tune = dmlc::GetEnv("MXNET_CUDNN_AUTOTUNE_DEFAULT", 0);
     }
@@ -97,8 +99,10 @@ class CuDNNConvolutionOp : public Operator {
     // approach keeps the treatment of convolution cases uniform and will
     // naturally respond to more algorithms supporting dilated convolutions in
     // future cuDNN releases.
+    span = start_span("SelectAlgo", "memory");
     SelectAlgo(ctx, in_shape, out_shape,
                cudnn_forward_compute_type, cudnn_backward_compute_type);
+stop_span(span);
   }
 
   ~CuDNNConvolutionOp() {
@@ -604,8 +608,11 @@ class CuDNNConvolutionOp : public Operator {
           if (CUDNN_MAJOR == 6 && param_.layout.value() == mshadow::kNHWC) {
             // In cuDNNv6, for kNHWC, only CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM is
             // supported.  Hard-coded this since the algo find() or get() throws an FPE.
+            LOG(INFO)<<"CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM\n";
             forward_algo_.Set(CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM, false);
-          } else if (!param_.cudnn_tune.value()) {
+          /* } else if (!param_.cudnn_tune.value()) { */
+          } else if (1) {
+            LOG(INFO)<<"!param_.cudnn_tune.value()\n";
             cudnnConvolutionFwdAlgo_t fastest_fwd_algo;
             CUDNN_CALL(cudnnGetConvolutionForwardAlgorithm(s->dnn_handle_,
                                                      in_desc_,
@@ -617,6 +624,7 @@ class CuDNNConvolutionOp : public Operator {
                                                      &fastest_fwd_algo));
             forward_algo_.Set(fastest_fwd_algo, false);
           } else {
+            LOG(INFO)<<"find conv algo\n";
             cudnnConvolutionFwdAlgoPerf_t fwd_algo[kMaxAlgos];
             CUDNN_CALL(cudnnFindConvolutionForwardAlgorithm(s->dnn_handle_,
                                                             in_desc_,
@@ -878,6 +886,47 @@ class CuDNNConvolutionOp : public Operator {
   // Allow TensorCore algo policy
   bool cudnn_tensor_core_;
   ConvolutionParam param_;
+
+using span_props = std::map<std::string, std::string>;
+
+engine::OprExecStat *start_span(const std::string &name,
+                                              std::string category) {
+#if MXNET_USE_PROFILER
+  const auto ctx = Context::GPU();
+  auto opr_stat =
+      engine::Profiler::Get()->AddOprStat(ctx.dev_type, ctx.dev_id, name);
+  uint64_t tid = std::hash<std::thread::id>()(std::this_thread::get_id());
+  engine::SetOprCategory(opr_stat, category);
+  engine::SetOprStart(opr_stat);
+  return opr_stat;
+#else
+  return nullptr;
+#endif
+}
+
+engine::OprExecStat *
+start_span(const std::string &name, std::string category, span_props props) {
+#if MXNET_USE_PROFILER
+  auto span = start_span(name, category);
+  for (const auto kv : props) {
+    engine::AddOprMetadata(span, kv.first, kv.second);
+  }
+  return span;
+#else
+  return nullptr;
+#endif
+}
+
+void stop_span(engine::OprExecStat *stat) {
+  if (stat == nullptr) {
+    return;
+  }
+
+#if MXNET_USE_PROFILER
+  engine::SetOprEnd(stat);
+#endif
+}
+
 };
 #endif  // __CUDACC__ && CUDNN
 }  // namespace op

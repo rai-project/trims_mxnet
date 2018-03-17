@@ -158,7 +158,7 @@ class OpStatePtr {
     OpState& operator=(const OpState& other) = delete;
 
     ~OpState() {
-      Engine::Get()->DeleteVariable([](RunContext s) {}, Context::CPU(), var_);
+      /* Engine::Get()->DeleteVariable([](RunContext s) {}, Context::CPU(), var_); */
     }
 
     engine::VarHandle var_;
