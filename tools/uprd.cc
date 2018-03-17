@@ -111,7 +111,7 @@ private:
     //           handle;
   }
 
-  void make_ipc_handle(Layer *layer, const std::string &id, const std::string &name, NDArray &array) {
+  void make_ipc_handle(Layer *layer, const std::string &id, const std::string &name, const NDArray &array) {
 
     auto span = start_span("make_ipc_handle", "ipc", span_props{{"id", id}, {"name", name}});
     defer(stop_span(span));
@@ -121,7 +121,7 @@ private:
     make_ipc_handle(layer, id, name, data);
   }
 
-  void make_ipc_handle(Layer *layer, NDArray &array) {
+  void make_ipc_handle(Layer *layer, const NDArray &array) {
     make_ipc_handle(layer, layer->id(), layer->name(), array);
   }
 
