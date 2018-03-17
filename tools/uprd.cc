@@ -50,7 +50,16 @@ std::vector<K> keys(const tsl::hopscotch_sc_map<K, V> &m) {
 
 class RegistryImpl final : public Registry::Service {
 private:
-  using memory_db_t = tsl::hopscotch_sc_map<std::string, Model *, std::hash<std::string>>;
+  struct model_info {
+    std::vector<TShape> shapes{};
+    std::vector<TBlob> blobs{};
+    std::vector<std::string> layer_names{};
+  };
+  using cpu_persistent_data_t = std::map<std::string, cpu_model_data *>;
+  using memory_db_t           = tsl::hopscotch_sc_map<std::string, Model *, std::hash<std::string>>;
+
+  cpu_persistent_data_t cpu_persistent_data{};
+
   void model_delete(Model *ptr) {
     if (ptr == nullptr) {
       return;
@@ -122,9 +131,9 @@ private:
       res->add_dim(dim);
     }
   }
-  void to_layer(Layer *layer, std::string name, NDArray cpu_array, int64_t ref_count) {
-    auto span =
-        start_span("to_layer", "convert", span_props{{"ref_count", std::to_string(ref_count)}, {"name", name}});
+  void to_layer_from_disk(Layer *layer, const std::string &name, const NDArray &cpu_array, int64_t ref_count) {
+    auto span = start_span("to_layer_from_disk", "convert",
+                           span_props{{"ref_count", std::to_string(ref_count)}, {"name", name}});
     defer(stop_span(span));
 
     // LOG(INFO) << "converting " << name << " ndarray to protobuf
@@ -153,11 +162,95 @@ private:
     layer->set_ref_count(ref_count);
   }
 
+  void to_layer_from_cpu_mem(Layer *layer, std::string name, const TBlob &blob, const TShape &tshape,
+                             int64_t ref_count) {
+    auto span = start_span("to_layer_from_cpu_mem", "convert",
+                           span_props{{"ref_count", std::to_string(ref_count)}, {"name", name}});
+    defer(stop_span(span));
+
+    // LOG(INFO) << "converting " << name << " ndarray to protobuf
+    // representation with ref_count = " << ref_count;
+    const auto ctx = get_ctx();
+    const auto id  = sole::uuid4().str();
+
+    const size_t type_size  = element_size;
+    const size_t byte_count = type_size * load_data.Size();
+    const auto cpu_ptr      = load_data.dptr_<float>();
+
+    float *dev_ptr = nullptr;
+
+    CUDA_CHECK_CALL(cudaMalloc(&dev_ptr, byte_count));
+    CUDA_CHECK_CALL(cudaMemcpy(dev_ptr, cpu_ptr, byte_count, cudaMemcpyHostToDevice));
+
+    const auto shape = layer->mutable_shape();
+    layer->set_id(id);
+    layer->set_name(name);
+
+    to_shape(shape, tshape);
+
+    layer->set_byte_count(byte_count);
+    if (ref_count == -1) { // special value for owned model
+      layer->set_ipc_handle("[owned]");
+    } else {
+      make_ipc_handle(layer, id, name, dev_ptr);
+    }
+    // LOG(INFO) << "setting device_ptr = " << (int64_t) blob.dptr<float>();
+    layer->set_device_raw_ptr((int64_t) dev_ptr);
+    layer->set_ref_count(ref_count);
+  }
+
+  void load_from_cpu_mem(const std::string &model_name, int64_t ref_count) {
+    auto e    = cpu_persistent_data.find(model_name);
+    auto info = e->second;
+    for (int ii = 0; ii < info->layer_names.size(); ii++) {
+      auto layer            = layers->Add();
+      const auto layer_name = info->layer_names[ii];
+      const auto blob       = info->blobs[ii];
+      const auto shape      = info->shapes[ii];
+      to_layer_from_cpu_mem(layer, layer_name, blob, shape, ref_count);
+    }
+  }
+
+  bool is_persistent_on_cpu(const std::string &model_name) {
+    if (!UPRD_PERSIST_CPU) {
+      return false;
+    }
+    return cpu_persistent_data.find(model_name) != cpu_persistent_data.end();
+  }
+
+  void persist_on_cpu(const std::string &model_name, const NDArray &array, const std::string &layer_name) {
+    if (cpu_persistent_data.find(model_name) == cpu_persistent_data.end()) {
+      cpu_persistent_data.insert({model_name, new model_info{}});
+    }
+    auto e    = cpu_persistent_data.find(model_name);
+    auto info = e->second;
+    info->shapes.emplace_back(array.shape());
+    info->blobs.emplace_back(temp.data());
+    info->layer_names.emplace_back(layer_name);
+  }
+
+  void persist_on_cpu(const std::string &model_name, const std::vector<NDArray> &arrays,
+                      const std::vector<std::string> &layer_names) {
+    for (const auto &array : arrays) {
+      const auto layer_name = layer_names[ii++];
+      persist_on_cpu(model_name, layer_name, array);
+    }
+  }
+
   void load_ndarray(::google::protobuf::RepeatedPtrField<Layer> *layers, const ModelRequest *request,
                     int64_t ref_count) {
 
-    auto directory_path   = request->directory_path();
     const auto model_name = request->name();
+
+    if (is_persistent_on_cpu(model_name)) {
+      auto layers_span = start_span("to_layers_from_cpu_mem", "load",
+                                    span_props{{"ref_count", std::to_string(ref_count)}, {"mode_name", model_name}});
+      load_from_cpu_mem(model_name, ref_count);
+      stop_span(layers_span);
+      return;
+    }
+
+    auto directory_path = request->directory_path();
 
     auto span = start_span("load_ndarray", "load",
                            span_props{{"ref_count", std::to_string(ref_count)}, {"mode_name", model_name}});
@@ -196,6 +289,11 @@ private:
       throw std::runtime_error(msg);
     }
 
+    // LOG(INFO) << fmt::format("performing an ndarray load with params={} and
+    // symbol={} paths", params_path, symbol_path);
+
+    std::vector<NDArray> arrays{};
+    std::vector<std::string> layer_names{};
     auto stream_span = start_span("create_dmlc_stream", "load",
                                   span_props{{"ref_count", std::to_string(ref_count)}, {"mode_name", model_name}});
 
@@ -207,25 +305,24 @@ private:
     }
     stop_span(stream_span);
 
-    // LOG(INFO) << fmt::format("performing an ndarray load with params={} and
-    // symbol={} paths", params_path, symbol_path);
-
-    std::vector<NDArray> arrays{};
-    std::vector<std::string> layer_names{};
     NDArray::Load(fi, &arrays, &layer_names);
 
     // LOG(INFO) << "starting to convert " << arrays.size() << " ndarrays to
     // protobuf representation";
 
-    auto layers_span = start_span("to_layers", "load",
+    auto layers_span = start_span("to_layers_from_disk", "load",
                                   span_props{{"ref_count", std::to_string(ref_count)}, {"mode_name", model_name}});
     size_t ii        = 0;
-    for (const auto array : arrays) {
+    for (const auto &array : arrays) {
       const auto layer_name = layer_names[ii++];
       auto layer            = layers->Add();
-      to_layer(layer, layer_name, array, ref_count);
+      to_layer_from_disk(layer, layer_name, array, ref_count);
     }
     stop_span(layers_span);
+
+    if (UPRD_PERSIST_CPU) {
+      persist_on_cpu(model_name, arrays, layer_names);
+    }
   }
 
   void from_owned_layer(Layer *layer, const Layer &owned, int64_t ref_count) {
@@ -318,7 +415,7 @@ private:
       if (min_element == memory_db_.end()) {
         break;
       }
-      auto model = min_element->second;
+      auto model            = min_element->second;
       const auto byte_count = model->owned_model().byte_count();
       memory_usage_ -= byte_count;
       memory_freed += byte_count;
@@ -352,7 +449,7 @@ private:
       if (min_element == memory_db_.end()) {
         break;
       }
-      auto model = min_element->second;
+      auto model            = min_element->second;
       const auto byte_count = model->owned_model().byte_count();
       memory_usage_ -= byte_count;
       memory_freed += byte_count;
@@ -371,7 +468,7 @@ private:
                               const size_t memory_to_free) {
     size_t memory_freed = 0;
     for (const auto &elem : memory_db_) {
-      auto model = elem.second;
+      auto model            = elem.second;
       const auto byte_count = model->owned_model().byte_count();
       memory_usage_ -= byte_count;
       memory_freed += byte_count;
@@ -401,7 +498,7 @@ private:
       if (min_element == memory_db_.end()) {
         break;
       }
-      auto model = min_element->second;
+      auto model            = min_element->second;
       const auto byte_count = model->owned_model().byte_count();
       memory_usage_ -= byte_count;
       memory_freed += byte_count;
@@ -540,7 +637,6 @@ public:
     it = memory_db_.find(request->name());
     CHECK(it != memory_db_.end()) << "expecting the model to be there";
 
-
     auto model = it->second;
     CHECK(model != nullptr) << "expecting a valid model";
 
@@ -608,12 +704,14 @@ public:
       LOG(ERROR) << "failed to close request.  unable to find model name with id " << request->model_id()
                  << " during close request";
       return grpc::Status(grpc::NOT_FOUND,
-                          std::string("unable to find model name with id ") + request->model_id() + " during close request");
+                          std::string("unable to find model name with id ") + request->model_id() +
+                              " during close request");
     }
     auto model_entry = memory_db_.find(model_name);
     if (model_entry == memory_db_.end()) {
       LOG(ERROR) << "failed to close request\n";
-      return grpc::Status(grpc::NOT_FOUND, std::string("unable to find handle with name ") + model_name + " during close request");
+      return grpc::Status(grpc::NOT_FOUND,
+                          std::string("unable to find handle with name ") + model_name + " during close request");
     }
 
     auto model              = model_entry->second;

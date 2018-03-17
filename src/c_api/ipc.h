@@ -49,23 +49,20 @@
 #ifdef NDEBUG
 #define CUDA_CHECK_CALL(func, msg) func
 #else
-#define CUDA_CHECK_CALL(func, msg)                                             \
-  {                                                                            \
-    cudaError_t e = (func);                                                    \
-    CHECK(e == cudaSuccess || e == cudaErrorCudartUnloading)                   \
-        << "CUDA[" << msg << "]:: " << cudaGetErrorString(e);                  \
-    if (e != cudaSuccess) {                                                    \
-      throw dmlc::Error(                                                       \
-          fmt::format("CUDA[{}]:: {}", msg, cudaGetErrorString(e)));           \
-    }                                                                          \
+#define CUDA_CHECK_CALL(func, msg)                                                                                     \
+  {                                                                                                                    \
+    cudaError_t e = (func);                                                                                            \
+    CHECK(e == cudaSuccess || e == cudaErrorCudartUnloading) << "CUDA[" << msg << "]:: " << cudaGetErrorString(e);     \
+    if (e != cudaSuccess) {                                                                                            \
+      throw dmlc::Error(fmt::format("CUDA[{}]:: {}", msg, cudaGetErrorString(e)));                                     \
+    }                                                                                                                  \
   }
 #endif
 
-static std::ostream &operator<<(std::ostream &os,
-                                const cudaIpcMemHandle_t &handle) {
+static std::ostream &operator<<(std::ostream &os, const cudaIpcMemHandle_t &handle) {
   const auto reserved = handle.reserved;
   for (int ii = 0; ii < CUDA_IPC_HANDLE_SIZE; ii++) {
-    os << (int)reserved[ii];
+    os << (int) reserved[ii];
   }
   return os;
 }
@@ -73,29 +70,23 @@ static std::ostream &operator<<(std::ostream &os,
 namespace upr {
 using namespace mxnet;
 
-static const auto HOME = dmlc::GetEnv("HOME", std::string("/home/abduld"));
-static const auto UPR_ENABLED = dmlc::GetEnv("UPR_ENABLED", true);
-static const auto UPR_PROFILE_IO =
-    !UPR_ENABLED && dmlc::GetEnv("UPR_PROFILE_IO", true);
-static const auto is_client = dmlc::GetEnv("UPR_CLIENT", false);
-static const auto UPR_BASE_DIR =
-    dmlc::GetEnv("UPR_BASE_DIR", HOME + std::string("/carml/data/mxnet/"));
+static const auto HOME           = dmlc::GetEnv("HOME", std::string("/home/abduld"));
+static const auto UPR_ENABLED    = dmlc::GetEnv("UPR_ENABLED", true);
+static const auto UPR_PROFILE_IO = !UPR_ENABLED && dmlc::GetEnv("UPR_PROFILE_IO", true);
+static const auto is_client      = dmlc::GetEnv("UPR_CLIENT", false);
+static const auto UPR_BASE_DIR   = dmlc::GetEnv("UPR_BASE_DIR", HOME + std::string("/carml/data/mxnet/"));
 
-static const auto UPR_ENABLE_MEMORY_PROFILE =
-    dmlc::GetEnv("UPR_ENABLE_MEMORY_PROFILE", false);
-static const auto UPR_ENABLE_CUDA_FREE =
-    dmlc::GetEnv("UPR_ENABLE_CUDA_FREE", false);
+static const auto UPR_ENABLE_MEMORY_PROFILE = dmlc::GetEnv("UPR_ENABLE_MEMORY_PROFILE", false);
+static const auto UPR_ENABLE_CUDA_FREE      = dmlc::GetEnv("UPR_ENABLE_CUDA_FREE", false);
 
-static const auto UPRD_EVICTION_POLICY =
-    dmlc::GetEnv("UPRD_EVICTION_POLICY", std::string("lru"));
-static const auto UPRD_ESTIMATION_RATE =
-    dmlc::GetEnv("UPRD_ESTIMATION_RATE", 1.0);
-static const auto UPRD_MEMORY_PERCENTAGE =
-    dmlc::GetEnv("UPRD_MEMORY_PERCENTAGE", 0.8);
+static const auto UPRD_EVICTION_POLICY   = dmlc::GetEnv("UPRD_EVICTION_POLICY", std::string("lru"));
+static const auto UPRD_ESTIMATION_RATE   = dmlc::GetEnv("UPRD_ESTIMATION_RATE", 1.0);
+static const auto UPRD_MEMORY_PERCENTAGE = dmlc::GetEnv("UPRD_MEMORY_PERCENTAGE", 0.8);
+static const auto UPRD_PERSIST_CPU       = dmlc::GetEnv("UPRD_PERSIST_CPU", true);
 
 static const auto UPR_INPUT_CHANNELS = dmlc::GetEnv("UPR_INPUT_CHANNELS", 3);
-static const auto UPR_INPUT_WIDTH = dmlc::GetEnv("UPR_INPUT_WIDTH", 224);
-static const auto UPR_INPUT_HEIGHT = dmlc::GetEnv("UPR_INPUT_HEIGHT", 224);
+static const auto UPR_INPUT_WIDTH    = dmlc::GetEnv("UPR_INPUT_WIDTH", 224);
+static const auto UPR_INPUT_HEIGHT   = dmlc::GetEnv("UPR_INPUT_HEIGHT", 224);
 
 static const auto UPR_INPUT_MEAN_R = dmlc::GetEnv("UPR_INPUT_MEAN_R", 0.0f);
 static const auto UPR_INPUT_MEAN_G = dmlc::GetEnv("UPR_INPUT_MEAN_G", 0.0f);
@@ -104,10 +95,8 @@ static const auto UPR_INPUT_MEAN_B = dmlc::GetEnv("UPR_INPUT_MEAN_B", 0.0f);
 static std::map<std::string, std::string> model_directory_paths{
     {"bvlc_alexnet_1.0", UPR_BASE_DIR + "bvlc_alexnet_1.0"},
     {"bvlc_googlenet_1.0", UPR_BASE_DIR + "bvlc_googlenet_1.0"},
-    {"bvlc_reference_caffenet_1.0",
-     UPR_BASE_DIR + "bvlc_reference_caffenet_1.0"},
-    {"bvlc_reference_rcnn_ilsvrc13_1.0",
-     UPR_BASE_DIR + "bvlc_reference_rcnn_ilsvrc13_1.0"},
+    {"bvlc_reference_caffenet_1.0", UPR_BASE_DIR + "bvlc_reference_caffenet_1.0"},
+    {"bvlc_reference_rcnn_ilsvrc13_1.0", UPR_BASE_DIR + "bvlc_reference_rcnn_ilsvrc13_1.0"},
     {"dpn68_1.0", UPR_BASE_DIR + "dpn68_1.0"},
     {"dpn92_1.0", UPR_BASE_DIR + "dpn92_1.0"},
     {"inception_bn_3.0", UPR_BASE_DIR + "inception_bn_3.0"},
@@ -210,24 +199,22 @@ static Context get_ctx() {
   return ctx;
 }
 
-static std::string span_category_init = "init";
-static std::string span_category_load = "load";
-static std::string span_category_close = "close";
+static std::string span_category_init          = "init";
+static std::string span_category_load          = "load";
+static std::string span_category_close         = "close";
 static std::string span_category_serialization = "serialization";
-static std::string span_category_ipc = "ipc";
-static std::string span_category_grpc = "grpc";
-static std::string span_category_mxnet_init = "init";
-static std::string span_category_ignore = "ignore";
+static std::string span_category_ipc           = "ipc";
+static std::string span_category_grpc          = "grpc";
+static std::string span_category_mxnet_init    = "init";
+static std::string span_category_ignore        = "ignore";
 
 using span_props = std::map<std::string, std::string>;
 
-static inline engine::OprExecStat *start_span(const std::string &name,
-                                              std::string category) {
+static inline engine::OprExecStat *start_span(const std::string &name, std::string category) {
 #if MXNET_USE_PROFILER
   const auto ctx = get_ctx();
-  auto opr_stat =
-      engine::Profiler::Get()->AddOprStat(ctx.dev_type, ctx.dev_id, name);
-  uint64_t tid = std::hash<std::thread::id>()(std::this_thread::get_id());
+  auto opr_stat  = engine::Profiler::Get()->AddOprStat(ctx.dev_type, ctx.dev_id, name);
+  uint64_t tid   = std::hash<std::thread::id>()(std::this_thread::get_id());
   engine::SetOprCategory(opr_stat, category);
   engine::SetOprStart(opr_stat);
   return opr_stat;
@@ -236,8 +223,7 @@ static inline engine::OprExecStat *start_span(const std::string &name,
 #endif
 }
 
-static inline engine::OprExecStat *
-start_span(const std::string &name, std::string category, span_props props) {
+static inline engine::OprExecStat *start_span(const std::string &name, std::string category, span_props props) {
 #if MXNET_USE_PROFILER
   auto span = start_span(name, category);
   for (const auto kv : props) {
@@ -265,18 +251,15 @@ static inline void stop_span(engine::OprExecStat *stat) {
 #define SPAN_PRIVATE_CONCAT(a, b) SPAN_PRIVATE_CONCAT2(a, b)
 #define SPAN_PRIVATE_CONCAT2(a, b) a##b
 
-#define TIME_IT(...)                                                           \
-  auto SPAN_PRIVATE_NAME =                                                     \
-      upr::start_span(#__VA_ARGS__, "statement",                               \
-                      span_props{{"function", __PRETTY_FUNCTION__},            \
-                                 {"file", __FILE__},                           \
-                                 {"line", std::to_string(__LINE__)}});         \
-  __VA_ARGS__;                                                                 \
+#define TIME_IT(...)                                                                                                   \
+  auto SPAN_PRIVATE_NAME = upr::start_span(                                                                            \
+      #__VA_ARGS__, "statement",                                                                                       \
+      span_props{{"function", __PRETTY_FUNCTION__}, {"file", __FILE__}, {"line", std::to_string(__LINE__)}});          \
+  __VA_ARGS__;                                                                                                         \
   upr::stop_span(SPAN_PRIVATE_NAME);
 
 static std::string get_model_name() {
-  static const auto model_name =
-      dmlc::GetEnv("UPR_MODEL_NAME", std::string(DEFAULT_MODEL));
+  static const auto model_name = dmlc::GetEnv("UPR_MODEL_NAME", std::string(DEFAULT_MODEL));
   return model_name;
 }
 
@@ -286,8 +269,7 @@ static size_t get_model_internal_memory_usage(std::string model_name = "") {
   }
   const auto it = model_internal_memory_usage.find(model_name);
   if (it == model_internal_memory_usage.end()) {
-    throw dmlc::Error(fmt::format(
-        "unable to find {} model in model_internal_memory_usage", model_name));
+    throw dmlc::Error(fmt::format("unable to find {} model in model_internal_memory_usage", model_name));
   }
   return it->second;
 }
@@ -298,9 +280,7 @@ static std::string get_model_directory_path(std::string model_name = "") {
   }
   const auto it = model_directory_paths.find(model_name);
   if (it == model_directory_paths.end()) {
-    throw dmlc::Error(
-        fmt::format("unable to find {} model in model_directory_paths {}",
-                    model_name, UPR_BASE_DIR));
+    throw dmlc::Error(fmt::format("unable to find {} model in model_directory_paths {}", model_name, UPR_BASE_DIR));
   }
   return it->second;
 }
@@ -334,7 +314,7 @@ static std::string get_model_params_path(std::string model_name = "") {
     model_name = get_model_name();
   }
   const std::string path = get_model_directory_path(model_name);
-  auto model_path = path + "/model.params";
+  auto model_path        = path + "/model.params";
   if (file_exists(model_path)) {
     return model_path;
   }
@@ -347,12 +327,11 @@ static std::string get_model_params_path(std::string model_name = "") {
     return model_path;
   }
 
-  throw dmlc::Error(fmt::format(
-      "unable to find {} model params in model_directory_path. make sure "
-      "that you have the model"
-      "in the directory and it's called either model.params, "
-      "{}.params, or {}-0000.params is in {}",
-      model_name, model_name, model_name, path));
+  throw dmlc::Error(fmt::format("unable to find {} model params in model_directory_path. make sure "
+                                "that you have the model"
+                                "in the directory and it's called either model.params, "
+                                "{}.params, or {}-0000.params is in {}",
+                                model_name, model_name, model_name, path));
 
   return "";
 }
@@ -362,7 +341,7 @@ static std::string get_model_symbol_path(std::string model_name = "") {
     model_name = get_model_name();
   }
   const std::string path = get_model_directory_path(model_name);
-  auto model_path = path + "/model.symbol";
+  auto model_path        = path + "/model.symbol";
   if (file_exists(model_path)) {
     return model_path;
   }
@@ -375,12 +354,11 @@ static std::string get_model_symbol_path(std::string model_name = "") {
     return model_path;
   }
 
-  throw dmlc::Error(fmt::format(
-      "unable to find {} model symbol in model_directory_path. make sure "
-      "that you have the model"
-      "in the directory and it's called either model.symbol, "
-      "{}.symbol, or {}-symbol.json is in {}",
-      model_name, model_name, model_name, path));
+  throw dmlc::Error(fmt::format("unable to find {} model symbol in model_directory_path. make sure "
+                                "that you have the model"
+                                "in the directory and it's called either model.symbol, "
+                                "{}.symbol, or {}-symbol.json is in {}",
+                                model_name, model_name, model_name, path));
 
   return "";
 }
@@ -396,11 +374,10 @@ static std::string get_synset_path(std::string model_name = "") {
     return synset_path;
   }
 
-  throw dmlc::Error(
-      fmt::format("unable to find {} model synset in {}. make sure "
-                  "that you have the synset file in the directory and it's "
-                  "called synset.txt",
-                  model_name, path));
+  throw dmlc::Error(fmt::format("unable to find {} model synset in {}. make sure "
+                                "that you have the synset file in the directory and it's "
+                                "called synset.txt",
+                                model_name, path));
 
   return "";
 }
@@ -426,19 +403,17 @@ struct server {
 };
 
 template <typename charT>
-inline bool string_starts_with(const std::basic_string<charT> &big,
-                               const std::basic_string<charT> &small) {
-  const typename std::basic_string<charT>::size_type big_size = big.size();
+inline bool string_starts_with(const std::basic_string<charT> &big, const std::basic_string<charT> &small) {
+  const typename std::basic_string<charT>::size_type big_size   = big.size();
   const typename std::basic_string<charT>::size_type small_size = small.size();
-  const bool valid_ = (big_size >= small_size);
-  const bool starts_with_ = (big.compare(0, small_size, small) == 0);
+  const bool valid_                                             = (big_size >= small_size);
+  const bool starts_with_                                       = (big.compare(0, small_size, small) == 0);
   return valid_ and starts_with_;
 }
 
 void Unload(mxnet::MXAPIPredictor *pred);
 
-std::pair<std::string, std::string> Load(std::string model_name,
-                                         std::vector<mxnet::NDArray> *data,
+std::pair<std::string, std::string> Load(std::string model_name, std::vector<mxnet::NDArray> *data,
                                          std::vector<std::string> *keys);
 } // namespace upr
 #endif // MXNET_USE_CUDA

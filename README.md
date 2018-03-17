@@ -112,7 +112,7 @@ The server is part of the MXNet build process.
 
 | Name                       | Description                           | Default Value    |
 | -------------------------- | ------------------------------------- | ---------------- |
-| UPR_ENABLED                |                                       | true            |
+| UPR_ENABLED                |                                       | true             |
 | UPR_PROFILE_IO             | only makes sense if UPR_ENABLED=false | true             |
 | UPR_RUN_ID                 |                                       | [undefined]      |
 | git                        |                                       | build_git_sha    |
@@ -136,6 +136,7 @@ The server is part of the MXNet build process.
 | UPRD_EVICTION_POLICY       |                                       | LRU              |
 | UPRD_ESTIMATION_RATE       |                                       | 1.0              |
 | UPRD_MEMORY_PERCENTAGE     |                                       | 0.8              |
+| UPRD_PERSIST_CPU           |                                       | true             |
 
 ## How it Works
 
