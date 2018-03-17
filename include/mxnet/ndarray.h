@@ -840,25 +840,25 @@ private:
     }
     /*! \brief destructor */
     ~Chunk() {
-      /* bool is_shared                     = this->is_shared; */
-      /* bool skip_free                     = static_data || delay_alloc; */
-      /* Storage::Handle h                  = this->shandle; */
-      /* std::vector<Storage::Handle> aux_h = this->aux_handles; */
-      /* Engine::Get()->DeleteVariable( */
-      /*     [h, aux_h, skip_free, is_shared](RunContext s) { */
-      /*       if (is_shared) { */
-      /*         cudaIpcCloseMemHandle(h.dptr); */
-      /*         return; */
-      /*       } */
-      /*       if (skip_free == false) { */
-      /*         Storage::Get()->Free(h); */
-      /*         for (size_t i = 0; i < aux_h.size(); i++) { */
-      /*           if (aux_h[i].size > 0) */
-      /*             Storage::Get()->Free(aux_h[i]); */
-      /*         } */
-      /*       } */
-      /*     }, */
-      /*     shandle.ctx, var); */
+      bool is_shared                     = this->is_shared;
+      bool skip_free                     = static_data || delay_alloc;
+      Storage::Handle h                  = this->shandle;
+      std::vector<Storage::Handle> aux_h = this->aux_handles;
+      Engine::Get()->DeleteVariable(
+          [h, aux_h, skip_free, is_shared](RunContext s) {
+            if (is_shared) {
+              cudaIpcCloseMemHandle(h.dptr);
+              return;
+            }
+            if (skip_free == false) {
+              Storage::Get()->Free(h);
+              for (size_t i = 0; i < aux_h.size(); i++) {
+                if (aux_h[i].size > 0)
+                  Storage::Get()->Free(aux_h[i]);
+              }
+            }
+          },
+          shandle.ctx, var);
     }
   }; // struct Chunk
 
