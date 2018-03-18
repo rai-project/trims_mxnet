@@ -205,8 +205,8 @@ struct client {
     auto span_converting = start_span("convering_to_nd_array",
                                       span_category_serialization,
                                       span_props{{"model_id", open_reply.model_id()},
-                                                 {"byte_count", open_reply.byte_count()},
-                                                 {"nlayers", open_reply.layer().size()}});
+                                                 {"byte_count", std::to_string(open_reply.byte_count())},
+                                                 {"nlayers", std::to_string(open_reply.layer().size())}});
     defer(stop_span(span_converting));
 
     to_ndarrays(res_arrays, res_keys, open_reply);
