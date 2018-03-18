@@ -271,6 +271,7 @@ namespace engine {
                 {"server",
                  {{"eviction_policy", upr::UPRD_EVICTION_POLICY},
                   {"estimation_rate", upr::UPRD_ESTIMATION_RATE},
+                  {"persist_cpu", upr::UPRD_PERSIST_CPU},
                   {"memory_percentage", upr::UPRD_MEMORY_PERCENTAGE}}},
                 {"hostname", std::string(hostname)},
                 {"username", std::string(username)},
