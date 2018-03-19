@@ -142,7 +142,7 @@ private:
     const auto id  = sole::uuid4().str();
 
     auto array = cpu_array.Copy(ctx);
-    TIME_IT(array.WaitToRead()); // TODO:: REVISIT THIS
+    array.WaitToRead();
 
     const auto blob  = array.data();
     const auto shape = layer->mutable_shape();
@@ -170,16 +170,17 @@ private:
 
     // LOG(INFO) << "converting " << name << " ndarray to protobuf
     // representation with ref_count = " << ref_count;
-    const auto id  = sole::uuid4().str();
+    const auto id = sole::uuid4().str();
 
     const size_t type_size  = element_size;
     const size_t byte_count = type_size * blob.Size();
-    const float * cpu_ptr      = (float *) blob.dptr_;
+    const float *cpu_ptr    = (float *) blob.dptr_;
 
     float *dev_ptr = nullptr;
 
     CUDA_CHECK_CALL(cudaMalloc(&dev_ptr, byte_count), "failed to allocate device pointer while creating cpu memory");
-    CUDA_CHECK_CALL(cudaMemcpy(dev_ptr, cpu_ptr, byte_count, cudaMemcpyHostToDevice), "faile to copy cpu memory to gpu");
+    CUDA_CHECK_CALL(cudaMemcpy(dev_ptr, cpu_ptr, byte_count, cudaMemcpyHostToDevice),
+                    "faile to copy cpu memory to gpu");
 
     const auto shape = layer->mutable_shape();
     layer->set_id(id);
@@ -198,8 +199,8 @@ private:
     layer->set_ref_count(ref_count);
   }
 
-  void load_from_cpu_mem(::google::protobuf::RepeatedPtrField<Layer> *layers, const std::string & model_name, 
-  int64_t ref_count) {
+  void load_from_cpu_mem(::google::protobuf::RepeatedPtrField<Layer> *layers, const std::string &model_name,
+                         int64_t ref_count) {
     auto e    = cpu_persistent_data.find(model_name);
     auto info = e->second;
     for (size_t ii = 0; ii < info->layer_names.size(); ii++) {
@@ -231,7 +232,7 @@ private:
 
   void persist_on_cpu(const std::string &model_name, const std::vector<NDArray> &arrays,
                       const std::vector<std::string> &layer_names) {
-size_t ii = 0;
+    size_t ii = 0;
     for (const auto &array : arrays) {
       const auto layer_name = layer_names[ii++];
       persist_on_cpu(model_name, array, layer_name);
