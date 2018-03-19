@@ -236,31 +236,43 @@ int main(int argc, char *argv[]) {
     MXSetProfilerState(1);
   }
 
+  auto predict_create = start_span("create", "prediction");
   MXPredCreate((const char *) json_data.GetBuffer(), (const char *) param_data.GetBuffer(), param_data.GetLength(),
                dev_type, dev_id, num_input_nodes, input_keys, input_shape_indptr, input_shape_data, &pred_hnd);
-
+  stop_span(predict_create);
 
   CHECK(pred_hnd != nullptr) << " got error=" << MXGetLastError();
 
   // Set Input Image
+  auto predict_set_input = start_span("set_input", "prediction");
   MXPredSetInput(pred_hnd, "data", image_data.data(), image_size);
+  stop_span(predict_set_input);
 
   // Do Predict Forward
+
+  auto predict_forward = start_span("forward", "prediction");
   MXPredForward(pred_hnd);
+  stop_span(predict_forward);
 
   mx_uint *shape = 0;
   mx_uint shape_len;
 
+  auto predict_get_output_shape = start_span("get_output_shape", "prediction");
   MXPredGetOutputShape(pred_hnd, output_index, &shape, &shape_len);
   size = 1;
   for (mx_uint i = 0; i < shape_len; ++i) {
     size *= shape[i];
   }
+  stop_span(predict_get_output_shape);
 
+  auto predict_get_output = start_span("get_output", "prediction");
   MXPredGetOutput(pred_hnd, output_index, data, size);
+  stop_span(predict_get_output);
 
   // Release Predictor
+  auto predict_free = start_span("free", "prediction");
   MXPredFree(pred_hnd);
+  stop_span(predict_free);
 
   // Stop profiling
   MXSetProfilerState(0);
