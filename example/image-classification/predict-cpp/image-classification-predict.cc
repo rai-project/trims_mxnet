@@ -243,6 +243,8 @@ int main(int argc, char *argv[]) {
 
   CHECK(pred_hnd != nullptr) << " got error=" << MXGetLastError();
 
+  auto predict_process = start_span("predict", "prediction");
+
   // Set Input Image
   auto predict_set_input = start_span("set_input", "prediction");
   MXPredSetInput(pred_hnd, "data", image_data.data(), image_size);
@@ -268,6 +270,8 @@ int main(int argc, char *argv[]) {
   auto predict_get_output = start_span("get_output", "prediction");
   MXPredGetOutput(pred_hnd, output_index, data, size);
   stop_span(predict_get_output);
+
+  stop_span(predict_process);
 
   // Release Predictor
   auto predict_free = start_span("free", "prediction");
