@@ -54,11 +54,6 @@ int MXPredInit() {
 int MXPredCreate(const char *symbol_json_str, const void *param_bytes, int param_size, int dev_type, int dev_id,
                  mx_uint num_input_nodes, const char **input_keys, const mx_uint *input_shape_indptr,
                  const mx_uint *input_shape_data, PredictorHandle *out) {
-  if (symbol_json_str == nullptr) {
-    cudaFree(0);
-    return 0;
-  }
-
   return MXPredCreatePartialOut(symbol_json_str, param_bytes, param_size, dev_type, dev_id, num_input_nodes, input_keys,
                                 input_shape_indptr, input_shape_data, 0, NULL, out);
 }
@@ -78,6 +73,11 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
     mx_uint outSize;
     const char **outArray;
     MXListAllOpNames(&outSize, &outArray);
+  }
+  if (symbol_json_str == nullptr) {
+    cudaFree(0);
+    delete ret;
+    return 0;
   }
   // load in the symbol.
   {
