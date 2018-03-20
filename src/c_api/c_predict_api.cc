@@ -80,6 +80,7 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
     return 0;
   }
   // load in the symbol.
+  auto span = upr::start_span("load symbol", "create");
   {
     nnvm::Graph g;
     g.attrs["json"] = std::make_shared<nnvm::any>(std::string(symbol_json_str));
@@ -103,8 +104,10 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
     }
     sym = nnvm::Symbol::CreateGroup(out_syms);
   }
+  upr::stop_span(span);
 
   // load the parameters
+  span = upr::start_span("load params", "create");
   std::unordered_map<std::string, NDArray> arg_params, aux_params;
   {
     std::unordered_set<std::string> arg_names, aux_names;
@@ -153,8 +156,10 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
       }
     }
   }
+  upr::stop_span(span);
 
   // shape inference and bind
+  span = upr::start_span("shape inference", "create");
   std::unordered_map<std::string, TShape> known_shape;
   for (mx_uint i = 0; i < num_input_nodes; ++i) {
     known_shape[std::string(input_keys[i])] =
@@ -219,7 +224,10 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
     }
   }
   ret->arg_arrays = arg_arrays;
+  upr::stop_span(span);
+
   // bind
+  span = upr::start_span("bind", "create");
   {
     std::map<std::string, Context> ctx_map;
     std::vector<NDArray> grad_store(arg_arrays.size());
@@ -229,6 +237,8 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
     ret->out_shapes = out_shapes;
     ret->out_arrays = ret->exec->outputs();
   }
+  upr::stop_span(span);
+
   *out = ret;
   API_END_HANDLE_ERROR(delete ret);
 }
