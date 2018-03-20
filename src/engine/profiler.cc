@@ -214,6 +214,10 @@ namespace engine {
     std::lock_guard<std::mutex> lock{this->m_};
     json trace_events;
 
+    if (upr::UPR_ENABLED && !upr::is_client && !upr::UPRD_WRITE_PROFILE) {
+      return;
+    }
+
     uint32_t dev_num = cpu_num_ + gpu_num_ + 1;
 
     for (uint32_t i = 0; i < dev_num; ++i) {
