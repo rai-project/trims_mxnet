@@ -734,7 +734,7 @@ public:
 
     if (ref_count == 0) {
       static const auto eviction_policy = UPRD_EVICTION_POLICY;
-      if (eviction_policy == "eager") {
+      if (eviction_policy == "eager" || UPRD_PERSIST_ONLY_CPU) {
         const auto byte_count = model->owned_model().byte_count();
         memory_usage_ -= byte_count;
         model_delete(model);

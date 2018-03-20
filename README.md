@@ -137,6 +137,7 @@ The server is part of the MXNet build process.
 | UPRD_ESTIMATION_RATE       |                                       | 1.0              |
 | UPRD_MEMORY_PERCENTAGE     |                                       | 0.8              |
 | UPRD_PERSIST_CPU           |                                       | true             |
+| UPRD_PERSIST_ONLY_CPU      | only persist on cpu memory            | false            |
 
 ## How it Works
 

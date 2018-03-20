@@ -83,6 +83,7 @@ static const auto UPRD_EVICTION_POLICY   = dmlc::GetEnv("UPRD_EVICTION_POLICY", 
 static const auto UPRD_ESTIMATION_RATE   = dmlc::GetEnv("UPRD_ESTIMATION_RATE", 1.0);
 static const auto UPRD_MEMORY_PERCENTAGE = dmlc::GetEnv("UPRD_MEMORY_PERCENTAGE", 0.8);
 static const auto UPRD_PERSIST_CPU       = dmlc::GetEnv("UPRD_PERSIST_CPU", true);
+static const auto UPRD_PERSIST_ONLY_CPU  = dmlc::GetEnv("UPRD_PERSIST_ONLY_CPU", false);
 
 static const auto UPR_INPUT_CHANNELS = dmlc::GetEnv("UPR_INPUT_CHANNELS", 3);
 static const auto UPR_INPUT_WIDTH    = dmlc::GetEnv("UPR_INPUT_WIDTH", 224);
