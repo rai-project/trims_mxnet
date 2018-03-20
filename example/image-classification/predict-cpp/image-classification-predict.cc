@@ -236,7 +236,7 @@ int main(int argc, char *argv[]) {
     MXSetProfilerState(1);
   }
 
-  auto predict_create = start_span("create", "prediction");
+  auto predict_create = start_span("create_predictor", "prediction");
   MXPredCreate((const char *) json_data.GetBuffer(), (const char *) param_data.GetBuffer(), param_data.GetLength(),
                dev_type, dev_id, num_input_nodes, input_keys, input_shape_indptr, input_shape_data, &pred_hnd);
   stop_span(predict_create);

@@ -80,7 +80,7 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
     return 0;
   }
   // load in the symbol.
-  auto span = upr::start_span("load symbol", "create");
+  auto span = upr::start_span("load_symbol", "create");
   {
     nnvm::Graph g;
     g.attrs["json"] = std::make_shared<nnvm::any>(std::string(symbol_json_str));
@@ -107,7 +107,7 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
   upr::stop_span(span);
 
   // load the parameters
-  span = upr::start_span("load params", "create");
+  span = upr::start_span("load_params", "create");
   std::unordered_map<std::string, NDArray> arg_params, aux_params;
   {
     std::unordered_set<std::string> arg_names, aux_names;
@@ -159,7 +159,7 @@ int MXPredCreatePartialOut(const char *symbol_json_str, const void *param_bytes,
   upr::stop_span(span);
 
   // shape inference and bind
-  span = upr::start_span("shape inference", "create");
+  span = upr::start_span("shape_inference", "create");
   std::unordered_map<std::string, TShape> known_shape;
   for (mx_uint i = 0; i < num_input_nodes; ++i) {
     known_shape[std::string(input_keys[i])] =
