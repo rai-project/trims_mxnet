@@ -136,15 +136,15 @@ std::vector<std::string> LoadSynset(std::string synset_file) {
   return output;
 }
 
-void PrintOutputResult(const std::vector<float> &data, const std::vector<std::string> &synset) {
-  if (data.size() != synset.size()) {
+void PrintOutputResult(const float * data, size_t size, const std::vector<std::string> &synset) {
+  if (size != synset.size()) {
     std::cerr << "Result data and synset size does not match!" << std::endl;
   }
 
   float best_accuracy = 0.0;
   int best_idx        = 0;
 
-  for (int i = 0; i < static_cast<int>(data.size()); i++) {
+  for (int i = 0; i < size; i++) {
     /* printf("Accuracy[%d] = %.8f\n", i, data[i]); */
 
     if (data[i] > best_accuracy) {
@@ -282,10 +282,10 @@ int main(int argc, char *argv[]) {
   MXSetProfilerState(0);
 
   // // Synset path for your model, you have to modify it
-  // std::vector<std::string> synset = LoadSynset(synset_file);
+ //  std::vector<std::string> synset = LoadSynset(synset_file);
 
   // // Print Output Data
-  // PrintOutputResult(data, synset);
+  // PrintOutputResult(data, size, synset);
 
   return 0;
 }
