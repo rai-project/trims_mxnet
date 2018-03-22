@@ -139,6 +139,11 @@ static std::map<std::string, std::string> model_directory_paths{
     {"wrn50_2.0", UPR_BASE_DIR + "wrn50_2.0"},
     {"large_alexnet_227x227_1.0", UPR_BASE_DIR + "large_alexnet_227x227_1.0"},
     {"large_alexnet_454x454_1.0", UPR_BASE_DIR + "large_alexnet_454x454_1.0"},
+    {"large_alexnet_480x640_1.0", UPR_BASE_DIR + "large_alexnet_480x640_1.0"},
+    {"large_alexnet_600x800_1.0", UPR_BASE_DIR + "large_alexnet_600x800_1.0"},
+    {"large_alexnet_720x960_1.0", UPR_BASE_DIR + "large_alexnet_720x960_1.0"},
+    {"large_alexnet_768x1280_1.0", UPR_BASE_DIR + "large_alexnet_768x1280_1.0"},
+    {"large_alexnet_1080x1920_1.0", UPR_BASE_DIR + "large_alexnet_1080x1920_1.0"},
     {"large_alexnet_681x681_1.0", UPR_BASE_DIR + "large_alexnet_681x681_1.0"},
     {"large_alexnet_908x908_1.0", UPR_BASE_DIR + "large_alexnet_908x908_1.0"},
     {"large_alexnet_1135x1135_1.0", UPR_BASE_DIR + "large_alexnet_1135x1135_1.0"},
@@ -190,6 +195,10 @@ static std::map<std::string, size_t> model_internal_memory_usage{
     {"resnet200_2.0", 589260288},
     {"resnet269_2.0", 889219456},
     {"resnet34_2.0", 235156800},
+    {"large_alexnet_227x227_1.0", 507339560},
+    {"large_alexnet_454x454_1.0", 1648424880},
+    {"large_vgg16_224x224_1.0", 1161115984},
+    {"large_vgg16_448x448_1.0", 3789936976},
 };
 
 /**
