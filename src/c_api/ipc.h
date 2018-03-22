@@ -84,7 +84,7 @@ static const auto UPRD_ESTIMATION_RATE   = dmlc::GetEnv("UPRD_ESTIMATION_RATE", 
 static const auto UPRD_MEMORY_PERCENTAGE = dmlc::GetEnv("UPRD_MEMORY_PERCENTAGE", 0.8);
 static const auto UPRD_PERSIST_CPU       = dmlc::GetEnv("UPRD_PERSIST_CPU", true);
 static const auto UPRD_PERSIST_ONLY_CPU  = dmlc::GetEnv("UPRD_PERSIST_ONLY_CPU", false);
-static const auto UPRD_WRITE_PROFILE  = dmlc::GetEnv("UPRD_WRITE_PROFILE", false);
+static const auto UPRD_WRITE_PROFILE     = dmlc::GetEnv("UPRD_WRITE_PROFILE", false);
 
 static const auto UPR_INPUT_CHANNELS = dmlc::GetEnv("UPR_INPUT_CHANNELS", 3);
 static const auto UPR_INPUT_WIDTH    = dmlc::GetEnv("UPR_INPUT_WIDTH", 224);
@@ -136,7 +136,17 @@ static std::map<std::string, std::string> model_directory_paths{
     {"vgg16_1.0", UPR_BASE_DIR + "vgg16_1.0"},
     {"vgg19_1.0", UPR_BASE_DIR + "vgg19_1.0"},
     {"xception_1.0", UPR_BASE_DIR + "xception_1.0"},
-    {"wrn50_2.0", UPR_BASE_DIR + "wrn50_2.0"}};
+    {"wrn50_2.0", UPR_BASE_DIR + "wrn50_2.0"},
+    {"large_alexnet_227x227_1.0", UPR_BASE_DIR + "large_alexnet_227x227_1.0"},
+    {"large_alexnet_454x454_1.0", UPR_BASE_DIR + "large_alexnet_454x454_1.0"},
+    {"large_alexnet_681x681_1.0", UPR_BASE_DIR + "large_alexnet_681x681_1.0"},
+    {"large_alexnet_908x908_1.0", UPR_BASE_DIR + "large_alexnet_908x908_1.0"},
+    {"large_alexnet_1135x1135_1.0", UPR_BASE_DIR + "large_alexnet_1135x1135_1.0"},
+    {"large_vgg16_224x224_1.0", UPR_BASE_DIR + "large_vgg16_224x224_1.0"},
+    {"large_vgg16_448x448_1.0", UPR_BASE_DIR + "large_vgg16_448x448_1.0"},
+    {"large_vgg16_672x672_1.0", UPR_BASE_DIR + "large_vgg16_672x672_1.0"},
+    {"large_vgg16_896x896_1.0", UPR_BASE_DIR + "large_vgg16_896x896_1.0"},
+};
 
 static std::map<std::string, size_t> model_internal_memory_usage{
     {"inceptionbn_21k_2.0", 313251904},
