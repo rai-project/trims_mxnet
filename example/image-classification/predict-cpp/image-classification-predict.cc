@@ -34,7 +34,7 @@ using namespace upr;
 class BufferFile {
 public:
   std::string file_path_;
-  int length_;
+  size_t length_;
   char *buffer_{nullptr};
 
   explicit BufferFile() {
@@ -59,7 +59,7 @@ public:
     ifs.close();
   }
 
-  int GetLength() {
+  size_t GetLength() {
     return length_;
   }
   char *GetBuffer() {
@@ -87,7 +87,7 @@ void GetImageFile(const std::string image_file, mx_float *image_data, const int 
 
   resize(im_ori, im, resize_size);
 
-  int size = im.rows * im.cols * channels;
+  size_t size = im.rows * im.cols * channels;
 
   mx_float *ptr_image_r = image_data;
   mx_float *ptr_image_g = image_data + size / 3;
@@ -97,10 +97,10 @@ void GetImageFile(const std::string image_file, mx_float *image_data, const int 
   const auto mean_g = upr::UPR_INPUT_MEAN_G;
   const auto mean_r = upr::UPR_INPUT_MEAN_R;
 
-  for (int i = 0; i < im.rows; i++) {
+  for (size_t i = 0; i < im.rows; i++) {
     uchar *data = im.ptr<uchar>(i);
 
-    for (int j = 0; j < im.cols; j++) {
+    for (size_t j = 0; j < im.cols; j++) {
       if (channels > 1) {
         *ptr_image_b++ = static_cast<mx_float>(*data++) - mean_b;
         *ptr_image_g++ = static_cast<mx_float>(*data++) - mean_g;
@@ -142,9 +142,9 @@ void PrintOutputResult(const float * data, size_t size, const std::vector<std::s
   }
 
   float best_accuracy = 0.0;
-  int best_idx        = 0;
+  size_t best_idx        = 0;
 
-  for (int i = 0; i < size; i++) {
+  for (size_t i = 0; i < size; i++) {
     /* printf("Accuracy[%d] = %.8f\n", i, data[i]); */
 
     if (data[i] > best_accuracy) {
@@ -153,7 +153,7 @@ void PrintOutputResult(const float * data, size_t size, const std::vector<std::s
     }
   }
 
-  printf("Best Result: [%s] id = %d, accuracy = %.8f\n", synset[best_idx].c_str(), best_idx, best_accuracy);
+  printf("Best Result: [%s] id = %ld, accuracy = %.8f\n", synset[best_idx].c_str(), best_idx, best_accuracy);
 }
 
 int main(int argc, char *argv[]) {
@@ -194,9 +194,9 @@ int main(int argc, char *argv[]) {
   const char **input_keys  = input_key;
 
   // Image size and channels
-  const int width    = UPR_INPUT_WIDTH;
-  const int height   = UPR_INPUT_HEIGHT;
-  const int channels = UPR_INPUT_CHANNELS;
+  const size_t width    = UPR_INPUT_WIDTH;
+  const size_t height   = UPR_INPUT_HEIGHT;
+  const size_t channels = UPR_INPUT_CHANNELS;
 
   const mx_uint input_shape_indptr[2] = {0, 4};
   const mx_uint input_shape_data[4]   = {1, static_cast<mx_uint>(channels), static_cast<mx_uint>(height),
@@ -207,7 +207,7 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  int image_size = width * height * channels;
+  size_t image_size = width * height * channels;
 
   // Read Image Data
   std::vector<mx_float> image_data = std::vector<mx_float>(image_size);
@@ -262,7 +262,7 @@ int main(int argc, char *argv[]) {
   auto predict_get_output_shape = start_span("get_output_shape", "prediction");
   MXPredGetOutputShape(pred_hnd, output_index, &shape, &shape_len);
   size = 1;
-  for (mx_uint i = 0; i < shape_len; ++i) {
+  for (size_t i = 0; i < shape_len; ++i) {
     size *= shape[i];
   }
   stop_span(predict_get_output_shape);
