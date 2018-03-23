@@ -25,10 +25,17 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <chrono>
 
 #include <opencv2/opencv.hpp>
 
 const mx_float DEFAULT_MEAN = 0;
+
+
+
+static std::chrono::time_point<std::chrono::high_resolution_clock> now() {
+  return std::chrono::high_resolution_clock::now();
+}
 
 // Read file to buffer
 class BufferFile {
@@ -50,7 +57,7 @@ public:
     ifs.seekg(0, std::ios::end);
     length_ = ifs.tellg();
     ifs.seekg(0, std::ios::beg);
-    std::cout << file_path.c_str() << " ... " << length_ << " bytes\n";
+    //std::cout << file_path.c_str() << " ... " << length_ << " bytes\n";
 
     buffer_ = new char[sizeof(char) * length_];
     ifs.read(buffer_, length_);
@@ -173,20 +180,23 @@ int main(int argc, char *argv[]) {
   std::string param_file = get_model_params_path();
   std::string synset_file = get_synset_path();
 
-  BufferFile json_data(json_file);
-  BufferFile param_data(param_file);
-
   // Parameters
-  int dev_type = 2;            // 1: cpu, 2: gpu
+  int dev_type = 1;            // 1: cpu, 2: gpu
   int dev_id = 0;              // arbitrary.
   mx_uint num_input_nodes = 1; // 1 for feedforward
   const char *input_key[1] = {"data"};
   const char **input_keys = input_key;
 
+
+
+static const auto UPR_INPUT_CHANNELS = dmlc::GetEnv("UPR_INPUT_CHANNELS", 3);
+static const auto UPR_INPUT_WIDTH    = dmlc::GetEnv("UPR_INPUT_WIDTH", 224);
+static const auto UPR_INPUT_HEIGHT   = dmlc::GetEnv("UPR_INPUT_HEIGHT", 224);
+
   // Image size and channels
-  int width = 224;
-  int height = 224;
-  int channels = 3;
+  int width = UPR_INPUT_WIDTH;
+  int height = UPR_INPUT_HEIGHT;
+  int channels = UPR_INPUT_CHANNELS;
 
   const mx_uint input_shape_indptr[2] = {0, 4};
   const mx_uint input_shape_data[4] = {1, static_cast<mx_uint>(channels),
@@ -194,18 +204,20 @@ int main(int argc, char *argv[]) {
                                        static_cast<mx_uint>(width)};
   PredictorHandle pred_hnd = 0;
 
-  if (json_data.GetLength() == 0) {
-    return -1;
-  }
-
   const std::string filename{model_name+"_original_profile_"+profile_suffix+".json"};
   MXSetProfilerConfig(1, filename.c_str());
 
   // Stope profiling
   MXSetProfilerState(1);
+std::cout << "running " << get_model_name() << "\n";
 
-  cudaSetDevice(0);
-  force_runtime_initialization();
+const auto load_tic = now();
+  BufferFile json_data(json_file);
+  BufferFile param_data(param_file);
+
+  if (json_data.GetLength() == 0) {
+    return -1;
+  }
 
   // Create Predictor
   MXPredCreate((const char *)json_data.GetBuffer(),
@@ -214,14 +226,26 @@ int main(int argc, char *argv[]) {
                input_shape_indptr, input_shape_data, &pred_hnd);
   CHECK(pred_hnd != nullptr) << " got error=" << MXGetLastError();
 
+const auto load_toc = now();
+
+const auto load_elapsed = std::chrono::duration<double, std::milli>(load_toc - load_tic).count();;
+std::cout << "load " << load_elapsed << "milliseconds\n";
+
+const auto image_tic = now();
   int image_size = width * height * channels;
 
   // Read Image Data
   std::vector<mx_float> image_data = std::vector<mx_float>(image_size);
 
   GetImageFile(test_file, image_data.data(), channels, cv::Size(width, height));
+const auto image_toc = now();
+
+const auto image_elapsed = std::chrono::duration<double, std::milli>(image_toc - image_tic).count();;
+std::cout << "image " << image_elapsed << "milliseconds\n";
+
 
   // Set Input Image
+const auto forward_tic = now();
   MXPredSetInput(pred_hnd, "data", image_data.data(), image_size);
 
   // Do Predict Forward
@@ -243,6 +267,11 @@ int main(int argc, char *argv[]) {
 
   MXPredGetOutput(pred_hnd, output_index, &(data[0]), size);
 
+const auto forward_toc = now();
+
+const auto forward_elapsed = std::chrono::duration<double, std::milli>(forward_toc - forward_tic).count();;
+std::cout << "predict " << forward_elapsed << "milliseconds\n";
+
   // Release Predictor
   MXPredFree(pred_hnd);
 
@@ -250,10 +279,10 @@ int main(int argc, char *argv[]) {
   MXSetProfilerState(0);
 
   // // Synset path for your model, you have to modify it
-  std::vector<std::string> synset = LoadSynset(synset_file);
+  //std::vector<std::string> synset = LoadSynset(synset_file);
 
   // // Print Output Data
-  PrintOutputResult(data, synset);
+ // PrintOutputResult(data, synset);
 
   return 0;
 }

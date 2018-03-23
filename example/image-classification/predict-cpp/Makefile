@@ -19,14 +19,22 @@ CFLAGS+=-I$(MXNET_ROOT)/nnvm/include -I$(MXNET_ROOT)/mshadow
 CFLAGS+=-I$(MXNET_ROOT)/dlpack/include -I$(MXNET_ROOT)/dmlc-core/include
 CFLAGS+=-I$(MXNET_ROOT)/3rdparty
 CFLAGS+=-I/usr/local/cuda
-CFLAGS+=-DMSHADOW_USE_CBLAS -DMSHADOW_USE_SSE=0
-LDFLAGS+=$(MXNET_ROOT)/lib/libmxnet.so
+CFLAGS+=-DMSHADOW_USE_SSE=0
+CFLAGS+=-DMSHADOW_USE_MKL=0
+CFLAGS+=-DMSHADOW_USE_CUDA=0
+CFLAGS+=-DMXNET_USE_MKL2017=0
+CFLAGS+=-DUSE_MKL=0
+CFLAGS+=-DUSE_CUDA=0
+CFLAGS+=-DUSE_OPENMP=0
+CFLAGS+=-DNO_OPENMP=1
+CFLAGS+=-DMXNET_USE_PROFILER=1
+LDFLAGS+=$(MXNET_ROOT)/lib/libmxnet.so -lstdc++
 
 image-classification-predict: image-classification-predict.o
-	nvcc -O3  -o image-classification-predict image-classification-predict.o $(LDFLAGS)
+	gcc -O3 -std=c++11 -o image-classification-predict image-classification-predict.o $(LDFLAGS)
 
 image-classification-predict.o: image-classification-predict.cc
-	nvcc -O3 -c image-classification-predict.cc ${CFLAGS}
+	gcc -O3 -std=c++11 -c image-classification-predict.cc ${CFLAGS}
 	
 clean: 
 	rm image-classification-predict

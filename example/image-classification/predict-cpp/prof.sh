@@ -2,20 +2,13 @@
 
 DATE=`date '+%Y-%m-%d-%H-%M-%S'`
 export MXNET_CPU_PRIORITY_NTHREADS=1
-export OMP_NUM_THREADS=1
 
 # export GLOG_v=4
-export MXNET_ENGINE_TYPE=NaiveEngine
-export MXNET_GPU_WORKER_NTHREADS=2
-export UPR_MODEL_NAME=alexnet
-
-mkdir -p profiles
+export MXNET_ENGINE_TYPE=ThreadedEngine
 
 # first time
 ./image-classification-predict `hostname`_0
 
-# second time
-./image-classification-predict `hostname`_1
 
 exit
 # nvprof -f --track-memory-allocations on --print-api-trace --export-profile `hostname`_profile_0.timeline.nvprof ./image-classification-predict

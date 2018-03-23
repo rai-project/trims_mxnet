@@ -1,3 +1,4 @@
+#if USE_CUDA
 #pragma once
 
 #include <chrono>
@@ -30,3 +31,4 @@ static const uint32_t colors[] = {0xFFFFFF00,  // Yellow
                                   0xFF000080}; // Navy
 static const int num_colors = sizeof(colors) / sizeof(uint32_t);
 
+#endif
