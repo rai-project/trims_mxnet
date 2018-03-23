@@ -208,8 +208,8 @@ static const auto UPR_INPUT_HEIGHT   = dmlc::GetEnv("UPR_INPUT_HEIGHT", 224);
   MXSetProfilerConfig(1, filename.c_str());
 
   // Stope profiling
-  MXSetProfilerState(1);
-std::cout << "running " << get_model_name() << "\n";
+  MXSetProfilerState(0);
+  /* std::cout << "running " << get_model_name() << "\n"; */
 
 const auto load_tic = now();
   BufferFile json_data(json_file);
@@ -229,7 +229,7 @@ const auto load_tic = now();
 const auto load_toc = now();
 
 const auto load_elapsed = std::chrono::duration<double, std::milli>(load_toc - load_tic).count();;
-std::cout << "load " << load_elapsed << "milliseconds\n";
+/* std::cout << "load " << load_elapsed << "milliseconds\n"; */
 
 const auto image_tic = now();
   int image_size = width * height * channels;
@@ -241,8 +241,7 @@ const auto image_tic = now();
 const auto image_toc = now();
 
 const auto image_elapsed = std::chrono::duration<double, std::milli>(image_toc - image_tic).count();;
-std::cout << "image " << image_elapsed << "milliseconds\n";
-
+/* std::cout << "image " << image_elapsed << "milliseconds\n"; */
 
   // Set Input Image
 const auto forward_tic = now();
@@ -270,7 +269,7 @@ const auto forward_tic = now();
 const auto forward_toc = now();
 
 const auto forward_elapsed = std::chrono::duration<double, std::milli>(forward_toc - forward_tic).count();;
-std::cout << "predict " << forward_elapsed << "milliseconds\n";
+std::cout << image_elapsed <<  ", " << load_elapsed << ", " << forward_elapsed << "\n";
 
   // Release Predictor
   MXPredFree(pred_hnd);
