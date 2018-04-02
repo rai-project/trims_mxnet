@@ -551,7 +551,6 @@ private:
     handle->set_byte_count(owned.byte_count());
     handle->set_sharing_granularity(owned.sharing_granularity());
     handle->set_device_raw_ptr(owned.device_raw_ptr());
-    handle->set_ipc_handle(owned.ipc_handle());
     handle->set_name(owned.name());
     handle->set_needed_eviction(owned.needed_eviction());
 
