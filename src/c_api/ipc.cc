@@ -27,6 +27,7 @@ std::string server::host_name = "localhost";
 int server::port              = dmlc::GetEnv("PORT", 50051);
 std::string server::address   = fmt::format("{}:{}", host_name, port);
 
+
 static TShape to_shape(Shape shape) {
   auto dim = shape.dim();
   TShape res(dim.begin(), dim.end());
@@ -221,6 +222,7 @@ struct client {
   static RegistryClient *get_connection() {
     static RegistryClient *client =
         new RegistryClient(grpc::CreateChannel(server_address, grpc::InsecureChannelCredentials()));
+        std::cout << "initialize = true \n";
     return client;
   }
 
@@ -276,6 +278,12 @@ void Unload(MXAPIPredictor *pred) {
   LOG(INFO) << "UPR:: closing in Client mode";
   client::Unload(pred);
   return;
+}
+
+void initialize() {
+    if (is_client && UPR_ENABLED) {
+        client::get_connection();
+    }
 }
 
 } // namespace upr

@@ -33,7 +33,7 @@
 #include <hopscotch/hopscotch_map.h>
 #include <hopscotch/hopscotch_sc_map.h>
 
-#if 0
+#if 1
 #define start_span(...) nullptr
 #define stop_span(...)                                                                                                 \
   do {                                                                                                                 \

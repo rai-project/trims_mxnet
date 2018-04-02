@@ -446,5 +446,7 @@ void Unload(mxnet::MXAPIPredictor *pred);
 
 std::pair<std::string, std::string> Load(std::string model_name, std::vector<mxnet::NDArray> *data,
                                          std::vector<std::string> *keys);
+
+void initialize();
 } // namespace upr
 #endif // MXNET_USE_CUDA

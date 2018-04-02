@@ -44,6 +44,11 @@ backward::SignalHandling sh;
 
 } // namespace backward
 
+namespace upr {
+    void initialize();
+}
+
+
 namespace mxnet {
 #if MXNET_USE_SIGNAL_HANDLER && DMLC_LOG_STACK_TRACE
 static void SegfaultLogger(int sig) {
@@ -70,6 +75,8 @@ public:
 #if MXNET_USE_PROFILER
     // ensure profiler's constructor are called before atexit.
     engine::Profiler::Get();
+
+    upr::initialize();
     // DumpProfile will be called before engine's and profiler's destructor.
     std::atexit([]() {
       engine::Profiler* profiler = engine::Profiler::Get();
