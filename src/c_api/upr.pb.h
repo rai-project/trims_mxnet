@@ -614,9 +614,32 @@ class ModelHandle : public ::google::protobuf::Message /* @@protoc_insertion_poi
   void unsafe_arena_set_allocated_model_id(
       ::std::string* model_id);
 
-  // bytes ipc_handle = 5;
+  // bytes device_raw_ptr = 7;
+  void clear_device_raw_ptr();
+  static const int kDeviceRawPtrFieldNumber = 7;
+  const ::std::string& device_raw_ptr() const;
+  void set_device_raw_ptr(const ::std::string& value);
+  #if LANG_CXX11
+  void set_device_raw_ptr(::std::string&& value);
+  #endif
+  void set_device_raw_ptr(const char* value);
+  void set_device_raw_ptr(const void* value, size_t size);
+  ::std::string* mutable_device_raw_ptr();
+  ::std::string* release_device_raw_ptr();
+  void set_allocated_device_raw_ptr(::std::string* device_raw_ptr);
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  ::std::string* unsafe_arena_release_device_raw_ptr();
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  void unsafe_arena_set_allocated_device_raw_ptr(
+      ::std::string* device_raw_ptr);
+
+  // bytes ipc_handle = 8;
   void clear_ipc_handle();
-  static const int kIpcHandleFieldNumber = 5;
+  static const int kIpcHandleFieldNumber = 8;
   const ::std::string& ipc_handle() const;
   void set_ipc_handle(const ::std::string& value);
   #if LANG_CXX11
@@ -643,15 +666,15 @@ class ModelHandle : public ::google::protobuf::Message /* @@protoc_insertion_poi
   ::google::protobuf::int64 byte_count() const;
   void set_byte_count(::google::protobuf::int64 value);
 
-  // bool needed_eviction = 6;
+  // bool needed_eviction = 5;
   void clear_needed_eviction();
-  static const int kNeededEvictionFieldNumber = 6;
+  static const int kNeededEvictionFieldNumber = 5;
   bool needed_eviction() const;
   void set_needed_eviction(bool value);
 
-  // .upr.SharingGranularity sharing_granularity = 7;
+  // .upr.SharingGranularity sharing_granularity = 6;
   void clear_sharing_granularity();
-  static const int kSharingGranularityFieldNumber = 7;
+  static const int kSharingGranularityFieldNumber = 6;
   ::upr::SharingGranularity sharing_granularity() const;
   void set_sharing_granularity(::upr::SharingGranularity value);
 
@@ -665,6 +688,7 @@ class ModelHandle : public ::google::protobuf::Message /* @@protoc_insertion_poi
   ::google::protobuf::RepeatedPtrField< ::upr::Layer > layer_;
   ::google::protobuf::internal::ArenaStringPtr id_;
   ::google::protobuf::internal::ArenaStringPtr model_id_;
+  ::google::protobuf::internal::ArenaStringPtr device_raw_ptr_;
   ::google::protobuf::internal::ArenaStringPtr ipc_handle_;
   ::google::protobuf::int64 byte_count_;
   bool needed_eviction_;
@@ -1806,7 +1830,110 @@ ModelHandle::layer() const {
   return layer_;
 }
 
-// bytes ipc_handle = 5;
+// bool needed_eviction = 5;
+inline void ModelHandle::clear_needed_eviction() {
+  needed_eviction_ = false;
+}
+inline bool ModelHandle::needed_eviction() const {
+  // @@protoc_insertion_point(field_get:upr.ModelHandle.needed_eviction)
+  return needed_eviction_;
+}
+inline void ModelHandle::set_needed_eviction(bool value) {
+  
+  needed_eviction_ = value;
+  // @@protoc_insertion_point(field_set:upr.ModelHandle.needed_eviction)
+}
+
+// .upr.SharingGranularity sharing_granularity = 6;
+inline void ModelHandle::clear_sharing_granularity() {
+  sharing_granularity_ = 0;
+}
+inline ::upr::SharingGranularity ModelHandle::sharing_granularity() const {
+  // @@protoc_insertion_point(field_get:upr.ModelHandle.sharing_granularity)
+  return static_cast< ::upr::SharingGranularity >(sharing_granularity_);
+}
+inline void ModelHandle::set_sharing_granularity(::upr::SharingGranularity value) {
+  
+  sharing_granularity_ = value;
+  // @@protoc_insertion_point(field_set:upr.ModelHandle.sharing_granularity)
+}
+
+// bytes device_raw_ptr = 7;
+inline void ModelHandle::clear_device_raw_ptr() {
+  device_raw_ptr_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
+}
+inline const ::std::string& ModelHandle::device_raw_ptr() const {
+  // @@protoc_insertion_point(field_get:upr.ModelHandle.device_raw_ptr)
+  return device_raw_ptr_.Get();
+}
+inline void ModelHandle::set_device_raw_ptr(const ::std::string& value) {
+  
+  device_raw_ptr_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value, GetArenaNoVirtual());
+  // @@protoc_insertion_point(field_set:upr.ModelHandle.device_raw_ptr)
+}
+#if LANG_CXX11
+inline void ModelHandle::set_device_raw_ptr(::std::string&& value) {
+  
+  device_raw_ptr_.Set(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArenaNoVirtual());
+  // @@protoc_insertion_point(field_set_rvalue:upr.ModelHandle.device_raw_ptr)
+}
+#endif
+inline void ModelHandle::set_device_raw_ptr(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  device_raw_ptr_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArenaNoVirtual());
+  // @@protoc_insertion_point(field_set_char:upr.ModelHandle.device_raw_ptr)
+}
+inline void ModelHandle::set_device_raw_ptr(const void* value,
+    size_t size) {
+  
+  device_raw_ptr_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArenaNoVirtual());
+  // @@protoc_insertion_point(field_set_pointer:upr.ModelHandle.device_raw_ptr)
+}
+inline ::std::string* ModelHandle::mutable_device_raw_ptr() {
+  
+  // @@protoc_insertion_point(field_mutable:upr.ModelHandle.device_raw_ptr)
+  return device_raw_ptr_.Mutable(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
+}
+inline ::std::string* ModelHandle::release_device_raw_ptr() {
+  // @@protoc_insertion_point(field_release:upr.ModelHandle.device_raw_ptr)
+  
+  return device_raw_ptr_.Release(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
+}
+inline void ModelHandle::set_allocated_device_raw_ptr(::std::string* device_raw_ptr) {
+  if (device_raw_ptr != NULL) {
+    
+  } else {
+    
+  }
+  device_raw_ptr_.SetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), device_raw_ptr,
+      GetArenaNoVirtual());
+  // @@protoc_insertion_point(field_set_allocated:upr.ModelHandle.device_raw_ptr)
+}
+inline ::std::string* ModelHandle::unsafe_arena_release_device_raw_ptr() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:upr.ModelHandle.device_raw_ptr)
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  
+  return device_raw_ptr_.UnsafeArenaRelease(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      GetArenaNoVirtual());
+}
+inline void ModelHandle::unsafe_arena_set_allocated_device_raw_ptr(
+    ::std::string* device_raw_ptr) {
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  if (device_raw_ptr != NULL) {
+    
+  } else {
+    
+  }
+  device_raw_ptr_.UnsafeArenaSetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      device_raw_ptr, GetArenaNoVirtual());
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:upr.ModelHandle.device_raw_ptr)
+}
+
+// bytes ipc_handle = 8;
 inline void ModelHandle::clear_ipc_handle() {
   ipc_handle_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
@@ -1879,34 +2006,6 @@ inline void ModelHandle::unsafe_arena_set_allocated_ipc_handle(
   ipc_handle_.UnsafeArenaSetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ipc_handle, GetArenaNoVirtual());
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:upr.ModelHandle.ipc_handle)
-}
-
-// bool needed_eviction = 6;
-inline void ModelHandle::clear_needed_eviction() {
-  needed_eviction_ = false;
-}
-inline bool ModelHandle::needed_eviction() const {
-  // @@protoc_insertion_point(field_get:upr.ModelHandle.needed_eviction)
-  return needed_eviction_;
-}
-inline void ModelHandle::set_needed_eviction(bool value) {
-  
-  needed_eviction_ = value;
-  // @@protoc_insertion_point(field_set:upr.ModelHandle.needed_eviction)
-}
-
-// .upr.SharingGranularity sharing_granularity = 7;
-inline void ModelHandle::clear_sharing_granularity() {
-  sharing_granularity_ = 0;
-}
-inline ::upr::SharingGranularity ModelHandle::sharing_granularity() const {
-  // @@protoc_insertion_point(field_get:upr.ModelHandle.sharing_granularity)
-  return static_cast< ::upr::SharingGranularity >(sharing_granularity_);
-}
-inline void ModelHandle::set_sharing_granularity(::upr::SharingGranularity value) {
-  
-  sharing_granularity_ = value;
-  // @@protoc_insertion_point(field_set:upr.ModelHandle.sharing_granularity)
 }
 
 // -------------------------------------------------------------------

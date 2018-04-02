@@ -215,9 +215,10 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::ModelHandle, model_id_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::ModelHandle, byte_count_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::ModelHandle, layer_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::ModelHandle, ipc_handle_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::ModelHandle, needed_eviction_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::ModelHandle, sharing_granularity_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::ModelHandle, device_raw_ptr_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::ModelHandle, ipc_handle_),
   ~0u,  // no _has_bits_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::upr::Model, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -252,9 +253,9 @@ static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROT
   { 0, -1, sizeof(::upr::Shape)},
   { 7, -1, sizeof(::upr::Layer)},
   { 20, -1, sizeof(::upr::ModelHandle)},
-  { 32, -1, sizeof(::upr::Model)},
-  { 47, -1, sizeof(::upr::ModelRequest)},
-  { 56, -1, sizeof(::upr::Void)},
+  { 33, -1, sizeof(::upr::Model)},
+  { 48, -1, sizeof(::upr::ModelRequest)},
+  { 57, -1, sizeof(::upr::Void)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -294,32 +295,33 @@ void AddDescriptorsImpl() {
       "\t\022\031\n\005shape\030\003 \001(\0132\n.upr.Shape\022\022\n\nbyte_cou"
       "nt\030\004 \001(\003\022\022\n\nipc_handle\030\005 \001(\014\022\026\n\016device_r"
       "aw_ptr\030\006 \001(\003\022\021\n\tref_count\030\007 \001(\003\022\016\n\006offse"
-      "t\030\010 \001(\003\"\275\001\n\013ModelHandle\022\n\n\002id\030\001 \001(\t\022\020\n\010m"
+      "t\030\010 \001(\003\"\325\001\n\013ModelHandle\022\n\n\002id\030\001 \001(\t\022\020\n\010m"
       "odel_id\030\002 \001(\t\022\022\n\nbyte_count\030\003 \001(\003\022\031\n\005lay"
-      "er\030\004 \003(\0132\n.upr.Layer\022\022\n\nipc_handle\030\005 \001(\014"
-      "\022\027\n\017needed_eviction\030\006 \001(\010\0224\n\023sharing_gra"
-      "nularity\030\007 \001(\0162\027.upr.SharingGranularity\""
-      "\247\002\n\005Model\022\n\n\002id\030\001 \001(\t\022\014\n\004name\030\002 \001(\t\022\021\n\tf"
-      "ile_path\030\003 \001(\t\022\021\n\tref_count\030\004 \001(\003\022%\n\013own"
-      "ed_model\030\005 \001(\0132\020.upr.ModelHandle\022&\n\014shar"
-      "ed_model\030\006 \003(\0132\020.upr.ModelHandle\0221\n\rlru_"
-      "timestamp\030\007 \001(\0132\032.google.protobuf.Timest"
-      "amp\022\022\n\nfifo_order\030\010 \001(\003\022/\n\013use_history\030\t"
-      " \003(\0132\032.google.protobuf.Timestamp\022\027\n\017alwa"
-      "ys_resident\030\n \001(\010\"|\n\014ModelRequest\022\014\n\004nam"
-      "e\030\001 \001(\t\022\026\n\016directory_path\030\002 \001(\t\022\020\n\010no_ca"
-      "che\030\003 \001(\010\0224\n\023sharing_granularity\030\004 \001(\0162\027"
-      ".upr.SharingGranularity\"\006\n\004Void*m\n\022Shari"
-      "ngGranularity\022\033\n\027SharingGranularity_Slab"
-      "\020\000\022\034\n\030SharingGranularity_Layer\020\001\022\034\n\030Shar"
-      "ingGranularity_Model\020\0022\212\001\n\010Registry\022-\n\004O"
-      "pen\022\021.upr.ModelRequest\032\020.upr.ModelHandle"
-      "\"\000\022&\n\005Close\022\020.upr.ModelHandle\032\t.upr.Void"
-      "\"\000\022\'\n\004Info\022\021.upr.ModelRequest\032\n.upr.Mode"
-      "l\"\000B\010Z\003upr\370\001\001b\006proto3"
+      "er\030\004 \003(\0132\n.upr.Layer\022\027\n\017needed_eviction\030"
+      "\005 \001(\010\0224\n\023sharing_granularity\030\006 \001(\0162\027.upr"
+      ".SharingGranularity\022\026\n\016device_raw_ptr\030\007 "
+      "\001(\014\022\022\n\nipc_handle\030\010 \001(\014\"\247\002\n\005Model\022\n\n\002id\030"
+      "\001 \001(\t\022\014\n\004name\030\002 \001(\t\022\021\n\tfile_path\030\003 \001(\t\022\021"
+      "\n\tref_count\030\004 \001(\003\022%\n\013owned_model\030\005 \001(\0132\020"
+      ".upr.ModelHandle\022&\n\014shared_model\030\006 \003(\0132\020"
+      ".upr.ModelHandle\0221\n\rlru_timestamp\030\007 \001(\0132"
+      "\032.google.protobuf.Timestamp\022\022\n\nfifo_orde"
+      "r\030\010 \001(\003\022/\n\013use_history\030\t \003(\0132\032.google.pr"
+      "otobuf.Timestamp\022\027\n\017always_resident\030\n \001("
+      "\010\"|\n\014ModelRequest\022\014\n\004name\030\001 \001(\t\022\026\n\016direc"
+      "tory_path\030\002 \001(\t\022\020\n\010no_cache\030\003 \001(\010\0224\n\023sha"
+      "ring_granularity\030\004 \001(\0162\027.upr.SharingGran"
+      "ularity\"\006\n\004Void*m\n\022SharingGranularity\022\033\n"
+      "\027SharingGranularity_Slab\020\000\022\034\n\030SharingGra"
+      "nularity_Layer\020\001\022\034\n\030SharingGranularity_M"
+      "odel\020\0022\212\001\n\010Registry\022-\n\004Open\022\021.upr.ModelR"
+      "equest\032\020.upr.ModelHandle\"\000\022&\n\005Close\022\020.up"
+      "r.ModelHandle\032\t.upr.Void\"\000\022\'\n\004Info\022\021.upr"
+      ".ModelRequest\032\n.upr.Model\"\000B\010Z\003upr\370\001\001b\006p"
+      "roto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 1141);
+      descriptor, 1165);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "upr.proto", &protobuf_RegisterTypes);
   ::protobuf_google_2fprotobuf_2ftimestamp_2eproto::AddDescriptors();
@@ -1294,9 +1296,10 @@ const int ModelHandle::kIdFieldNumber;
 const int ModelHandle::kModelIdFieldNumber;
 const int ModelHandle::kByteCountFieldNumber;
 const int ModelHandle::kLayerFieldNumber;
-const int ModelHandle::kIpcHandleFieldNumber;
 const int ModelHandle::kNeededEvictionFieldNumber;
 const int ModelHandle::kSharingGranularityFieldNumber;
+const int ModelHandle::kDeviceRawPtrFieldNumber;
+const int ModelHandle::kIpcHandleFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ModelHandle::ModelHandle()
@@ -1332,6 +1335,11 @@ ModelHandle::ModelHandle(const ModelHandle& from)
     model_id_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.model_id(),
       GetArenaNoVirtual());
   }
+  device_raw_ptr_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.device_raw_ptr().size() > 0) {
+    device_raw_ptr_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.device_raw_ptr(),
+      GetArenaNoVirtual());
+  }
   ipc_handle_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (from.ipc_handle().size() > 0) {
     ipc_handle_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.ipc_handle(),
@@ -1346,6 +1354,7 @@ ModelHandle::ModelHandle(const ModelHandle& from)
 void ModelHandle::SharedCtor() {
   id_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   model_id_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  device_raw_ptr_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ipc_handle_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ::memset(&byte_count_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&sharing_granularity_) -
@@ -1362,6 +1371,7 @@ void ModelHandle::SharedDtor() {
   GOOGLE_DCHECK(GetArenaNoVirtual() == NULL);
   id_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   model_id_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  device_raw_ptr_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ipc_handle_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 
@@ -1399,6 +1409,7 @@ void ModelHandle::Clear() {
   layer_.Clear();
   id_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
   model_id_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
+  device_raw_ptr_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
   ipc_handle_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
   ::memset(&byte_count_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&sharing_granularity_) -
@@ -1473,22 +1484,10 @@ bool ModelHandle::MergePartialFromCodedStream(
         break;
       }
 
-      // bytes ipc_handle = 5;
+      // bool needed_eviction = 5;
       case 5: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(42u /* 42 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
-                input, this->mutable_ipc_handle()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // bool needed_eviction = 6;
-      case 6: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(48u /* 48 & 0xFF */)) {
+            static_cast< ::google::protobuf::uint8>(40u /* 40 & 0xFF */)) {
 
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
@@ -1499,15 +1498,39 @@ bool ModelHandle::MergePartialFromCodedStream(
         break;
       }
 
-      // .upr.SharingGranularity sharing_granularity = 7;
-      case 7: {
+      // .upr.SharingGranularity sharing_granularity = 6;
+      case 6: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(56u /* 56 & 0xFF */)) {
+            static_cast< ::google::protobuf::uint8>(48u /* 48 & 0xFF */)) {
           int value;
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
                  input, &value)));
           set_sharing_granularity(static_cast< ::upr::SharingGranularity >(value));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // bytes device_raw_ptr = 7;
+      case 7: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(58u /* 58 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_device_raw_ptr()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // bytes ipc_handle = 8;
+      case 8: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(66u /* 66 & 0xFF */)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_ipc_handle()));
         } else {
           goto handle_unusual;
         }
@@ -1572,21 +1595,27 @@ void ModelHandle::SerializeWithCachedSizes(
       4, this->layer(static_cast<int>(i)), output);
   }
 
-  // bytes ipc_handle = 5;
-  if (this->ipc_handle().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBytesMaybeAliased(
-      5, this->ipc_handle(), output);
-  }
-
-  // bool needed_eviction = 6;
+  // bool needed_eviction = 5;
   if (this->needed_eviction() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(6, this->needed_eviction(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteBool(5, this->needed_eviction(), output);
   }
 
-  // .upr.SharingGranularity sharing_granularity = 7;
+  // .upr.SharingGranularity sharing_granularity = 6;
   if (this->sharing_granularity() != 0) {
     ::google::protobuf::internal::WireFormatLite::WriteEnum(
-      7, this->sharing_granularity(), output);
+      6, this->sharing_granularity(), output);
+  }
+
+  // bytes device_raw_ptr = 7;
+  if (this->device_raw_ptr().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytesMaybeAliased(
+      7, this->device_raw_ptr(), output);
+  }
+
+  // bytes ipc_handle = 8;
+  if (this->ipc_handle().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytesMaybeAliased(
+      8, this->ipc_handle(), output);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -1638,22 +1667,29 @@ void ModelHandle::SerializeWithCachedSizes(
         4, this->layer(static_cast<int>(i)), deterministic, target);
   }
 
-  // bytes ipc_handle = 5;
+  // bool needed_eviction = 5;
+  if (this->needed_eviction() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(5, this->needed_eviction(), target);
+  }
+
+  // .upr.SharingGranularity sharing_granularity = 6;
+  if (this->sharing_granularity() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
+      6, this->sharing_granularity(), target);
+  }
+
+  // bytes device_raw_ptr = 7;
+  if (this->device_raw_ptr().size() > 0) {
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+        7, this->device_raw_ptr(), target);
+  }
+
+  // bytes ipc_handle = 8;
   if (this->ipc_handle().size() > 0) {
     target =
       ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
-        5, this->ipc_handle(), target);
-  }
-
-  // bool needed_eviction = 6;
-  if (this->needed_eviction() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(6, this->needed_eviction(), target);
-  }
-
-  // .upr.SharingGranularity sharing_granularity = 7;
-  if (this->sharing_granularity() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
-      7, this->sharing_granularity(), target);
+        8, this->ipc_handle(), target);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -1698,7 +1734,14 @@ size_t ModelHandle::ByteSizeLong() const {
         this->model_id());
   }
 
-  // bytes ipc_handle = 5;
+  // bytes device_raw_ptr = 7;
+  if (this->device_raw_ptr().size() > 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::BytesSize(
+        this->device_raw_ptr());
+  }
+
+  // bytes ipc_handle = 8;
   if (this->ipc_handle().size() > 0) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::BytesSize(
@@ -1712,12 +1755,12 @@ size_t ModelHandle::ByteSizeLong() const {
         this->byte_count());
   }
 
-  // bool needed_eviction = 6;
+  // bool needed_eviction = 5;
   if (this->needed_eviction() != 0) {
     total_size += 1 + 1;
   }
 
-  // .upr.SharingGranularity sharing_granularity = 7;
+  // .upr.SharingGranularity sharing_granularity = 6;
   if (this->sharing_granularity() != 0) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::EnumSize(this->sharing_granularity());
@@ -1758,6 +1801,9 @@ void ModelHandle::MergeFrom(const ModelHandle& from) {
   }
   if (from.model_id().size() > 0) {
     set_model_id(from.model_id());
+  }
+  if (from.device_raw_ptr().size() > 0) {
+    set_device_raw_ptr(from.device_raw_ptr());
   }
   if (from.ipc_handle().size() > 0) {
     set_ipc_handle(from.ipc_handle());
@@ -1815,6 +1861,7 @@ void ModelHandle::InternalSwap(ModelHandle* other) {
   layer_.InternalSwap(&other->layer_);
   id_.Swap(&other->id_);
   model_id_.Swap(&other->model_id_);
+  device_raw_ptr_.Swap(&other->device_raw_ptr_);
   ipc_handle_.Swap(&other->ipc_handle_);
   swap(byte_count_, other->byte_count_);
   swap(needed_eviction_, other->needed_eviction_);
