@@ -204,7 +204,10 @@ ifeq ($(USE_GPERFTOOLS), 1)
 		ifeq (,$(FIND_LIBFILE))
 			FIND_LIBFILE=$(wildcard /usr/local/lib/lib$(FIND_LIBNAME).$(FIND_LIBFILEEXT))
 			ifeq (,$(FIND_LIBFILE))
-				USE_GPERFTOOLS=0
+				FIND_LIBFILE=$(wildcard /usr/lib64/lib$(FIND_LIBNAME).$(FIND_LIBFILEEXT))
+				ifeq (,$(FIND_LIBFILE))
+					USE_GPERFTOOLS=0
+				endif
 			endif
 		endif
 	endif
