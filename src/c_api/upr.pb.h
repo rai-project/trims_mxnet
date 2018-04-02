@@ -441,6 +441,12 @@ class Layer : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
   ::google::protobuf::int64 offset() const;
   void set_offset(::google::protobuf::int64 value);
 
+  // .upr.SharingGranularity sharing_granularity = 9;
+  void clear_sharing_granularity();
+  static const int kSharingGranularityFieldNumber = 9;
+  ::upr::SharingGranularity sharing_granularity() const;
+  void set_sharing_granularity(::upr::SharingGranularity value);
+
   // @@protoc_insertion_point(class_scope:upr.Layer)
  private:
 
@@ -456,6 +462,7 @@ class Layer : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
   ::google::protobuf::int64 device_raw_ptr_;
   ::google::protobuf::int64 ref_count_;
   ::google::protobuf::int64 offset_;
+  int sharing_granularity_;
   mutable int _cached_size_;
   friend struct ::protobuf_upr_2eproto::TableStruct;
   friend void ::protobuf_upr_2eproto::InitDefaultsLayerImpl();
@@ -637,29 +644,6 @@ class ModelHandle : public ::google::protobuf::Message /* @@protoc_insertion_poi
   void unsafe_arena_set_allocated_model_id(
       ::std::string* model_id);
 
-  // bytes device_raw_ptr = 8;
-  void clear_device_raw_ptr();
-  static const int kDeviceRawPtrFieldNumber = 8;
-  const ::std::string& device_raw_ptr() const;
-  void set_device_raw_ptr(const ::std::string& value);
-  #if LANG_CXX11
-  void set_device_raw_ptr(::std::string&& value);
-  #endif
-  void set_device_raw_ptr(const char* value);
-  void set_device_raw_ptr(const void* value, size_t size);
-  ::std::string* mutable_device_raw_ptr();
-  ::std::string* release_device_raw_ptr();
-  void set_allocated_device_raw_ptr(::std::string* device_raw_ptr);
-  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
-  "    string fields are deprecated and will be removed in a"
-  "    future release.")
-  ::std::string* unsafe_arena_release_device_raw_ptr();
-  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
-  "    string fields are deprecated and will be removed in a"
-  "    future release.")
-  void unsafe_arena_set_allocated_device_raw_ptr(
-      ::std::string* device_raw_ptr);
-
   // bytes ipc_handle = 9;
   void clear_ipc_handle();
   static const int kIpcHandleFieldNumber = 9;
@@ -701,6 +685,12 @@ class ModelHandle : public ::google::protobuf::Message /* @@protoc_insertion_poi
   ::upr::SharingGranularity sharing_granularity() const;
   void set_sharing_granularity(::upr::SharingGranularity value);
 
+  // int64 device_raw_ptr = 8;
+  void clear_device_raw_ptr();
+  static const int kDeviceRawPtrFieldNumber = 8;
+  ::google::protobuf::int64 device_raw_ptr() const;
+  void set_device_raw_ptr(::google::protobuf::int64 value);
+
   // @@protoc_insertion_point(class_scope:upr.ModelHandle)
  private:
 
@@ -712,11 +702,11 @@ class ModelHandle : public ::google::protobuf::Message /* @@protoc_insertion_poi
   ::google::protobuf::internal::ArenaStringPtr id_;
   ::google::protobuf::internal::ArenaStringPtr name_;
   ::google::protobuf::internal::ArenaStringPtr model_id_;
-  ::google::protobuf::internal::ArenaStringPtr device_raw_ptr_;
   ::google::protobuf::internal::ArenaStringPtr ipc_handle_;
   ::google::protobuf::int64 byte_count_;
   bool needed_eviction_;
   int sharing_granularity_;
+  ::google::protobuf::int64 device_raw_ptr_;
   mutable int _cached_size_;
   friend struct ::protobuf_upr_2eproto::TableStruct;
   friend void ::protobuf_upr_2eproto::InitDefaultsModelHandleImpl();
@@ -1656,6 +1646,20 @@ inline void Layer::set_offset(::google::protobuf::int64 value) {
   // @@protoc_insertion_point(field_set:upr.Layer.offset)
 }
 
+// .upr.SharingGranularity sharing_granularity = 9;
+inline void Layer::clear_sharing_granularity() {
+  sharing_granularity_ = 0;
+}
+inline ::upr::SharingGranularity Layer::sharing_granularity() const {
+  // @@protoc_insertion_point(field_get:upr.Layer.sharing_granularity)
+  return static_cast< ::upr::SharingGranularity >(sharing_granularity_);
+}
+inline void Layer::set_sharing_granularity(::upr::SharingGranularity value) {
+  
+  sharing_granularity_ = value;
+  // @@protoc_insertion_point(field_set:upr.Layer.sharing_granularity)
+}
+
 // -------------------------------------------------------------------
 
 // ModelHandle
@@ -1957,79 +1961,18 @@ inline void ModelHandle::set_sharing_granularity(::upr::SharingGranularity value
   // @@protoc_insertion_point(field_set:upr.ModelHandle.sharing_granularity)
 }
 
-// bytes device_raw_ptr = 8;
+// int64 device_raw_ptr = 8;
 inline void ModelHandle::clear_device_raw_ptr() {
-  device_raw_ptr_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
+  device_raw_ptr_ = GOOGLE_LONGLONG(0);
 }
-inline const ::std::string& ModelHandle::device_raw_ptr() const {
+inline ::google::protobuf::int64 ModelHandle::device_raw_ptr() const {
   // @@protoc_insertion_point(field_get:upr.ModelHandle.device_raw_ptr)
-  return device_raw_ptr_.Get();
+  return device_raw_ptr_;
 }
-inline void ModelHandle::set_device_raw_ptr(const ::std::string& value) {
+inline void ModelHandle::set_device_raw_ptr(::google::protobuf::int64 value) {
   
-  device_raw_ptr_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value, GetArenaNoVirtual());
+  device_raw_ptr_ = value;
   // @@protoc_insertion_point(field_set:upr.ModelHandle.device_raw_ptr)
-}
-#if LANG_CXX11
-inline void ModelHandle::set_device_raw_ptr(::std::string&& value) {
-  
-  device_raw_ptr_.Set(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArenaNoVirtual());
-  // @@protoc_insertion_point(field_set_rvalue:upr.ModelHandle.device_raw_ptr)
-}
-#endif
-inline void ModelHandle::set_device_raw_ptr(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  device_raw_ptr_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
-              GetArenaNoVirtual());
-  // @@protoc_insertion_point(field_set_char:upr.ModelHandle.device_raw_ptr)
-}
-inline void ModelHandle::set_device_raw_ptr(const void* value,
-    size_t size) {
-  
-  device_raw_ptr_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(
-      reinterpret_cast<const char*>(value), size), GetArenaNoVirtual());
-  // @@protoc_insertion_point(field_set_pointer:upr.ModelHandle.device_raw_ptr)
-}
-inline ::std::string* ModelHandle::mutable_device_raw_ptr() {
-  
-  // @@protoc_insertion_point(field_mutable:upr.ModelHandle.device_raw_ptr)
-  return device_raw_ptr_.Mutable(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
-}
-inline ::std::string* ModelHandle::release_device_raw_ptr() {
-  // @@protoc_insertion_point(field_release:upr.ModelHandle.device_raw_ptr)
-  
-  return device_raw_ptr_.Release(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
-}
-inline void ModelHandle::set_allocated_device_raw_ptr(::std::string* device_raw_ptr) {
-  if (device_raw_ptr != NULL) {
-    
-  } else {
-    
-  }
-  device_raw_ptr_.SetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), device_raw_ptr,
-      GetArenaNoVirtual());
-  // @@protoc_insertion_point(field_set_allocated:upr.ModelHandle.device_raw_ptr)
-}
-inline ::std::string* ModelHandle::unsafe_arena_release_device_raw_ptr() {
-  // @@protoc_insertion_point(field_unsafe_arena_release:upr.ModelHandle.device_raw_ptr)
-  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
-  
-  return device_raw_ptr_.UnsafeArenaRelease(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      GetArenaNoVirtual());
-}
-inline void ModelHandle::unsafe_arena_set_allocated_device_raw_ptr(
-    ::std::string* device_raw_ptr) {
-  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
-  if (device_raw_ptr != NULL) {
-    
-  } else {
-    
-  }
-  device_raw_ptr_.UnsafeArenaSetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      device_raw_ptr, GetArenaNoVirtual());
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:upr.ModelHandle.device_raw_ptr)
 }
 
 // bytes ipc_handle = 9;

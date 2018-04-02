@@ -56,7 +56,7 @@ private:
     size_t byte_count{0};
     std::vector<TShape> shapes{};
     std::vector<void *> data{};
-    std::vector<size_t *> offsets{};
+    std::vector<size_t> offsets{};
     std::vector<std::string> layer_names{};
   };
   using cpu_persistent_data_t = std::map<std::string, model_info *>;
@@ -84,7 +84,7 @@ private:
       return;
     }
     if (owned.sharing_granularity() == SharingGranularity_Model) {
-      void *dptr = (void *) ptr->device_raw_ptr();
+      void *dptr = (void *) owned.device_raw_ptr();
       if (dptr != nullptr) {
         cudaFree(dptr);
       }
@@ -110,13 +110,13 @@ private:
     return ipc_id;
   }
 
-  cudaIpcMemHandle_t make_ipc_handle(float *device_ptr) {
+  cudaIpcMemHandle_t make_ipc_handle(void *device_ptr) {
     cudaIpcMemHandle_t handle;
     CUDA_CHECK_CALL(cudaIpcGetMemHandle(&handle, (void *) device_ptr), "failed to create a handle ref");
     return handle;
   }
 
-  void make_ipc_handle(Layer *layer, const std::string &id, const std::string &name, float *device_ptr) {
+  void make_ipc_handle(Layer *layer, const std::string &id, const std::string &name, void *device_ptr) {
     const auto ipc_id = get_ipc_id(id, name);
 
     auto span = start_span("ipc_get_memhandle", "ipc", span_props{{"id", id}, {"name", name}});
@@ -203,7 +203,7 @@ private:
     float *dev_ptr = nullptr;
 
     CUDA_CHECK_CALL(cudaMalloc(&dev_ptr, byte_count), "failed to allocate device pointer while creating cpu memory");
-    CUDA_CHECK_CALL(cudaMemcpyAsync(dev_ptr, cpu_ptr, byte_count, cudaMemcpyHostToDevice, stream),
+    CUDA_CHECK_CALL(cudaMemcpyAsync(dev_ptr, ptr, byte_count, cudaMemcpyHostToDevice, stream),
                     "faile to copy cpu memory to gpu");
 
     const auto shape = layer->mutable_shape();
@@ -234,8 +234,11 @@ private:
       total_byte_count += type_size * blob.Size();
     }
 
-    void *base_ptr = malloc(total_byte_count);
-    CHECK(base_ptr != NULL, "unable to allocate cpu memory");
+    void *base_ptr = nullptr;
+
+    CUDA_CHECK_CALL(cudaMallocHost(&base_ptr, total_byte_count, cudaHostAllocWriteCombined),
+                    "failed to allocate base_ptr cpu memory");
+    CHECK(base_ptr != NULL) << "unable to allocate cpu memory";
 
     size_t ii     = 0;
     size_t offset = 0;
@@ -251,7 +254,7 @@ private:
       const auto byte_count = type_size * blob.Size();
       const auto layer_name = layer_names[ii++];
 
-      auto cpu_mem = base_ptr + offset;
+      auto cpu_mem = ((char *) base_ptr) + offset;
       memcpy(cpu_mem, arry_ptr, byte_count);
 
       info->shapes.emplace_back(array.shape());
@@ -265,14 +268,14 @@ private:
     return info;
   }
 
-  void to_layers_from_model_info_for_model_granularity(::google::protobuf::RepeatedPtrField<Layer> *layers layers,
-                                                       const auto model_info *info,
+  void to_layers_from_model_info_for_model_granularity(::google::protobuf::RepeatedPtrField<Layer> *layers,
+                                                       const model_info *info,
                                                        int64_t ref_count,
                                                        cudaStream_t stream = 0) {
 
-    CHECK(info->granularity == SharingGranularity_Model, "expecting model granularity");
+    CHECK(info->granularity == SharingGranularity_Model) << "expecting model granularity";
     if (info->granularity != SharingGranularity_Model) {
-      throw std::runtime_error("expecting model granularity";)
+      throw std::runtime_error("expecting model granularity");
     }
 
     void *device_ptr;
@@ -284,10 +287,10 @@ private:
     auto ipc_handle = make_ipc_handle(device_ptr);
 
     for (size_t ii = 0; ii < info->layer_names.size(); ii++) {
-      auto layer            = layers->Add();
-      const auto layer_name = info->layer_names[ii];
-      const auto tshape     = info->shapes[ii];
-      const auto offset     = info->offset[ii];
+      auto layer        = layers->Add();
+      const auto name   = info->layer_names[ii];
+      const auto tshape = info->shapes[ii];
+      const auto offset = info->offsets[ii];
 
       auto span = start_span("to_layer_from_cpu_mem", "convert",
                              span_props{{"ref_count", std::to_string(ref_count)},
@@ -304,11 +307,13 @@ private:
 
       to_shape(shape, tshape);
 
+      const auto byte_count = tshape.Size() * element_size;
+
       layer->set_byte_count(byte_count);
       if (ref_count == -1) { // special value for owned model
         layer->set_ipc_handle("[owned]");
       } else {
-        layer->set_ipc_handle(ipc_handle);
+        layer->set_ipc_handle(ipc_handle.reserved, CUDA_IPC_HANDLE_SIZE);
       }
       // LOG(INFO) << "setting device_ptr = " << (int64_t) blob.dptr<float>();
       layer->set_sharing_granularity(SharingGranularity_Model);
@@ -335,9 +340,7 @@ private:
       return;
     }
     if (info->granularity == SharingGranularity_Model) {
-      auto info = to_model_info_for_model_sharing_granularity(arrays, layer_names);
       to_layers_from_model_info_for_model_granularity(layers, info, ref_count, stream);
-      delete info;
       return;
     }
 
@@ -353,15 +356,22 @@ private:
 
   void persist_on_cpu(const std::string &model_name, const NDArray &array, const std::string &layer_name) {
     if (cpu_persistent_data.find(model_name) == cpu_persistent_data.end()) {
-      auto model_info         = new model_info{};
-      model_info->granularity = SharingGranularity_Layer;
-      cpu_persistent_data.insert({model_name, model_info});
+      auto info         = new model_info{};
+      info->granularity = SharingGranularity_Layer;
+      cpu_persistent_data.insert({model_name, info});
     }
     auto e    = cpu_persistent_data.find(model_name);
     auto info = e->second;
 
-    const auto blob      = array.data();
-    const char *arry_ptr = (char *) blob.dptr_;
+    const auto blob       = array.data();
+    const auto byte_count = blob.Size() * element_size;
+    void *arry_ptr        = (void *) blob.dptr_;
+
+    void *arry_cpy = nullptr;
+
+    CUDA_CHECK_CALL(cudaMallocHost(&arry_cpy, byte_count, cudaHostAllocWriteCombined),
+                    "failed to allocate pinned cpu memory");
+    memcpy(arry_cpy, arry_ptr, byte_count);
 
     info->shapes.emplace_back(array.shape());
     info->data.emplace_back(arry_ptr);
@@ -379,7 +389,7 @@ private:
       return;
     }
     if (sharing_granularity == SharingGranularity_Model) {
-      auto info = to_model_info_with_model_sharing(arrays, layer_names);
+      auto info = to_model_info_for_model_sharing_granularity(arrays, layer_names);
       cpu_persistent_data.insert({model_name, info});
       return;
     }
@@ -484,13 +494,14 @@ private:
         to_layer_from_disk(layer, layer_name, array, ref_count, stream);
       }
     } else if (sharing_granularity == SharingGranularity_Model) {
-
       if (is_persistent_on_cpu(model_name)) {
         auto e    = cpu_persistent_data.find(model_name);
         auto info = e->second;
-        to_layers_from_model_info_for_model_granularity(layer_names, info, ref_count, stream);
+        to_layers_from_model_info_for_model_granularity(layers, info, ref_count, stream);
       } else {
-        model_granularity_to_layer_from_disk(layer_names, layers, arrays, ref_count, stream);
+        auto info = to_model_info_for_model_sharing_granularity(arrays, layer_names);
+        to_layers_from_model_info_for_model_granularity(layers, info, ref_count, stream);
+        delete info;
       }
     } else {
       throw std::runtime_error("invalid sharing granularity");
@@ -765,19 +776,21 @@ private:
 public:
   // control memory usage by percentage of gpu
   grpc::Status Open(grpc::ServerContext *context, const ModelRequest *request, ModelHandle *reply) override {
-    auto span = start_span("open", "grpc", span_props{{"model_name", request->name()}});
+    const auto model_name = request->name();
+
+    auto span = start_span("open", "grpc", span_props{{"model_name", model_name}});
     defer(stop_span(span));
 
     // LOG(INFO) << "opening " << request->name();
 
-    auto it = memory_db_.find(request->name());
+    auto it = memory_db_.find(model_name);
     if (it == memory_db_.end()) {
       const auto uuid = sole::uuid4().str();
 
       cudaStream_t stream;
       CUDA_CHECK_CALL(cudaStreamCreate(&stream), "unable to create stream");
 
-      auto owned_span = start_span("load_owned", "load", span_props{{"model_name", request->name()}});
+      auto owned_span = start_span("load_owned", "load", span_props{{"model_name", model_name}});
       defer(stop_span(owned_span));
 
       bool needed_eviction = false;
@@ -789,20 +802,21 @@ public:
 
       Model *model = new Model();
       model->set_id(uuid);
-      model->set_name(request->name());
+      model->set_name(model_name);
       model->set_ref_count(0);
 
       auto owned_model = model->mutable_owned_model();
       owned_model->set_id("owned-by-" + uuid);
       owned_model->set_model_id(model->id());
       owned_model->set_byte_count(0);
-      owned_model->set_name(name);
+      owned_model->set_name(model_name);
       owned_model->set_needed_eviction(needed_eviction);
 
       load_ndarray(owned_model->mutable_layer(), request, /*ref_count=*/-1, stream);
 
       int64_t byte_count = 0;
-      for (const auto it : owned_model->layer()) {
+      const auto layers  = owned_model->layer();
+      for (const auto it : layers) {
         byte_count += it.byte_count();
       }
 
@@ -810,9 +824,12 @@ public:
       owned_model->set_sharing_granularity(request->sharing_granularity());
 
       if (request->sharing_granularity() == SharingGranularity_Model) {
-        const auto first_layer = owned_model->layer().first();
-        owned_model->set_device_raw_ptr(first_layer.device_raw_ptr());
-        owned_model->set_ipc_handle(first_layer.ipc_handle());
+        const auto first_layer = layers.begin();
+        if (first_layer == layers.end()) {
+          throw std::runtime_error("no layers found");
+        }
+        owned_model->set_device_raw_ptr(first_layer->device_raw_ptr());
+        owned_model->set_ipc_handle(first_layer->ipc_handle());
       } else {
         owned_model->set_device_raw_ptr(0);
         owned_model->set_ipc_handle("");
@@ -820,19 +837,19 @@ public:
 
       model->set_fifo_order(fifo_order++);
 
-      memory_db_.insert({request->name(), model});
+      memory_db_.insert({model_name, model});
       memory_usage_ += byte_count;
 
       CUDA_CHECK_CALL(cudaStreamSynchronize(stream), "failed to synchronize stream");
       CUDA_CHECK_CALL(cudaStreamDestroy(stream), "failed to destroy stream");
     }
 
-    auto shared_span = start_span("make_shared", "share", span_props{{"model_name", request->name()}});
+    auto shared_span = start_span("make_shared", "share", span_props{{"model_name", model_name}});
     defer(stop_span(shared_span));
 
     // LOG(INFO) << "done with creating owned model";
 
-    it = memory_db_.find(request->name());
+    it = memory_db_.find(model_name);
     CHECK(it != memory_db_.end()) << "expecting the model to be there";
 
     auto model = it->second;

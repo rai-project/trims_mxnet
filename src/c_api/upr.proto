@@ -39,6 +39,8 @@ message Layer {
   int64 ref_count = 7;
   // memory offset
   int64 offset = 8;
+  // sharing granularity
+  SharingGranularity sharing_granularity = 9;
 }
 
 // a model that's shared
@@ -60,7 +62,7 @@ message ModelHandle {
   SharingGranularity sharing_granularity = 7;
   // the raw cuda device ptr (as void *)
   // used when one has model granularity
-  bytes device_raw_ptr = 8;
+  int64 device_raw_ptr = 8;
   // encoding of cuda ipc handle
   // used when one has model granularity
   bytes ipc_handle = 9;
