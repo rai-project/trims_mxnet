@@ -94,9 +94,9 @@ static void to_ndarrays(std::vector<NDArray> *arrays, std::vector<std::string> *
     stop_span(ipc_open_span);
 
     for (const auto layer : layers) {
-      auto create_layer_span = start_span("to_nd_array",
-                                          span_category_serialization,
-                                          span_props{{"layer", layer.name()}, {"sharing_granularity", "model"}});
+     //auto create_layer_span = start_span("to_nd_array",
+     //                                    span_category_serialization,
+     //                                    span_props{{"layer", layer.name()}, {"sharing_granularity", "model"}});
 
       keys->emplace_back(layer.name());
       const auto shape = to_shape(layer.shape());
@@ -104,15 +104,15 @@ static void to_ndarrays(std::vector<NDArray> *arrays, std::vector<std::string> *
       TBlob blob(device_ptr, shape, dev_mask, dev_id);
       arrays->emplace_back(blob, dev_id, /* is_shared = */ true);
 
-      stop_span(create_layer_span);
+      //stop_span(create_layer_span);
     }
     return;
   }
   if (model_handle.sharing_granularity() == SharingGranularity_Model) {
     for (const auto layer : layers) {
-      auto create_layer_span = start_span("to_nd_array",
-                                          span_category_serialization,
-                                          span_props{{"layer", layer.name()}, {"sharing_granularity", "layer"}});
+     //auto create_layer_span = start_span("to_nd_array",
+     //                                    span_category_serialization,
+     //                                    span_props{{"layer", layer.name()}, {"sharing_granularity", "layer"}});
 
       keys->emplace_back(layer.name());
       const auto shape = to_shape(layer.shape());
@@ -120,7 +120,7 @@ static void to_ndarrays(std::vector<NDArray> *arrays, std::vector<std::string> *
       TBlob blob(device_ptr, shape, dev_mask, dev_id);
       arrays->emplace_back(blob, dev_id, /* is_shared = */ true);
 
-      stop_span(create_layer_span);
+      //stop_span(create_layer_span);
     }
     return;
   }

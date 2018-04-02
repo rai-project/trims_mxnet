@@ -33,6 +33,9 @@
 #include <hopscotch/hopscotch_map.h>
 #include <hopscotch/hopscotch_sc_map.h>
 
+#define start_span(...) nullptr
+#define stop_span(...) do {int __x__ = 0; (void)__x__; } while(0)
+
 using namespace upr;
 using namespace mxnet;
 using namespace grpc;
@@ -70,7 +73,6 @@ private:
     }
     auto span =
         start_span("deleting_model", "destroy", span_props{{"model_id", ptr->id()}, {"model_name", ptr->name()}});
-    defer(stop_span(span));
 
     LOG(INFO) << "deleting model id=" << ptr->id();
     auto owned = ptr->owned_model();
@@ -81,6 +83,7 @@ private:
           cudaFree(dptr);
         }
       }
+    stop_span(span);
       return;
     }
     if (owned.sharing_granularity() == SharingGranularity_Model) {
@@ -88,6 +91,7 @@ private:
       if (dptr != nullptr) {
         cudaFree(dptr);
       }
+    stop_span(span);
       return;
     }
     throw std::runtime_error("invalid sharing granularity");
@@ -131,11 +135,12 @@ private:
   void make_ipc_handle(Layer *layer, const std::string &id, const std::string &name, const NDArray &array) {
 
     auto span = start_span("make_ipc_handle", "ipc", span_props{{"id", id}, {"name", name}});
-    defer(stop_span(span));
 
     const auto blob = array.data();
     auto data       = blob.dptr<float>();
     make_ipc_handle(layer, id, name, data);
+
+    stop_span(span);
   }
 
   void make_ipc_handle(Layer *layer, const NDArray &array) {
@@ -153,7 +158,6 @@ private:
                           cudaStream_t stream = 0) {
     auto span = start_span("to_layer_from_disk", "convert",
                            span_props{{"ref_count", std::to_string(ref_count)}, {"name", name}});
-    defer(stop_span(span));
 
     // LOG(INFO) << "converting " << name << " ndarray to protobuf
     // representation with ref_count = " << ref_count;
@@ -184,13 +188,14 @@ private:
     layer->set_device_raw_ptr((int64_t) blob.dptr<float>());
     layer->set_sharing_granularity(SharingGranularity_Layer);
     layer->set_ref_count(ref_count);
+
+    stop_span(span);
   }
 
   void to_layer_from_cpu_mem(Layer *layer, std::string name, const void *ptr, const TShape &tshape, int64_t ref_count,
                              cudaStream_t stream = 0) {
     auto span = start_span("to_layer_from_cpu_mem", "convert",
                            span_props{{"ref_count", std::to_string(ref_count)}, {"name", name}});
-    defer(stop_span(span));
 
     // LOG(INFO) << "converting " << name << " ndarray to protobuf
     // representation with ref_count = " << ref_count;
@@ -220,6 +225,8 @@ private:
     // LOG(INFO) << "setting device_ptr = " << (int64_t) blob.dptr<float>();
     layer->set_device_raw_ptr((int64_t) dev_ptr);
     layer->set_ref_count(ref_count);
+
+    stop_span(span);
   }
 
   model_info *to_model_info_for_model_sharing_granularity(const std::vector<NDArray> &arrays,
@@ -515,7 +522,6 @@ private:
 
     auto span = start_span("from_owned_layer", "load",
                            span_props{{"ref_count", std::to_string(ref_count)}, {"name", layer->name()}});
-    defer(stop_span(span));
 
     // LOG(INFO) << "loading from owned layer for layer " << owned.name() << "
     // with ref_count = " << ref_count;
@@ -539,6 +545,8 @@ private:
     layer->set_offset(owned.offset());
     layer->set_device_raw_ptr(owned.device_raw_ptr());
     layer->set_ref_count(ref_count);
+
+    stop_span(span);
   }
 
   void from_owned_modelhandle(ModelHandle *handle, const ModelHandle &owned, int64_t ref_count) {
@@ -547,7 +555,6 @@ private:
 
     auto span = start_span("from_owned_modelhandle", "load",
                            span_props{{"ref_count", std::to_string(ref_count)}, {"model_id", owned.model_id()}});
-    defer(stop_span(span));
 
     handle->set_id(uuid);
     handle->set_model_id(owned.model_id());
@@ -570,6 +577,8 @@ private:
       auto trgt_layer = layers->Add();
       from_owned_layer(trgt_layer, owned_layer, ref_count);
     }
+
+    stop_span(span);
   }
 
   size_t estimate_model_size(const ModelRequest *request) {

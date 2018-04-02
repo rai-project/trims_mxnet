@@ -222,7 +222,8 @@ private:
             on_complete();
           },
           ctx, {}, {resource.var}, FnProperty::kNormal, 0,
-          PROFILER_MESSAGE("ResourceRandomSetSeed"));
+         // PROFILER_MESSAGE("ResourceRandomSetSeed"));
+          PROFILER_MESSAGE(nullptr));
     }
   };
 
@@ -299,7 +300,8 @@ private:
               r->Seed(rctx.get_stream<xpu>(), seed);
             },
             ctx, {}, {resource[i].var}, FnProperty::kNormal, 0,
-            PROFILER_MESSAGE("ResourceParallelRandomSetSeed"));
+            //PROFILER_MESSAGE("ResourceParallelRandomSetSeed"));
+            PROFILER_MESSAGE(nullptr));
         sampler[i] = r;
         resource[i].ptr_ = sampler[i];
         resource[i].req = ResourceRequest(ResourceRequest::kParallelRandom);
@@ -329,7 +331,8 @@ private:
               on_complete();
             },
             ctx, {}, {resource[i].var}, FnProperty::kNormal, 0,
-            PROFILER_MESSAGE("ResourceNativeRandomSetSeed"));
+            //PROFILER_MESSAGE("ResourceNativeRandomSetSeed"));
+            PROFILER_MESSAGE(nullptr));
       }
       // reset pointer to ensure the same result with the same seed.
       curr_ptr.store(0);
