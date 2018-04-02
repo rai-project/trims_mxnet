@@ -106,37 +106,6 @@ namespace engine {
     this->filename_ = output_filename;
   }
 
-  OprExecStat *Profiler::AddOprStat(int dev_type, uint32_t dev_id) {
-    return this->AddOprStat(dev_type, dev_id, "undefined");
-  }
-  OprExecStat *Profiler::AddOprStat(int dev_type, uint32_t dev_id, std::string opr_name) {
-    std::unique_ptr<OprExecStat> opr_stat(new OprExecStat);
-    opr_stat->category = "generic";
-    opr_stat->dev_type = dev_type;
-    opr_stat->dev_id   = dev_id;
-    opr_stat->opr_name = opr_name;
-
-    int idx;
-    switch (dev_type) {
-      case Context::kCPU:
-        idx = dev_id;
-        break;
-      case Context::kGPU:
-        idx = cpu_num_ + dev_id;
-        break;
-      case Context::kCPUPinned:
-        idx = cpu_num_ + gpu_num_;
-        break;
-      default:
-        LOG(FATAL) << "Unknown dev_type: " << dev_type;
-        return NULL;
-    }
-
-    DevStat &dev_stat = profile_stat[idx];
-    dev_stat.opr_exec_stats_->enqueue(opr_stat.get());
-    return opr_stat.release();
-  }
-
   static std::string _engine_type() {
     static const auto stype = dmlc::GetEnv("MXNET_ENGINE_TYPE", std::string("NaiveEngine"));
     return stype;

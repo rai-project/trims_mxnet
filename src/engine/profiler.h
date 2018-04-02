@@ -136,8 +136,37 @@ namespace engine {
     }
     /*! \brief add one operation execution record in
      *   corresponding device statistics */
-    OprExecStat *AddOprStat(int dev_type, uint32_t dev_id, std::string name);
-    OprExecStat *AddOprStat(int dev_type, uint32_t dev_id);
+
+    OprExecStat *AddOprStat(int dev_type, uint32_t dev_id) {
+      return this->AddOprStat(dev_type, dev_id, "undefined");
+    }
+    OprExecStat *AddOprStat(int dev_type, uint32_t dev_id, std::string opr_name) {
+      std::unique_ptr<OprExecStat> opr_stat(new OprExecStat);
+      opr_stat->category = "generic";
+      opr_stat->dev_type = dev_type;
+      opr_stat->dev_id   = dev_id;
+      opr_stat->opr_name = opr_name;
+
+      int idx;
+      switch (dev_type) {
+        case Context::kCPU:
+          idx = dev_id;
+          break;
+        case Context::kGPU:
+          idx = cpu_num_ + dev_id;
+          break;
+        case Context::kCPUPinned:
+          idx = cpu_num_ + gpu_num_;
+          break;
+        default:
+          LOG(FATAL) << "Unknown dev_type: " << dev_type;
+          return NULL;
+      }
+
+      DevStat &dev_stat = profile_stat[idx];
+      dev_stat.opr_exec_stats_->enqueue(opr_stat.get());
+      return opr_stat.release();
+    }
     /*! \return Profiler singleton */
     static Profiler *Get();
 
