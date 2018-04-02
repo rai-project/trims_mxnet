@@ -46,22 +46,24 @@ message Layer {
 message ModelHandle {
   // a unique id
   string id = 1;
+  // name mapping
+  string name = 2;
   // model_id mapping
-  string model_id = 2;
+  string model_id = 3;
   // the total number of bytes for the model
-  int64 byte_count = 3;
+  int64 byte_count = 4;
   // the sequence of layers
-  repeated Layer layer = 4;
+  repeated Layer layer = 5;
   // needed eviction
-  bool needed_eviction = 5;
+  bool needed_eviction = 6;
   // sharing granularity
-  SharingGranularity sharing_granularity = 6;
+  SharingGranularity sharing_granularity = 7;
   // the raw cuda device ptr (as void *)
   // used when one has model granularity
-  bytes device_raw_ptr = 7;
+  bytes device_raw_ptr = 8;
   // encoding of cuda ipc handle
   // used when one has model granularity
-  bytes ipc_handle = 8;
+  bytes ipc_handle = 9;
 }
 
 message Model {

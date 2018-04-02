@@ -556,10 +556,10 @@ class ModelHandle : public ::google::protobuf::Message /* @@protoc_insertion_poi
 
   // accessors -------------------------------------------------------
 
-  // repeated .upr.Layer layer = 4;
+  // repeated .upr.Layer layer = 5;
   int layer_size() const;
   void clear_layer();
-  static const int kLayerFieldNumber = 4;
+  static const int kLayerFieldNumber = 5;
   const ::upr::Layer& layer(int index) const;
   ::upr::Layer* mutable_layer(int index);
   ::upr::Layer* add_layer();
@@ -591,9 +591,32 @@ class ModelHandle : public ::google::protobuf::Message /* @@protoc_insertion_poi
   void unsafe_arena_set_allocated_id(
       ::std::string* id);
 
-  // string model_id = 2;
+  // string name = 2;
+  void clear_name();
+  static const int kNameFieldNumber = 2;
+  const ::std::string& name() const;
+  void set_name(const ::std::string& value);
+  #if LANG_CXX11
+  void set_name(::std::string&& value);
+  #endif
+  void set_name(const char* value);
+  void set_name(const char* value, size_t size);
+  ::std::string* mutable_name();
+  ::std::string* release_name();
+  void set_allocated_name(::std::string* name);
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  ::std::string* unsafe_arena_release_name();
+  PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  void unsafe_arena_set_allocated_name(
+      ::std::string* name);
+
+  // string model_id = 3;
   void clear_model_id();
-  static const int kModelIdFieldNumber = 2;
+  static const int kModelIdFieldNumber = 3;
   const ::std::string& model_id() const;
   void set_model_id(const ::std::string& value);
   #if LANG_CXX11
@@ -614,9 +637,9 @@ class ModelHandle : public ::google::protobuf::Message /* @@protoc_insertion_poi
   void unsafe_arena_set_allocated_model_id(
       ::std::string* model_id);
 
-  // bytes device_raw_ptr = 7;
+  // bytes device_raw_ptr = 8;
   void clear_device_raw_ptr();
-  static const int kDeviceRawPtrFieldNumber = 7;
+  static const int kDeviceRawPtrFieldNumber = 8;
   const ::std::string& device_raw_ptr() const;
   void set_device_raw_ptr(const ::std::string& value);
   #if LANG_CXX11
@@ -637,9 +660,9 @@ class ModelHandle : public ::google::protobuf::Message /* @@protoc_insertion_poi
   void unsafe_arena_set_allocated_device_raw_ptr(
       ::std::string* device_raw_ptr);
 
-  // bytes ipc_handle = 8;
+  // bytes ipc_handle = 9;
   void clear_ipc_handle();
-  static const int kIpcHandleFieldNumber = 8;
+  static const int kIpcHandleFieldNumber = 9;
   const ::std::string& ipc_handle() const;
   void set_ipc_handle(const ::std::string& value);
   #if LANG_CXX11
@@ -660,21 +683,21 @@ class ModelHandle : public ::google::protobuf::Message /* @@protoc_insertion_poi
   void unsafe_arena_set_allocated_ipc_handle(
       ::std::string* ipc_handle);
 
-  // int64 byte_count = 3;
+  // int64 byte_count = 4;
   void clear_byte_count();
-  static const int kByteCountFieldNumber = 3;
+  static const int kByteCountFieldNumber = 4;
   ::google::protobuf::int64 byte_count() const;
   void set_byte_count(::google::protobuf::int64 value);
 
-  // bool needed_eviction = 5;
+  // bool needed_eviction = 6;
   void clear_needed_eviction();
-  static const int kNeededEvictionFieldNumber = 5;
+  static const int kNeededEvictionFieldNumber = 6;
   bool needed_eviction() const;
   void set_needed_eviction(bool value);
 
-  // .upr.SharingGranularity sharing_granularity = 6;
+  // .upr.SharingGranularity sharing_granularity = 7;
   void clear_sharing_granularity();
-  static const int kSharingGranularityFieldNumber = 6;
+  static const int kSharingGranularityFieldNumber = 7;
   ::upr::SharingGranularity sharing_granularity() const;
   void set_sharing_granularity(::upr::SharingGranularity value);
 
@@ -687,6 +710,7 @@ class ModelHandle : public ::google::protobuf::Message /* @@protoc_insertion_poi
   typedef void DestructorSkippable_;
   ::google::protobuf::RepeatedPtrField< ::upr::Layer > layer_;
   ::google::protobuf::internal::ArenaStringPtr id_;
+  ::google::protobuf::internal::ArenaStringPtr name_;
   ::google::protobuf::internal::ArenaStringPtr model_id_;
   ::google::protobuf::internal::ArenaStringPtr device_raw_ptr_;
   ::google::protobuf::internal::ArenaStringPtr ipc_handle_;
@@ -1711,7 +1735,82 @@ inline void ModelHandle::unsafe_arena_set_allocated_id(
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:upr.ModelHandle.id)
 }
 
-// string model_id = 2;
+// string name = 2;
+inline void ModelHandle::clear_name() {
+  name_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
+}
+inline const ::std::string& ModelHandle::name() const {
+  // @@protoc_insertion_point(field_get:upr.ModelHandle.name)
+  return name_.Get();
+}
+inline void ModelHandle::set_name(const ::std::string& value) {
+  
+  name_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value, GetArenaNoVirtual());
+  // @@protoc_insertion_point(field_set:upr.ModelHandle.name)
+}
+#if LANG_CXX11
+inline void ModelHandle::set_name(::std::string&& value) {
+  
+  name_.Set(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArenaNoVirtual());
+  // @@protoc_insertion_point(field_set_rvalue:upr.ModelHandle.name)
+}
+#endif
+inline void ModelHandle::set_name(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  name_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArenaNoVirtual());
+  // @@protoc_insertion_point(field_set_char:upr.ModelHandle.name)
+}
+inline void ModelHandle::set_name(const char* value,
+    size_t size) {
+  
+  name_.Set(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArenaNoVirtual());
+  // @@protoc_insertion_point(field_set_pointer:upr.ModelHandle.name)
+}
+inline ::std::string* ModelHandle::mutable_name() {
+  
+  // @@protoc_insertion_point(field_mutable:upr.ModelHandle.name)
+  return name_.Mutable(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
+}
+inline ::std::string* ModelHandle::release_name() {
+  // @@protoc_insertion_point(field_release:upr.ModelHandle.name)
+  
+  return name_.Release(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
+}
+inline void ModelHandle::set_allocated_name(::std::string* name) {
+  if (name != NULL) {
+    
+  } else {
+    
+  }
+  name_.SetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name,
+      GetArenaNoVirtual());
+  // @@protoc_insertion_point(field_set_allocated:upr.ModelHandle.name)
+}
+inline ::std::string* ModelHandle::unsafe_arena_release_name() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:upr.ModelHandle.name)
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  
+  return name_.UnsafeArenaRelease(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      GetArenaNoVirtual());
+}
+inline void ModelHandle::unsafe_arena_set_allocated_name(
+    ::std::string* name) {
+  GOOGLE_DCHECK(GetArenaNoVirtual() != NULL);
+  if (name != NULL) {
+    
+  } else {
+    
+  }
+  name_.UnsafeArenaSetAllocated(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      name, GetArenaNoVirtual());
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:upr.ModelHandle.name)
+}
+
+// string model_id = 3;
 inline void ModelHandle::clear_model_id() {
   model_id_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
@@ -1786,7 +1885,7 @@ inline void ModelHandle::unsafe_arena_set_allocated_model_id(
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:upr.ModelHandle.model_id)
 }
 
-// int64 byte_count = 3;
+// int64 byte_count = 4;
 inline void ModelHandle::clear_byte_count() {
   byte_count_ = GOOGLE_LONGLONG(0);
 }
@@ -1800,7 +1899,7 @@ inline void ModelHandle::set_byte_count(::google::protobuf::int64 value) {
   // @@protoc_insertion_point(field_set:upr.ModelHandle.byte_count)
 }
 
-// repeated .upr.Layer layer = 4;
+// repeated .upr.Layer layer = 5;
 inline int ModelHandle::layer_size() const {
   return layer_.size();
 }
@@ -1830,7 +1929,7 @@ ModelHandle::layer() const {
   return layer_;
 }
 
-// bool needed_eviction = 5;
+// bool needed_eviction = 6;
 inline void ModelHandle::clear_needed_eviction() {
   needed_eviction_ = false;
 }
@@ -1844,7 +1943,7 @@ inline void ModelHandle::set_needed_eviction(bool value) {
   // @@protoc_insertion_point(field_set:upr.ModelHandle.needed_eviction)
 }
 
-// .upr.SharingGranularity sharing_granularity = 6;
+// .upr.SharingGranularity sharing_granularity = 7;
 inline void ModelHandle::clear_sharing_granularity() {
   sharing_granularity_ = 0;
 }
@@ -1858,7 +1957,7 @@ inline void ModelHandle::set_sharing_granularity(::upr::SharingGranularity value
   // @@protoc_insertion_point(field_set:upr.ModelHandle.sharing_granularity)
 }
 
-// bytes device_raw_ptr = 7;
+// bytes device_raw_ptr = 8;
 inline void ModelHandle::clear_device_raw_ptr() {
   device_raw_ptr_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }
@@ -1933,7 +2032,7 @@ inline void ModelHandle::unsafe_arena_set_allocated_device_raw_ptr(
   // @@protoc_insertion_point(field_unsafe_arena_set_allocated:upr.ModelHandle.device_raw_ptr)
 }
 
-// bytes ipc_handle = 8;
+// bytes ipc_handle = 9;
 inline void ModelHandle::clear_ipc_handle() {
   ipc_handle_.ClearToEmpty(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), GetArenaNoVirtual());
 }

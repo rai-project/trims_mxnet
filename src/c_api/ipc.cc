@@ -33,9 +33,9 @@ static TShape to_shape(Shape shape) {
   return res;
 }
 
-static void *get_device_ptr_offset(const Layer &layer, char *devPtr) {
-  const auto offset = layer->offset();
-  return (void *) (devPtr + offset);
+static void *get_device_ptr_offset(const Layer &layer, void *devPtr) {
+  const auto offset = layer.offset();
+  return (void *) (((char *) (devPtr)) + offset);
 }
 
 static void *get_device_ptr(const std::string &handle_bytes) {
@@ -44,11 +44,19 @@ static void *get_device_ptr(const std::string &handle_bytes) {
     LOG(FATAL) << msg;
     throw dmlc::Error(msg);
   }
-
   cudaIpcMemHandle_t handle;
   memcpy((uint8_t *) &handle, handle_bytes.c_str(), sizeof(handle));
 
-  auto name = layer.name();
+  void *device_ptr = nullptr;
+  CUDA_CHECK_CALL(cudaIpcOpenMemHandle((void **) &device_ptr, handle, cudaIpcMemLazyEnablePeerAccess),
+                  fmt::format("failed to open cuda ipc mem handle from {}", utils::base64_encode(handle_bytes)));
+
+  return device_ptr;
+}
+
+static void *get_device_ptr(const Layer &layer) {
+  auto name             = layer.name();
+  const auto ipc_handle = layer.ipc_handle();
 
   static const std::string arg_prefix("arg:");
   if (string_starts_with(name, arg_prefix)) {
@@ -59,20 +67,13 @@ static void *get_device_ptr(const std::string &handle_bytes) {
     name.erase(0, aux_prefix.size());
   }
 
-  void *device_ptr;
-  auto span = start_span("cudaIpcOpenMemHandle",
+  auto span       = start_span("cudaIpcOpenMemHandle",
                          span_category_ipc,
                          span_props{{"layer", name}, {"byte_count", std::to_string(layer.byte_count())}});
-  CUDA_CHECK_CALL(cudaIpcOpenMemHandle((void **) &device_ptr, handle, cudaIpcMemLazyEnablePeerAccess),
-                  fmt::format("failed to open cuda ipc mem handle from {}", utils::base64_encode(ipc_handle)));
+  auto device_ptr = get_device_ptr(ipc_handle.c_str());
   stop_span(span);
 
   return device_ptr;
-}
-
-static void *get_device_ptr(const Layer &layer) {
-  const auto ipc_handle = layer.ipc_handle();
-  return get_device_ptr(ipc_handle);
 }
 
 static void to_ndarrays(std::vector<NDArray> *arrays, std::vector<std::string> *keys, const ModelHandle &model_handle) {
@@ -85,7 +86,13 @@ static void to_ndarrays(std::vector<NDArray> *arrays, std::vector<std::string> *
   // LOG(INFO) << "got " << layers.size() << " layers form reply, before to_ndarray";
 
   if (model_handle.sharing_granularity() == SharingGranularity_Model) {
+    auto ipc_open_span = start_span(
+        "cudaIpcOpenMemHandle",
+        span_category_ipc,
+        span_props{{"model", model_handle.name()}, {"byte_count", std::to_string(model_handle.byte_count())}});
     auto base_device_ptr = get_device_ptr(model_handle.ipc_handle());
+    stop_span(ipc_open_span);
+
     for (const auto layer : layers) {
       auto create_layer_span = start_span("to_nd_array",
                                           span_category_serialization,
@@ -93,13 +100,15 @@ static void to_ndarrays(std::vector<NDArray> *arrays, std::vector<std::string> *
 
       keys->emplace_back(layer.name());
       const auto shape = to_shape(layer.shape());
-      auto device_ptr  = get_device_ptr_offset(layer, based_device_ptr);
+      auto device_ptr  = get_device_ptr_offset(layer, base_device_ptr);
       TBlob blob(device_ptr, shape, dev_mask, dev_id);
       arrays->emplace_back(blob, dev_id, /* is_shared = */ true);
 
-      stop_span(create_layer_span)
+      stop_span(create_layer_span);
     }
-  } else if (model_handle.sharing_granularity() == SharingGranularity_Model) {
+    return;
+  }
+  if (model_handle.sharing_granularity() == SharingGranularity_Model) {
     for (const auto layer : layers) {
       auto create_layer_span = start_span("to_nd_array",
                                           span_category_serialization,
@@ -111,13 +120,12 @@ static void to_ndarrays(std::vector<NDArray> *arrays, std::vector<std::string> *
       TBlob blob(device_ptr, shape, dev_mask, dev_id);
       arrays->emplace_back(blob, dev_id, /* is_shared = */ true);
 
-      stop_span(create_layer_span)
+      stop_span(create_layer_span);
     }
-  } else {
-    throw dmlc::Error("invalid granularity");
+    return;
   }
 
-  // LOG(INFO) << "finished nd_array conversion";
+  throw dmlc::Error("invalid granularity");
 
   return;
 }
@@ -172,7 +180,14 @@ struct client {
     ModelHandle Open(const std::string &model_name) {
       ModelRequest request;
       request.set_name(model_name);
-      request.set_sharing_granularity(UPR_SHARING_GRANULARITY);
+      if (UPR_SHARING_GRANULARITY == "model") {
+        request.set_sharing_granularity(SharingGranularity_Model);
+      } else if (UPR_SHARING_GRANULARITY == "layer") {
+        request.set_sharing_granularity(SharingGranularity_Layer);
+      } else {
+        throw dmlc::Error(
+            fmt::format("Error: [{}] {}. failed to determine model granularity.", UPR_SHARING_GRANULARITY));
+      }
       return this->Open(request);
     }
 
@@ -233,6 +248,7 @@ struct client {
                                       span_category_serialization,
                                       span_props{{"model_id", open_reply.model_id()},
                                                  {"byte_count", std::to_string(open_reply.byte_count())},
+                                                 {"needed_eviction", std::to_string(open_reply.needed_eviction())},
                                                  {"nlayers", std::to_string(open_reply.layer().size())}});
     defer(stop_span(span_converting));
 

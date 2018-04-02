@@ -542,6 +542,8 @@ private:
     handle->set_sharing_granularity(owned.sharing_granularity());
     handle->set_device_raw_ptr(owned.device_raw_ptr());
     handle->set_ipc_handle(owned.ipc_handle());
+    handle->set_name(owned.name());
+    handle->set_needed_eviction(owned.needed_eviction());
 
     // LOG(INFO) << "loading from owned model";
 
@@ -733,7 +735,7 @@ private:
     throw std::runtime_error(msg);
   }
 
-  void evict_if_needed(const ModelRequest *request) {
+  bool evict_if_needed(const ModelRequest *request) {
     static const auto max_memory_to_use = UPRD_MEMORY_PERCENTAGE * memory_total();
     const auto estimated_model_size     = estimate_model_size(request);
     if (estimated_model_size > max_memory_to_use) {
@@ -753,9 +755,9 @@ private:
                                      memory_to_free, max_memory_to_use, eviction_policy);
         throw std::runtime_error(msg);
       }
-      return;
+      return true;
     }
-    return;
+    return false;
   }
 
   size_t fifo_order{0};
@@ -778,8 +780,9 @@ public:
       auto owned_span = start_span("load_owned", "load", span_props{{"model_name", request->name()}});
       defer(stop_span(owned_span));
 
+      bool needed_eviction = false;
       try {
-        evict_if_needed(request);
+        needed_eviction = evict_if_needed(request);
       } catch (const std::runtime_error &error) {
         return grpc::Status(grpc::RESOURCE_EXHAUSTED, error.what());
       }
@@ -793,6 +796,8 @@ public:
       owned_model->set_id("owned-by-" + uuid);
       owned_model->set_model_id(model->id());
       owned_model->set_byte_count(0);
+      owned_model->set_name(name);
+      owned_model->set_needed_eviction(needed_eviction);
 
       load_ndarray(owned_model->mutable_layer(), request, /*ref_count=*/-1, stream);
 
