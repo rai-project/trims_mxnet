@@ -32,6 +32,13 @@
 #include <string>
 #include <vector>
 
+#include <dmlc/base.h>
+#include <mxnet/base.h>
+
+#if MXNET_USE_CUDA
+#include "../common/cuda_utils.h"
+#endif
+
 #include "json.hpp"
 
 #include "./nvtools.h"
@@ -147,6 +154,7 @@ namespace engine {
       opr_stat->dev_id   = dev_id;
       opr_stat->opr_name = opr_name;
 
+      using namespace mxnet;
       int idx;
       switch (dev_type) {
         case Context::kCPU:
@@ -159,7 +167,7 @@ namespace engine {
           idx = cpu_num_ + gpu_num_;
           break;
         default:
-          LOG(FATAL) << "Unknown dev_type: " << dev_type;
+          //LOG(FATAL) << "Unknown dev_type: " << dev_type;
           return NULL;
       }
 

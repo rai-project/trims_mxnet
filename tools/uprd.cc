@@ -529,8 +529,8 @@ private:
     const auto id    = sole::uuid4().str();
     const auto shape = layer->mutable_shape();
 
-    auto span = start_span("from_owned_layer", "load",
-                           span_props{{"ref_count", std::to_string(ref_count)}, {"name", layer->name()}});
+    //auto span = start_span("from_owned_layer", "load",
+     //                      span_props{{"ref_count", std::to_string(ref_count)}, {"name", layer->name()}});
 
     // LOG(INFO) << "loading from owned layer for layer " << owned.name() << "
     // with ref_count = " << ref_count;
@@ -555,7 +555,7 @@ private:
     layer->set_device_raw_ptr(owned.device_raw_ptr());
     layer->set_ref_count(ref_count);
 
-    stop_span(span);
+ // stop_span(span);
   }
 
   void from_owned_modelhandle(ModelHandle *handle, const ModelHandle &owned, int64_t ref_count) {
@@ -584,10 +584,7 @@ private:
 
     layers->Reserve(owned.layer().size());
     for (const auto owned_layer : owned.layer()) {
-      auto span = start_span("add", "add");
-
       auto trgt_layer = layers->Add();
-      stop_span(span);
       from_owned_layer(trgt_layer, owned_layer, ref_count);
     }
 

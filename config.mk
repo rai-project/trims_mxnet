@@ -174,7 +174,7 @@ USE_S3 = 0
 # performance settings
 #----------------------------
 # Use operator tuning
-USE_OPERATOR_TUNING = 1
+USE_OPERATOR_TUNING = 0
 
 # Use gperftools if found
 USE_GPERFTOOLS = 1
