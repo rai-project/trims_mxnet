@@ -255,9 +255,7 @@ static inline engine::OprExecStat *start_span(const std::string &name, std::stri
   auto opr_stat  = engine::Profiler::Get()->AddOprStat(ctx.dev_type, ctx.dev_id, name);
   // uint64_t tid   = std::hash<std::thread::id>()(std::this_thread::get_id());
   opr_stat->category = category;
-  for (const auto kv : props) {
-    engine::AddOprMetadata(span, kv.first, kv.second);
-  }
+  opr_stat->metadata = props;
   engine::SetOprStart(opr_stat);
   return opr_stat;
 #else
