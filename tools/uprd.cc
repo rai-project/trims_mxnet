@@ -33,8 +33,14 @@
 #include <hopscotch/hopscotch_map.h>
 #include <hopscotch/hopscotch_sc_map.h>
 
-//#define start_span(...) nullptr
-//#define stop_span(...) do {int __x__ = 0; (void)__x__; } while(0)
+#if 0
+#define start_span(...) nullptr
+#define stop_span(...)                                                                                                 \
+  do {                                                                                                                 \
+    int __x__ = 0;                                                                                                     \
+    (void) __x__;                                                                                                      \
+  } while (0)
+#endif
 
 using namespace upr;
 using namespace mxnet;
@@ -578,7 +584,10 @@ private:
 
     layers->Reserve(owned.layer().size());
     for (const auto owned_layer : owned.layer()) {
+      auto span = start_span("add", "add");
+
       auto trgt_layer = layers->Add();
+      stop_span(span);
       from_owned_layer(trgt_layer, owned_layer, ref_count);
     }
 
