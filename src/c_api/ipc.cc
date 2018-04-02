@@ -222,7 +222,6 @@ struct client {
   static RegistryClient *get_connection() {
     static RegistryClient *client =
         new RegistryClient(grpc::CreateChannel(server_address, grpc::InsecureChannelCredentials()));
-        std::cout << "initialize = true \n";
     return client;
   }
 
