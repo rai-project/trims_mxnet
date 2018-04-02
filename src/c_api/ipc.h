@@ -78,6 +78,7 @@ static const auto UPR_BASE_DIR   = dmlc::GetEnv("UPR_BASE_DIR", HOME + std::stri
 
 static const auto UPR_ENABLE_MEMORY_PROFILE = dmlc::GetEnv("UPR_ENABLE_MEMORY_PROFILE", false);
 static const auto UPR_ENABLE_CUDA_FREE      = dmlc::GetEnv("UPR_ENABLE_CUDA_FREE", false);
+static const auto UPR_SHARING_GRANULARITY   = dmlc::GetEnv("UPR_SHARING_GRANULARITY", "model");
 
 static const auto UPRD_EVICTION_POLICY               = dmlc::GetEnv("UPRD_EVICTION_POLICY", std::string("lru"));
 static const auto UPRD_ESTIMATION_RATE               = dmlc::GetEnv("UPRD_ESTIMATION_RATE", 1.0);
