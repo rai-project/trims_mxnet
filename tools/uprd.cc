@@ -33,12 +33,8 @@
 #include <hopscotch/hopscotch_map.h>
 #include <hopscotch/hopscotch_sc_map.h>
 
-#define start_span(...) nullptr
-#define stop_span(...)                                                                                                 \
-  do {                                                                                                                 \
-    int __x__ = 0;                                                                                                     \
-    (void) __x__;                                                                                                      \
-  } while (0)
+//#define start_span(...) nullptr
+//#define stop_span(...) do {int __x__ = 0; (void)__x__; } while(0)
 
 using namespace upr;
 using namespace mxnet;

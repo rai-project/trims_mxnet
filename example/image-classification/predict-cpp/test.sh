@@ -16,8 +16,8 @@ export UPR_INITIALIZE_EAGER=true
 
 #UPR_MODEL_NAME=inception_3.0 ./image-classification-predict
 #UPR_MODEL_NAME=bvlc_googlenet_1.0 ./image-classification-predict
-#UPR_MODEL_NAME=vgg16_1.0 ./image-classification-predict
-UPR_MODEL_NAME=squeezenet_1.0 ./image-classification-predict
+UPR_MODEL_NAME=vgg16_1.0 ./image-classification-predict
+#UPR_MODEL_NAME=squeezenet_1.0 ./image-classification-predict
 #UPR_MODEL_NAME=bvlc_alexnet_1.0 ./image-classification-predict
 # UPR_MODEL_NAME=bvlc_alexnet_1.0 ./image-classification-predict&
 # UPR_MODEL_NAME=bvlc_googlenet_1.0 ./image-classification-predict &
