@@ -157,7 +157,7 @@ private:
 
     // LOG(INFO) << "converting " << name << " ndarray to protobuf
     // representation with ref_count = " << ref_count;
-    const auto id  = sole::uuid4().str();
+    const auto id = sole::uuid4().str();
 
     const auto blob       = array.data();
     const float *cpu_ptr  = (float *) blob.dptr_;
@@ -528,9 +528,12 @@ private:
       shape->add_dim(dim);
     }
     layer->set_byte_count(owned.byte_count());
+    layer->set_sharing_granularity(owned.sharing_granularity());
     // LOG(INFO) << "creating ipc handle using device_ptr = " <<
     // owned.device_raw_ptr();
-    make_ipc_handle(layer, id, owned.name(), (float *) owned.device_raw_ptr());
+    if (layer->sharing_granularity() == SharingGranularity_Layer) {
+      make_ipc_handle(layer, id, owned.name(), (float *) owned.device_raw_ptr());
+    }
     // LOG(INFO) << "created ipc handle using device_ptr = " <<
     // owned.device_raw_ptr();
     layer->set_offset(owned.offset());
@@ -557,6 +560,11 @@ private:
     // LOG(INFO) << "loading from owned model";
 
     auto layers = handle->mutable_layer();
+
+    if (owned.sharing_granularity() == SharingGranularity_Model) {
+      const auto ipc_handle = make_ipc_handle((float *) owned.device_raw_ptr());
+      handle->set_ipc_handle(ipc_handle.reserved, CUDA_IPC_HANDLE_SIZE);
+    }
 
     for (const auto owned_layer : owned.layer()) {
       auto trgt_layer = layers->Add();
