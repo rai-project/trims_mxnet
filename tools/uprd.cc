@@ -34,7 +34,11 @@
 #include <hopscotch/hopscotch_sc_map.h>
 
 #define start_span(...) nullptr
-#define stop_span(...) do {int __x__ = 0; (void)__x__; } while(0)
+#define stop_span(...)                                                                                                 \
+  do {                                                                                                                 \
+    int __x__ = 0;                                                                                                     \
+    (void) __x__;                                                                                                      \
+  } while (0)
 
 using namespace upr;
 using namespace mxnet;
@@ -83,7 +87,7 @@ private:
           cudaFree(dptr);
         }
       }
-    stop_span(span);
+      stop_span(span);
       return;
     }
     if (owned.sharing_granularity() == SharingGranularity_Model) {
@@ -91,7 +95,7 @@ private:
       if (dptr != nullptr) {
         cudaFree(dptr);
       }
-    stop_span(span);
+      stop_span(span);
       return;
     }
     throw std::runtime_error("invalid sharing granularity");
@@ -292,6 +296,7 @@ private:
 
     auto ipc_handle = make_ipc_handle(device_ptr);
 
+    layers->Reserve(info->layer_names.size());
     for (size_t ii = 0; ii < info->layer_names.size(); ii++) {
       auto layer        = layers->Add();
       const auto name   = info->layer_names[ii];
@@ -336,6 +341,7 @@ private:
     auto e    = cpu_persistent_data.find(model_name);
     auto info = e->second;
     if (info->granularity == SharingGranularity_Layer) {
+      layers->Reserve(info->layer_names.size());
       for (size_t ii = 0; ii < info->layer_names.size(); ii++) {
         auto layer            = layers->Add();
         const auto layer_name = info->layer_names[ii];
@@ -494,6 +500,7 @@ private:
 
     if (sharing_granularity == SharingGranularity_Layer) {
       size_t ii = 0;
+      layers->Reserve(arrays.size());
       for (const auto &array : arrays) {
         const auto layer_name = layer_names[ii++];
         auto layer            = layers->Add();
@@ -573,6 +580,7 @@ private:
       handle->set_ipc_handle(ipc_handle.reserved, CUDA_IPC_HANDLE_SIZE);
     }
 
+    layers->Reserve(owned.layer().size());
     for (const auto owned_layer : owned.layer()) {
       auto trgt_layer = layers->Add();
       from_owned_layer(trgt_layer, owned_layer, ref_count);
