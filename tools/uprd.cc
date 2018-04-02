@@ -157,7 +157,6 @@ private:
 
     // LOG(INFO) << "converting " << name << " ndarray to protobuf
     // representation with ref_count = " << ref_count;
-    const auto ctx = get_ctx();
     const auto id  = sole::uuid4().str();
 
     const auto blob       = array.data();
