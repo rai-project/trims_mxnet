@@ -282,10 +282,10 @@ int main(int argc, char *argv[]) {
   MXSetProfilerState(0);
 
   // // Synset path for your model, you have to modify it
-   std::vector<std::string> synset = LoadSynset(synset_file);
+ //  std::vector<std::string> synset = LoadSynset(synset_file);
 
   // // Print Output Data
-  PrintOutputResult(data, size, synset);
+ // PrintOutputResult(data, size, synset);
 
   return 0;
 }
