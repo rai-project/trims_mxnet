@@ -95,10 +95,10 @@ public:
     if (!Supports(param, forward_compute_type, backward_compute_type, ctx))
       LOG(FATAL) << "Need CuDNN >= 6.0 for dilated convolution.";
 
-    auto span = start_span("InitDescriptors", "memory");
+    //auto span = start_span("InitDescriptors", "memory");
     InitDescriptors(ctx, in_shape, out_shape, cudnn_forward_compute_type,
                     cudnn_backward_compute_type);
-    stop_span(span);
+    //stop_span(span);
     if (!param_.cudnn_tune) {
       param_.cudnn_tune = dmlc::GetEnv("MXNET_CUDNN_AUTOTUNE_DEFAULT", 0);
     }
@@ -108,7 +108,7 @@ public:
     // approach keeps the treatment of convolution cases uniform and will
     // naturally respond to more algorithms supporting dilated convolutions in
     // future cuDNN releases.
-    span = start_span("set cudnn conv algo", "memory");
+    //span = start_span("set cudnn conv algo", "memory");
     Engine::VarHandle var = Engine::Get()->NewVariable();
     Engine::Get()->PushAsync(
         [=](RunContext rctx, Engine::CallbackOnComplete on_complete) {
@@ -130,7 +130,7 @@ public:
 
     /* SelectAlgo(ctx, in_shape, out_shape, */
     /*             cudnn_forward_compute_type, cudnn_backward_compute_type); */
-    stop_span(span);
+    //stop_span(span);
   }
 
   ~CuDNNConvolutionOp() {

@@ -30,16 +30,19 @@ CFLAGS+=-DUSE_CUDNN=1
 CFLAGS+=-DMSHADOW_USE_CUDNN=1
 CFLAGS+=-DNO_OPENMP=1
 CFLAGS+=-DUSE_CUDA=1
+CFLAGS+=-DUSE_GPERFTOOLS=1
+CFLAGS+=-Xcompiler -fno-builtin-malloc,-fno-builtin-calloc,-fno-builtin-realloc,-fno-builtin-free 
 CFLAGS+=-DMXNET_USE_CUDA=1
-CFLAGS+= -Xcompiler -finstrument-functions 
+#CFLAGS+= -Xcompiler -finstrument-functions 
 LDFLAGS+=$(MXNET_ROOT)/lib/libmxnet.so -Xcompiler -finstrument-functions 
+LDFLAGS+=-ltcmalloc
 
 image-classification-predict: image-classification-predict.o
-	nvcc -O3 -o image-classification-predict image-classification-predict.o $(LDFLAGS)
+	nvcc -O3 -g -o image-classification-predict image-classification-predict.o $(LDFLAGS)
 
 image-classification-predict.o: image-classification-predict.cc
 	echo "CFLAGS = " $(CFLAGS)
-	nvcc -O3  -c image-classification-predict.cc $(CFLAGS)
+	nvcc -O3  -g -c image-classification-predict.cc $(CFLAGS)
 	
 clean: 
 	rm -f image-classification-predict

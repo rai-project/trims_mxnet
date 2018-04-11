@@ -1308,7 +1308,9 @@ void GraphExecutor::InitCachedOps() {
         exec->Setup();
         on_complete();
       }, Context::CPU(), {}, all_vars, FnProperty::kNormal, 0,
-      PROFILER_MESSAGE("SetupExec"));
+     // PROFILER_MESSAGE("SetupExec")
+      PROFILER_MESSAGE(nullptr)
+      );
     auto exec_fun = [exec, is_async, is_gpu] (
         RunContext ctx, Engine::CallbackOnComplete on_complete) {
       if (is_async) {
@@ -1331,7 +1333,8 @@ void GraphExecutor::InitCachedOps() {
     // setup the vars
     op_nodes_[nid].cached_opr = Engine::Get()->NewOperator(
         exec_fun, use_vars, mutate_vars, FnProperty::kNormal,
-        PROFILER_MESSAGE(op_nodes_[nid].opr_name));
+        //PROFILER_MESSAGE(op_nodes_[nid].opr_name));
+        PROFILER_MESSAGE(nullptr));
     op_nodes_[nid].mutate_vars = mutate_vars;
     op_nodes_[nid].use_vars = use_vars;
   }

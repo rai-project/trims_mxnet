@@ -78,6 +78,7 @@ static const auto UPR_BASE_DIR   = dmlc::GetEnv("UPR_BASE_DIR", HOME + std::stri
 
 static const auto UPR_ENABLE_MEMORY_PROFILE = dmlc::GetEnv("UPR_ENABLE_MEMORY_PROFILE", false);
 static const auto UPR_ENABLE_CUDA_FREE      = dmlc::GetEnv("UPR_ENABLE_CUDA_FREE", false);
+static const auto UPR_SHARING_GRANULARITY   = dmlc::GetEnv("UPR_SHARING_GRANULARITY", std::string("model"));
 
 static const auto UPRD_EVICTION_POLICY               = dmlc::GetEnv("UPRD_EVICTION_POLICY", std::string("lru"));
 static const auto UPRD_ESTIMATION_RATE               = dmlc::GetEnv("UPRD_ESTIMATION_RATE", 1.0);
@@ -239,8 +240,8 @@ static inline engine::OprExecStat *start_span(const std::string &name, std::stri
 #if MXNET_USE_PROFILER
   const auto ctx = get_ctx();
   auto opr_stat  = engine::Profiler::Get()->AddOprStat(ctx.dev_type, ctx.dev_id, name);
-  uint64_t tid   = std::hash<std::thread::id>()(std::this_thread::get_id());
-  engine::SetOprCategory(opr_stat, category);
+  // uint64_t tid   = std::hash<std::thread::id>()(std::this_thread::get_id());
+  opr_stat->category = category;
   engine::SetOprStart(opr_stat);
   return opr_stat;
 #else
@@ -250,11 +251,13 @@ static inline engine::OprExecStat *start_span(const std::string &name, std::stri
 
 static inline engine::OprExecStat *start_span(const std::string &name, std::string category, span_props props) {
 #if MXNET_USE_PROFILER
-  auto span = start_span(name, category);
-  for (const auto kv : props) {
-    engine::AddOprMetadata(span, kv.first, kv.second);
-  }
-  return span;
+  const auto ctx = get_ctx();
+  auto opr_stat  = engine::Profiler::Get()->AddOprStat(ctx.dev_type, ctx.dev_id, name);
+  // uint64_t tid   = std::hash<std::thread::id>()(std::this_thread::get_id());
+  opr_stat->category = category;
+  opr_stat->metadata = props;
+  engine::SetOprStart(opr_stat);
+  return opr_stat;
 #else
   return nullptr;
 #endif
@@ -443,5 +446,7 @@ void Unload(mxnet::MXAPIPredictor *pred);
 
 std::pair<std::string, std::string> Load(std::string model_name, std::vector<mxnet::NDArray> *data,
                                          std::vector<std::string> *keys);
+
+void initialize();
 } // namespace upr
 #endif // MXNET_USE_CUDA

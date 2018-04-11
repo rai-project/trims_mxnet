@@ -377,7 +377,8 @@ inline void PushFCompute(const FCompute& fn,
         rctx.get_stream<gpu>()->Wait();
       }
     }, ctx, read_vars, write_vars, FnProperty::kNormal,
-    0, PROFILER_MESSAGE(op->name.c_str()));
+    //0, PROFILER_MESSAGE(op->name.c_str()));
+    0, PROFILER_MESSAGE(nullptr));
 }
 
 inline void PushFComputeEx(const FComputeEx& fn,

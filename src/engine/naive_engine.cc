@@ -109,8 +109,7 @@ namespace engine {
     void Push(OprHandle op, Context exec_ctx, int priority = 0, bool profiling = false) override {
       Profiler *profiler = Profiler::Get();
       NaiveOpr *opr      = op->Cast<NaiveOpr>();
-      opr->profiling     = profiling && (profiler->GetMode() == Profiler::kOnlySymbolic ||
-                                     profiler->GetMode() == Profiler::kAllOperator);
+      opr->profiling     = false; //profiling && (profiler->GetMode() == Profiler::kOnlySymbolic ||  profiler->GetMode() == Profiler::kAllOperator);
       this->PushAsync(
           [&](RunContext ctx, CallbackOnComplete on_complete) {
 #if MXNET_USE_PROFILER
@@ -149,7 +148,7 @@ namespace engine {
 #if MXNET_USE_PROFILER
       Profiler *profiler = Profiler::Get();
       NaiveOpr *opr      = nullptr;
-      bool profiling =
+      bool profiling = false ; //
           (profiler->GetState() == Profiler::kRunning) && (profiler->GetMode() == Profiler::kAllOperator) && opr_name;
       if (profiling) {
         opr                      = NewOperator(exec_fun, const_vars, mutable_vars, prop, opr_name)->Cast<NaiveOpr>();

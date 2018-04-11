@@ -8,6 +8,13 @@ option go_package = "upr";
 
 option cc_enable_arenas = true;
 
+
+enum SharingGranularity {
+  SharingGranularity_Slab = 0;
+  SharingGranularity_Layer = 1;
+  SharingGranularity_Model = 2;
+}
+
 message Shape {
   // rank of the the dims (i.e. the length of the dims)
   int32 rank = 1;
@@ -30,6 +37,10 @@ message Layer {
   int64 device_raw_ptr = 6;
   // the ref count for the layer (this is equal to the model ref_count)
   int64 ref_count = 7;
+  // memory offset
+  int64 offset = 8;
+  // sharing granularity
+  SharingGranularity sharing_granularity = 9;
 }
 
 // a model that's shared
@@ -37,12 +48,24 @@ message Layer {
 message ModelHandle {
   // a unique id
   string id = 1;
+  // name mapping
+  string name = 2;
   // model_id mapping
-  string model_id = 2;
+  string model_id = 3;
   // the total number of bytes for the model
-  int64 byte_count = 3;
+  int64 byte_count = 4;
   // the sequence of layers
-  repeated Layer layer = 4;
+  repeated Layer layer = 5;
+  // needed eviction
+  bool needed_eviction = 6;
+  // sharing granularity
+  SharingGranularity sharing_granularity = 7;
+  // the raw cuda device ptr (as void *)
+  // used when one has model granularity
+  int64 device_raw_ptr = 8;
+  // encoding of cuda ipc handle
+  // used when one has model granularity
+  bytes ipc_handle = 9;
 }
 
 message Model {
@@ -79,6 +102,8 @@ message ModelRequest {
   string directory_path = 2;
   // if true then the model is never read from cache
   bool no_cache = 3;
+  // sharing granularity
+  SharingGranularity sharing_granularity = 4;
 }
 
 message Void {}

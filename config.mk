@@ -45,7 +45,7 @@ export NVCC = nvcc
 DEV = 0
 
 # whether compile with debug
-DEBUG = 0
+0EBUG = 0
 
 # whether compile with profiler
 USE_PROFILER =
@@ -174,7 +174,7 @@ USE_S3 = 0
 # performance settings
 #----------------------------
 # Use operator tuning
-USE_OPERATOR_TUNING = 1
+USE_OPERATOR_TUNING = 0
 
 # Use gperftools if found
 USE_GPERFTOOLS = 1
@@ -225,7 +225,7 @@ USE_PROFILER=1
 # whether compile with options for MXNet developer
 DEV = 0
 
-DEBUG = 1
+DEBUG = 0
 USE_GLOG=1
 USE_OPERATOR_TUNING = 0
 USE_OPENMP = 0
