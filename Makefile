@@ -87,20 +87,20 @@ ifeq ($(DEV), 1)
 endif
 
 # CFLAGS for debug
-<<<<<<< HEAD
-ifneq ($(DEBUG), 1)
-	CFLAGS += -DNDEBUG=1
-endif
-CFLAGS += -O3 #-pg -p -g -ggdb 
-CGRPCFLAGS = `pkg-config --cflags protobuf grpc`
-LDGRPCFLAGS = `pkg-config --libs protobuf grpc++ grpc`
-# CGRPCFLAGS = -pthread -I/home/linuxbrew/.linuxbrew/Cellar/protobuf/3.5.1/include -I/home/linuxbrew/.linuxbrew/Cellar/grpc/1.9.0/include
-# LDGRPCFLAGS = -L/home/linuxbrew/.linuxbrew/Cellar/protobuf/3.5.1/lib -L/home/linuxbrew/.linuxbrew/Cellar/grpc/1.9.0/lib -lprotobuf -pthread -lpthread -lgrpc++ -lgrpc
-CFLAGS += $(CGRPCFLAGS) -I$(ROOTDIR)/3rdparty -I$(ROOTDIR)/mshadow/ -I$(ROOTDIR)/dmlc-core/include -fPIC -I$(NNVM_PATH)/include -I$(DLPACK_PATH)/include -Iinclude $(MSHADOW_CFLAGS) -Isrc/
-LDFLAGS = -pthread $(MSHADOW_LDFLAGS) $(DMLC_LDFLAGS) $(LDGRPCFLAGS) -lnvToolsExt -lbfd
-ifeq ($(CUDA_DEBUG), 1)
-	NVCCFLAGS += -DFMT_HEADER_ONLY=1 -std=c++14 -Xcompiler -D_FORCE_INLINES -g -O0 -G -ccbin $(CXX) $(MSHADOW_NVCCFLAGS)
-=======
+# <<<<<<< HEAD
+# ifneq ($(DEBUG), 1)
+# 	CFLAGS += -DNDEBUG=1
+# endif
+# CFLAGS += -O3 #-pg -p -g -ggdb 
+# CGRPCFLAGS = `pkg-config --cflags protobuf grpc`
+# LDGRPCFLAGS = `pkg-config --libs protobuf grpc++ grpc`
+# # CGRPCFLAGS = -pthread -I/home/linuxbrew/.linuxbrew/Cellar/protobuf/3.5.1/include -I/home/linuxbrew/.linuxbrew/Cellar/grpc/1.9.0/include
+# # LDGRPCFLAGS = -L/home/linuxbrew/.linuxbrew/Cellar/protobuf/3.5.1/lib -L/home/linuxbrew/.linuxbrew/Cellar/grpc/1.9.0/lib -lprotobuf -pthread -lpthread -lgrpc++ -lgrpc
+# CFLAGS += $(CGRPCFLAGS) -I$(ROOTDIR)/3rdparty -I$(ROOTDIR)/mshadow/ -I$(ROOTDIR)/dmlc-core/include -fPIC -I$(NNVM_PATH)/include -I$(DLPACK_PATH)/include -Iinclude $(MSHADOW_CFLAGS) -Isrc/
+# LDFLAGS = -pthread $(MSHADOW_LDFLAGS) $(DMLC_LDFLAGS) $(LDGRPCFLAGS) -lnvToolsExt -lbfd
+# ifeq ($(CUDA_DEBUG), 1)
+# 	NVCCFLAGS += -DFMT_HEADER_ONLY=1 -std=c++14 -Xcompiler -D_FORCE_INLINES -g -O0 -G -ccbin $(CXX) $(MSHADOW_NVCCFLAGS)
+# =======
 ifeq ($(DEBUG), 1)
 	CFLAGS += -g -O0
 else
@@ -110,7 +110,7 @@ CFLAGS += -I$(TPARTYDIR)/mshadow/ -I$(TPARTYDIR)/dmlc-core/include -fPIC -I$(NNV
 LDFLAGS = -pthread $(MSHADOW_LDFLAGS) $(DMLC_LDFLAGS)
 ifeq ($(DEBUG), 1)
 	NVCCFLAGS += -std=c++11 -Xcompiler -D_FORCE_INLINES -g -G -O0 -ccbin $(CXX) $(MSHADOW_NVCCFLAGS)
->>>>>>> master
+# >>>>>>> master
 else
 	NVCCFLAGS += -DFMT_HEADER_ONLY=1 -std=c++14 -Xcompiler -D_FORCE_INLINES -O3 -ccbin $(CXX) $(MSHADOW_NVCCFLAGS)
 endif

@@ -31,7 +31,7 @@
 #include <dmlc/registry.h>
 #include <dmlc/type_traits.h>
 #include <map>
-//#include <nnvm/node.h>
+#include <nnvm/node.h>
 #include <string>
 #include <vector>
 #include <string>
@@ -94,54 +94,11 @@ public:
    * \param dtype data type of this ndarray
    */
   NDArray(const TShape &shape, Context ctx, bool delay_alloc = false, int dtype = mshadow::default_type_flag)
-      : ptr_(new Chunk(shape, ctx, delay_alloc, dtype)), shape_(shape), dtype_(dtype), storage_type_(kDefaultStorage),
+      : ptr_(std::make_shared<Chunk>(shape, ctx, delay_alloc, dtype)), shape_(shape), dtype_(dtype), storage_type_(kDefaultStorage),
         entry_({nullptr, 0, 0}) {
   }
   /*! \brief constructor for NDArray with storage type
    */
-  /* <<<<<<< HEAD */
-  /* NDArray(const NDArrayStorageType stype, const TShape &shape, Context ctx, bool delay_alloc = true, */
-  /*         int dtype = mshadow::default_type_flag, std::vector<int> aux_types = {}, std::vector<TShape> aux_shapes = {}, */
-  /*         TShape storage_shape = TShape(mshadow::Shape1(0))) */
-  /*     : shape_(shape), dtype_(dtype), storage_type_(stype), entry_({nullptr, 0, 0}) { */
-  /*   // Assign default aux types if not given */
-  /*   if (aux_types.size() == 0) { */
-  /*     if (stype == kRowSparseStorage) { */
-  /*       aux_types = {mshadow::kInt64}; */
-  /*     } else if (stype == kCSRStorage) { */
-  /*       aux_types = {mshadow::kInt64, mshadow::kInt64}; */
-  /*     } else { */
-  /*       LOG(FATAL) << "Unknown storage type " << stype; */
-  /*     } */
-  /*   } */
-  /*   // Assign default shapes if not given */
-  /*   // unknown shapes are intialized as {0} such that Size() would return 0 */
-  /*   if (aux_shapes.size() == 0) { */
-  /*     if (stype == kRowSparseStorage) { */
-  /*       aux_shapes = {TShape(mshadow::Shape1(0))}; */
-  /*     } else if (stype == kCSRStorage) { */
-  /*       // aux shapes for indptr and indices */
-  /*       aux_shapes = {TShape(mshadow::Shape1(0)), TShape(mshadow::Shape1(0))}; */
-  /*     } else { */
-  /*       LOG(FATAL) << "Unknown storage type " << stype; */
-  /*     } */
-  /*   } */
-  /*   if (storage_shape.Size() == 0) { */
-  /*     if (stype == kRowSparseStorage) { */
-  /*       storage_shape    = shape; */
-  /*       storage_shape[0] = aux_shapes[rowsparse::kIdx][0]; */
-  /*     } else if (stype == kCSRStorage) { */
-  /*       storage_shape = aux_shapes[csr::kIdx]; */
-  /*     } else { */
-  /*       LOG(FATAL) << "Unknown storage type " << stype; */
-  /*     } */
-  /*   } */
-  /*   ptr_ = new Chunk(stype, storage_shape, ctx, delay_alloc, dtype, aux_types, aux_shapes); */
-/* #if MKL_EXPERIMENTAL == 1 */
-  /*   Mkl_mem_ = std::make_shared<MKLMemHolder>(); */
-/* #endif */
-  /* } */
-  /* ======= */
   NDArray(const NDArrayStorageType stype, const TShape &shape, Context ctx,
           bool delay_alloc = true, int dtype = mshadow::default_type_flag,
           std::vector<int> aux_types = {}, std::vector<TShape> aux_shapes = {},
@@ -154,22 +111,6 @@ public:
    * \param data the memory content of static data
    * \param dev_id the device id this tensor sits at
    */
-/* <<<<<<< HEAD */
-/*   NDArray(const TBlob &data, int dev_id, bool is_shared = false) */
-/*       : ptr_(new Chunk(data, dev_id, is_shared)), shape_(data.shape_), dtype_(data.type_flag_), */
-/*         storage_type_(kDefaultStorage), entry_({nullptr, 0, 0}) { */
-/* #if MKL_EXPERIMENTAL == 1 */
-/*     Mkl_mem_ = std::make_shared<MKLMemHolder>(); */
-/* #endif */
-/*   } */
-/*   /*! \brief create ndarray from shared memory *1/ */
-/*   NDArray(int shared_pid, int shared_id, const TShape &shape, int dtype) */
-/*       : ptr_(new Chunk(shared_pid, shared_id, shape, dtype)), shape_(shape), dtype_(dtype), */
-/*         storage_type_(kDefaultStorage), entry_({nullptr, 0, 0}) { */
-/* #if MKL_EXPERIMENTAL == 1 */
-/*     Mkl_mem_ = std::make_shared<MKLMemHolder>(); */
-/* #endif */
-/* ======= */
   NDArray(const TBlob &data, int dev_id)
       : ptr_(std::make_shared<Chunk>(data, dev_id)), shape_(data.shape_),
         dtype_(data.type_flag_), storage_type_(kDefaultStorage),
@@ -191,17 +132,6 @@ public:
    * \param aux_data the memory content of static aux data
    * \param dev_id the device id this tensor sits at
    */
-/* <<<<<<< HEAD */
-/*   NDArray(const NDArrayStorageType stype, const TShape &shape, const TBlob &data, const std::vector<TBlob> &aux_data, */
-/*           int dev_id) */
-/*       : ptr_(new Chunk(stype, data, aux_data, dev_id)), shape_(shape), dtype_(data.type_flag_), storage_type_(stype), */
-/*         entry_({nullptr, 0, 0}) { */
-/* #if MKL_EXPERIMENTAL == 1 */
-/*     Mkl_mem_ = std::make_shared<MKLMemHolder>(); */
-/* #endif */
-/*   } */
-
-/* ======= */
   NDArray(const NDArrayStorageType stype, const TShape &shape,
           const TBlob &data, const std::vector<TBlob> &aux_data, int dev_id)
       : ptr_(std::make_shared<Chunk>(stype, data, aux_data, dev_id)), shape_(shape),

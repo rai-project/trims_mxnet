@@ -221,6 +221,9 @@ USE_CUDNN=1
 ADD_LDFLAGS=-L/usr/local/cuda/lib64
 USE_PROFILER=1
 
+USE_MKLDNN=0
+MSHADOW_USE_MKL=0
+USE_MKL=0
 
 # whether compile with options for MXNet developer
 DEV = 0
