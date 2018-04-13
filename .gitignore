@@ -134,6 +134,7 @@ lib
 #Notebook Automated Test
 !tests/nightly/test_tutorial_config.txt
 !tests/nightly/TestNotebook
+tests/nightly/tmp_notebook
 
 # pip building tools
 tools/pip_package/build
@@ -147,21 +148,28 @@ bld
 ./tmp/*
 *.jar
 target
-
 bin/im2rec
-
 model/
+
+# VTune
+./r0*hs
 
 # generated function signature for IDE auto-complete
 python/mxnet/symbol/gen_*
 python/mxnet/ndarray/gen_*
 python/.eggs
 
+# tests if built insource
+*CTestTestfile.cmake
+*DartConfiguration.tcl
+tests/Makefile
+tests/mxnet_unit_tests
+
+# upr
 bin/
 example/image-classification/predict-cpp/image-classification-predict
 *nvprof
 mxnet.srctr*
-
 profile.json
 server_profile.json
 profile

@@ -453,7 +453,7 @@ inline void LogStorageFallback(const nnvm::NodeAttrs &attrs, const int dev_mask,
 }
 
 // heuristic to dermine number of threads per GPU
-inline int GetNumThreadPerGPU() {
+inline int GetNumThreadsPerGPU() {
   // This is resource efficient option.
   return dmlc::GetEnv("MXNET_GPU_WORKER_NTHREADS", 2);
 }
@@ -463,7 +463,7 @@ inline int GetNumThreadPerGPU() {
 inline int GetExecNumMatchColor() {
   // This is resource efficient option.
   int num_match_color = dmlc::GetEnv("MXNET_EXEC_NUM_TEMP", 1);
-  return std::min(num_match_color, GetNumThreadPerGPU());
+  return std::min(num_match_color, GetNumThreadsPerGPU());
 }
 
 template <typename T, typename V>

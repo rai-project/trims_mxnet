@@ -174,17 +174,32 @@ public:
 
   void SeedRandom(uint32_t seed) override {
     global_seed_ = seed;
-    cpu_rand_->Seed(global_seed_);
-    cpu_parallel_rand_->Seed(global_seed_);
+    cpu_rand_->SeedWithDeviceID(global_seed_);
+    cpu_parallel_rand_->SeedWithDeviceID(global_seed_);
 #if MXNET_USE_CUDA
-    gpu_rand_.ForEach(
-        [seed](size_t i, ResourceRandom<gpu> *p) { p->Seed(seed); });
-    gpu_parallel_rand_.ForEach(
-        [seed](size_t i, ResourceParallelRandom<gpu> *p) { p->Seed(seed); });
+    gpu_rand_.ForEach([seed](size_t i, ResourceRandom<gpu> *p) {
+        p->SeedWithDeviceID(seed);
+      });
+    gpu_parallel_rand_.ForEach([seed](size_t i, ResourceParallelRandom<gpu> *p) {
+      p->SeedWithDeviceID(seed);
+    });
 #endif
   }
 
-private:
+  void SeedRandom(Context ctx, uint32_t seed) override {
+    cpu_rand_->Seed(seed);
+    cpu_parallel_rand_->Seed(seed);
+#if MXNET_USE_CUDA
+    gpu_rand_.Get(ctx.dev_id, [ctx, seed, this]() {
+      return new ResourceRandom<gpu>(ctx, seed);
+    })->Seed(seed);
+    gpu_parallel_rand_.Get(ctx.dev_id, [ctx, seed, this]() {
+      return new ResourceParallelRandom<gpu>(ctx, gpu_native_rand_copy_, seed);
+    })->Seed(seed);
+#endif
+  }
+
+ private:
   /*! \brief Maximum number of GPUs */
   static constexpr std::size_t kMaxNumGPUs = 16;
   /*! \brief Random number magic number to seed different random numbers */
@@ -211,19 +226,20 @@ private:
           [r](RunContext rctx) { MSHADOW_CATCH_ERROR(delete r); }, ctx,
           resource.var);
     }
+    // set seed to a PRNG using global_seed and device id
+    inline void SeedWithDeviceID(uint32_t global_seed) {
+      Seed(ctx.dev_id + global_seed * kRandMagic);
+    }
     // set seed to a PRNG
-    inline void Seed(uint32_t global_seed) {
-      uint32_t seed = ctx.dev_id + global_seed * kRandMagic;
+    inline void Seed(uint32_t seed) {
       mshadow::Random<xpu> *r = prnd;
       Engine::Get()->PushAsync(
-          [r, seed](RunContext rctx, Engine::CallbackOnComplete on_complete) {
-            r->set_stream(rctx.get_stream<xpu>());
-            r->Seed(seed);
-            on_complete();
-          },
-          ctx, {}, {resource.var}, FnProperty::kNormal, 0,
-         // PROFILER_MESSAGE("ResourceRandomSetSeed"));
-          PROFILER_MESSAGE(nullptr));
+        [r, seed](RunContext rctx, Engine::CallbackOnComplete on_complete) {
+          r->set_stream(rctx.get_stream<xpu>());
+          r->Seed(seed);
+          on_complete();
+        }, ctx, {}, {resource.var},
+        FnProperty::kNormal, 0, "ResourceRandomSetSeed");
     }
   };
 
@@ -295,13 +311,11 @@ private:
         common::random::RandGenerator<xpu> *r =
             new common::random::RandGenerator<xpu>();
         Engine::Get()->PushSync(
-            [r, seed](RunContext rctx) {
-              common::random::RandGenerator<xpu>::AllocState(r);
-              r->Seed(rctx.get_stream<xpu>(), seed);
-            },
-            ctx, {}, {resource[i].var}, FnProperty::kNormal, 0,
-            //PROFILER_MESSAGE("ResourceParallelRandomSetSeed"));
-            PROFILER_MESSAGE(nullptr));
+        [r, seed](RunContext rctx) {
+          common::random::RandGenerator<xpu>::AllocState(r);
+          r->Seed(rctx.get_stream<xpu>(), seed);
+        }, ctx, {}, {resource[i].var},
+        FnProperty::kNormal, 0, "ResourceParallelRandomSetSeed");
         sampler[i] = r;
         resource[i].ptr_ = sampler[i];
         resource[i].req = ResourceRequest(ResourceRequest::kParallelRandom);
@@ -319,23 +333,31 @@ private:
             ctx, resource[i].var);
       }
     }
-    // set seed to a sampler
-    inline void Seed(uint32_t global_seed) {
+    // set seed to a sampler using global_seed and device id
+    inline void SeedWithDeviceID(uint32_t global_seed) {
       for (size_t i = 0; i < sampler.size(); ++i) {
-        const uint32_t seed =
-            ctx.dev_id + i * kMaxNumGPUs + global_seed * kRandMagic;
-        common::random::RandGenerator<xpu> *r = sampler[i];
-        Engine::Get()->PushAsync(
-            [r, seed](RunContext rctx, Engine::CallbackOnComplete on_complete) {
-              r->Seed(rctx.get_stream<xpu>(), seed);
-              on_complete();
-            },
-            ctx, {}, {resource[i].var}, FnProperty::kNormal, 0,
-            //PROFILER_MESSAGE("ResourceNativeRandomSetSeed"));
-            PROFILER_MESSAGE(nullptr));
+        SeedOne(i, ctx.dev_id + i * kMaxNumGPUs + global_seed * kRandMagic);
       }
       // reset pointer to ensure the same result with the same seed.
       curr_ptr.store(0);
+    }
+    // set seed to a sampler
+    inline void Seed(uint32_t seed) {
+      for (size_t i = 0; i < sampler.size(); ++i) {
+        SeedOne(i, i * kMaxNumGPUs + seed * kRandMagic);
+      }
+      // reset pointer to ensure the same result with the same seed.
+      curr_ptr.store(0);
+    }
+    // set seed to a sampler
+    inline void SeedOne(size_t i, uint32_t seed) {
+      common::random::RandGenerator<xpu> *r = sampler[i];
+      Engine::Get()->PushAsync(
+      [r, seed](RunContext rctx, Engine::CallbackOnComplete on_complete) {
+        r->Seed(rctx.get_stream<xpu>(), seed);
+        on_complete();
+      }, ctx, {}, {resource[i].var},
+      FnProperty::kNormal, 0, "ResourceNativeRandomSetSeed");
     }
     // get next resource in round roubin matter
     inline Resource GetNext() {

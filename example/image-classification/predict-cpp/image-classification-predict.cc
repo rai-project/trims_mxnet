@@ -1,5 +1,24 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 /*!
- *  Copyright (c) 2015 by Xiao Liu, pertusa, caprice-j
+ * Copyright (c) 2015 by Xiao Liu, pertusa, caprice-j
  * \file image_classification-predict.cpp
  * \brief C++ predict example of mxnet
  */
@@ -24,11 +43,29 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <vector>
 
+#include <cstdio>
+#include <cstdlib>
+#include <fstream>
+
+#include <vector>
+#include <memory>
+#include <iomanip>
 #include <opencv2/opencv.hpp>
+// Path for c_predict_api
+#include <mxnet/c_predict_api.h>
 
 using namespace upr;
+
+static std::string trim(const std::string& input) {
+  auto not_space = [](int ch) {
+    return !std::isspace(ch);
+  };
+  auto output = input;
+  output.erase(output.begin(), std::find_if(output.begin(), output.end(), not_space));
+  output.erase(std::find_if(output.rbegin(), output.rend(), not_space).base(), output.end());
+  return output;
+}
 
 // Read file to buffer
 class BufferFile {
@@ -46,7 +83,7 @@ public:
       std::cerr << "Can't open the file. Please check " << file_path << ". \n";
       length_ = 0;
       buffer_ = NULL;
-      return;
+     return;
     }
 
     ifs.seekg(0, std::ios::end);
@@ -136,6 +173,7 @@ std::vector<std::string> LoadSynset(std::string synset_file) {
   return output;
 }
 
+<<<<<<< HEAD
 void PrintOutputResult(const float *data, size_t size, const std::vector<std::string> &synset) {
   if (size != synset.size()) {
     std::cerr << "Result data and synset size does not match!" << std::endl;

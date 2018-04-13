@@ -49,4 +49,4 @@ clean:
 	rm -f *.d *.o *nvprof
 
 lint:
-	python ../../../dmlc-core/scripts/lint.py mxnet "cpp" ./
+	python ../../../3rdparty/dmlc-core/scripts/lint.py mxnet "cpp" ./

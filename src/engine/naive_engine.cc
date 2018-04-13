@@ -23,8 +23,8 @@
  * \brief Implementation of NaiveEngine
  */
 #include "./engine_impl.h"
+#include "../profiler/profiler.h"
 #include "./openmp.h"
-#include "./profiler.h"
 #include "c_api/ipc.h"
 #include <atomic>
 #include <thread>
@@ -34,32 +34,53 @@
 namespace mxnet {
 namespace engine {
 
-  // implement naive engine
-  class NaiveEngine final : public Engine {
-  public:
-    struct NaiveOpr : public Opr {
-      AsyncFn fn;
-      std::vector<VarHandle> const_vars;
-      std::vector<VarHandle> mutable_vars;
-      FnProperty prop;
-      const char *opr_name;
-      /*! \brief indicate whether to profile this operator */
-      bool profiling{false};
-      /*! \brief operator execution statistics */
-      OprExecStat *opr_stat;
-    };
+/* <<<<<<< HEAD */
+/*   // implement naive engine */
+/*   class NaiveEngine final : public Engine { */
+/*   public: */
+/*     struct NaiveOpr : public Opr { */
+/*       AsyncFn fn; */
+/*       std::vector<VarHandle> const_vars; */
+/*       std::vector<VarHandle> mutable_vars; */
+/*       FnProperty prop; */
+/*       const char *opr_name; */
+/*       /*! \brief indicate whether to profile this operator *1/ */
+/*       bool profiling{false}; */
+/*       /*! \brief operator execution statistics *1/ */
+/*       OprExecStat *opr_stat; */
+/*     }; */
 
-    NaiveEngine() {
-    }
-    // virtual destructor
-    virtual ~NaiveEngine() {
-    }
+/*     NaiveEngine() { */
+/*     } */
+/*     // virtual destructor */
+/*     virtual ~NaiveEngine() { */
+/*     } */
 
-    virtual void InitializeAsync(const Context &exec_ctx) override {
-      init_future_ = std::async(std::launch::async, [this, &exec_ctx] { this->Initialize(exec_ctx); });
-    }
+/*     virtual void InitializeAsync(const Context &exec_ctx) override { */
+/*       init_future_ = std::async(std::launch::async, [this, &exec_ctx] { this->Initialize(exec_ctx); }); */
+/*     } */
 
-    virtual void Initialize(const Context &exec_ctx) override {
+/*     virtual void Initialize(const Context &exec_ctx) override { */
+/* ======= */
+// implement naive engine
+class NaiveEngine final : public Engine {
+ public:
+  struct NaiveOpr : public Opr {
+    AsyncFn fn;
+    std::vector<VarHandle> const_vars;
+    std::vector<VarHandle> mutable_vars;
+    FnProperty prop;
+    const char* opr_name;
+    /*! \brief indicate whether to profile this operator */
+    bool profiling{false};
+    /*! \brief operator execution statistics */
+    std::unique_ptr<profiler::ProfileOperator> opr_profile;
+  };
+
+  NaiveEngine() {
+  }
+  // virtual destructor
+  virtual ~NaiveEngine() {
 #if MXNET_USE_CUDA
       using namespace upr;
       static bool initialized = false;
@@ -87,80 +108,78 @@ namespace engine {
       return reinterpret_cast<VarHandle>(v);
     }
 
-    OprHandle NewOperator(AsyncFn fn,
-                          std::vector<VarHandle> const &const_vars,
-                          std::vector<VarHandle> const &mutable_vars,
-                          FnProperty prop      = FnProperty::kNormal,
-                          const char *opr_name = nullptr) override {
-      NaiveOpr *opr     = new NaiveOpr();
-      opr->fn           = fn;
-      opr->const_vars   = const_vars;
-      opr->mutable_vars = mutable_vars;
-      opr->prop         = prop;
-      opr->opr_name     = opr_name;
-      return opr;
-    }
+  OprHandle NewOperator(AsyncFn fn,
+                        std::vector<VarHandle> const& const_vars,
+                        std::vector<VarHandle> const& mutable_vars,
+                        FnProperty prop = FnProperty::kNormal,
+                        const char* opr_name = nullptr,
+                        bool wait = false) override {
+    NaiveOpr *opr = new NaiveOpr();
+    opr->fn = fn;
+    opr->const_vars = const_vars;
+    opr->mutable_vars = mutable_vars;
+    opr->prop = prop;
+    opr->opr_name = opr_name;
+    return opr;
+  }
 
     void DeleteOperator(OprHandle op) override {
       NaiveOpr *opr = op->Cast<NaiveOpr>();
       delete opr;
     }
 
-    void Push(OprHandle op, Context exec_ctx, int priority = 0, bool profiling = false) override {
-      Profiler *profiler = Profiler::Get();
-      NaiveOpr *opr      = op->Cast<NaiveOpr>();
-      opr->profiling     = false; //profiling && (profiler->GetMode() == Profiler::kOnlySymbolic ||  profiler->GetMode() == Profiler::kAllOperator);
-      this->PushAsync(
-          [&](RunContext ctx, CallbackOnComplete on_complete) {
-#if MXNET_USE_PROFILER
-            if (opr->profiling) {
-              opr->opr_stat            = Profiler::Get()->AddOprStat(exec_ctx.dev_type, exec_ctx.dev_id);
-              uint64_t id              = 0; // std::hash<std::thread::id>()(std::this_thread::get_id());
-              opr->opr_stat->thread_id = id;
-              opr->opr_stat->opr_name  = opr->opr_name;
-              SetOprStart(opr->opr_stat);
-            }
-            opr->fn(ctx, on_complete);
-            if (opr->profiling) {
-              SetOprEnd(opr->opr_stat);
-            }
-#else
-            opr->fn(ctx, on_complete);
-#endif
-          },
-          exec_ctx,
-          opr->const_vars,
-          opr->mutable_vars,
-          opr->prop,
-          priority,
-          PROFILER_MESSAGE(opr->opr_name));
-    }
+  void Push(OprHandle op, Context exec_ctx, int priority = 0, bool profiling = false) override {
+    profiler::Profiler *profiler = profiler::Profiler::Get();
+    NaiveOpr *opr = op->Cast<NaiveOpr>();
+    opr->profiling = profiling && profiler->IsProfiling(profiler::Profiler::kSymbolic);
+    this->PushAsync([&](RunContext ctx, CallbackOnComplete on_complete) {
+        if (opr->profiling) {
+          std::unique_ptr<profiler::ProfileOperator::Attributes> attrs;
+          if (profiler->AggregateEnabled()) {
+            attrs.reset(new profiler::ProfileOperator::Attributes());
+          }
+          opr->opr_profile.reset(new profiler::ProfileOperator(opr->opr_name, attrs.release()));
+          opr->opr_profile->start(exec_ctx.dev_type, exec_ctx.dev_id);
+        }
+        opr->fn(ctx, on_complete);
+        if (opr->profiling) {
+          opr->opr_profile->stop();
+        }
+      },
+      exec_ctx,
+      opr->const_vars,
+      opr->mutable_vars,
+      opr->prop,
+      priority,
+      opr->opr_name);
+  }
 
-    void PushAsync(AsyncFn exec_fun,
-                   Context exec_ctx,
-                   std::vector<VarHandle> const &const_vars,
-                   std::vector<VarHandle> const &mutable_vars,
-                   FnProperty prop      = FnProperty::kNormal,
-                   int priority         = 0,
-                   const char *opr_name = nullptr) override {
-      CallbackOnComplete callback = CreateCallback(NaiveEngine::OnComplete, nullptr);
-      this->req_completed_        = false;
-#if MXNET_USE_PROFILER
-      Profiler *profiler = Profiler::Get();
-      NaiveOpr *opr      = nullptr;
-      bool profiling = false ; //
-          (profiler->GetState() == Profiler::kRunning) && (profiler->GetMode() == Profiler::kAllOperator) && opr_name;
-      if (profiling) {
-        opr                      = NewOperator(exec_fun, const_vars, mutable_vars, prop, opr_name)->Cast<NaiveOpr>();
-        opr->profiling           = profiling;
-        opr->opr_stat            = Profiler::Get()->AddOprStat(exec_ctx.dev_type, exec_ctx.dev_id);
-        uint64_t id              = 0; // std::hash<std::thread::id>()(std::this_thread::get_id());
-        opr->opr_stat->thread_id = id;
-        opr->opr_stat->opr_name  = opr->opr_name;
-        SetOprStart(opr->opr_stat);
+  void PushAsync(AsyncFn exec_fun,
+                 Context exec_ctx,
+                 std::vector<VarHandle> const& const_vars,
+                 std::vector<VarHandle> const& mutable_vars,
+                 FnProperty prop = FnProperty::kNormal,
+                 int priority = 0,
+                 const char* opr_name = nullptr,
+                 bool wait = false) override {
+    CallbackOnComplete callback = CreateCallback(
+        NaiveEngine::OnComplete, nullptr);
+    this->req_completed_ = false;
+    profiler::Profiler *profiler = profiler::Profiler::Get();
+    NaiveOpr *opr = nullptr;
+    const bool profiling = opr_name && profiler->IsProfiling(profiler::Profiler::kImperative);
+    if (profiling) {
+      opr = NewOperator(exec_fun, const_vars, mutable_vars,
+                        prop, opr_name)->Cast<NaiveOpr>();
+      opr->profiling = profiling;
+      std::unique_ptr<profiler::ProfileOperator::Attributes> attrs;
+      if (profiler->AggregateEnabled()) {
+        attrs.reset(new profiler::ProfileOperator::Attributes());
       }
-#endif
-      if (exec_ctx.dev_mask() == gpu::kDevMask) {
+      opr->opr_profile.reset(new profiler::ProfileOperator(opr->opr_name, attrs.release()));
+      opr->opr_profile->start(exec_ctx.dev_type, exec_ctx.dev_id);
+    }
+    if (exec_ctx.dev_mask() == gpu::kDevMask) {
 #if MXNET_USE_CUDA
         static const bool eager_init       = dmlc::GetEnv("UPR_INITIALIZE_EAGER", false);
         static const auto eager_init_async = dmlc::GetEnv("UPR_INITIALIZE_EAGER_ASYNC", false);
@@ -174,20 +193,20 @@ namespace engine {
 #else
         LOG(FATAL) << "GPU is not enabled";
 #endif
-      } else {
-        exec_fun(RunContext{exec_ctx, &cpu_stream_}, callback);
-      }
-      CHECK(this->req_completed_) << "NaiveEngine only support synchronize Push so far";
-#if MXNET_USE_PROFILER
-      if (profiling) {
-        SetOprEnd(opr->opr_stat);
-      }
-#endif
+    } else {
+      exec_fun(RunContext{exec_ctx, &cpu_stream_}, callback);
     }
+    CHECK(this->req_completed_)
+        << "NaiveEngine only support synchronize Push so far";
+    if (profiling) {
+      opr->opr_profile->stop();
+    }
+  }
 
-    void DeleteVariable(SyncFn delete_fn, Context exec_ctx, VarHandle var) override {
-      this->PushSync(delete_fn, exec_ctx, {}, {var}, FnProperty::kNormal, 0, PROFILER_MESSAGE("DeleteVariable"));
-    }
+  void DeleteVariable(SyncFn delete_fn, Context exec_ctx, VarHandle var) override {
+    this->PushSync(delete_fn, exec_ctx, {}, {var},
+                   FnProperty::kNormal, 0, "DeleteVariable");
+  }
 
     void WaitForVar(VarHandle var) override {
     }
@@ -221,5 +240,20 @@ namespace engine {
   Engine *CreateNaiveEngine() {
     return new NaiveEngine();
   }
-} // namespace engine
-} // namespace mxnet
+  // whether action is completed
+  bool req_completed_;
+  // counter
+  std::atomic<size_t> counter_{0};
+  /*! \brief whether it is during shutdown phase*/
+  std::atomic<bool> shutdown_phase_{false};
+  // CPU stream
+  mshadow::Stream<cpu> cpu_stream_;
+  // GPU streams
+  std::vector<mshadow::Stream<gpu>*> streams_;
+};  // class NaiveEngine
+
+Engine *CreateNaiveEngine() {
+  return new NaiveEngine();
+}
+}  // namespace engine
+}  // namespace mxnet

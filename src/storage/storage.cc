@@ -20,20 +20,32 @@
 /*!
  * Copyright (c) 2015 by Contributors
  */
-#include "../common/cuda_utils.h"
-#include "../common/lazy_alloc_array.h"
-#include "./cpu_device_storage.h"
-#include "./cpu_shared_storage_manager.h"
-#include "./gpu_device_storage.h"
-#include "./gpu_shared_storage_manager.h"
-#include "./naive_storage_manager.h"
-#include "./pinned_memory_storage.h"
-#include "./pooled_storage_manager.h"
-#include "./storage_manager.h"
-#include <array>
-#include <dmlc/logging.h>
-#include <mshadow/tensor.h>
+/* <<<<<<< HEAD */
+/* #include "../common/cuda_utils.h" */
+/* #include "../common/lazy_alloc_array.h" */
+/* #include "./cpu_device_storage.h" */
+/* #include "./cpu_shared_storage_manager.h" */
+/* #include "./gpu_device_storage.h" */
+/* #include "./gpu_shared_storage_manager.h" */
+/* #include "./naive_storage_manager.h" */
+/* #include "./pinned_memory_storage.h" */
+/* #include "./pooled_storage_manager.h" */
+/* #include "./storage_manager.h" */
+/* #include <array> */
+/* #include <dmlc/logging.h> */
+/* #include <mshadow/tensor.h> */
+/* #include <mxnet/storage.h> */
+/* ======= */
 #include <mxnet/storage.h>
+#include "./storage_manager.h"
+#include "./naive_storage_manager.h"
+#include "./pooled_storage_manager.h"
+#include "./cpu_shared_storage_manager.h"
+#include "./cpu_device_storage.h"
+#include "./pinned_memory_storage.h"
+#include "../common/lazy_alloc_array.h"
+#include "../profiler/storage_profiler.h"
+/* >>>>>>> master */
 
 namespace mxnet {
 
@@ -48,9 +60,8 @@ public:
   }
   virtual ~StorageImpl() = default;
 
-private:
-  static constexpr size_t kMaxNumberOfDevices   = Context::kMaxDevType + 1;
-  static constexpr size_t kMaxNumberOfDeviceIDs = Context::kMaxDevID + 1;
+ private:
+  static constexpr size_t kMaxNumberOfDevices = Context::kMaxDevType + 1;
 #if MXNET_USE_CUDA
   static int num_gpu_device;
 #endif // MXNET_USE_CUDA
@@ -58,7 +69,12 @@ private:
   static void ActivateDevice(Context ctx) {
     switch (ctx.dev_type) {
       case Context::kCPU:
-      case Context::kCPUShared:
+        break;
+      case Context::kCPUShared: {
+#if defined(ANDROID) || defined(__ANDROID__)
+        LOG(FATAL) << "Unimplemented device";
+#endif  // defined(ANDROID) || defined(__ANDROID__)
+      }
         break;
       case Context::kGPU:
       case Context::kCPUPinned: {
@@ -74,27 +90,32 @@ private:
     }
   }
   // internal storage managers
-  std::array<common::LazyAllocArray<storage::StorageManager>, kMaxNumberOfDevices> storage_managers_;
-}; // struct Storage::Impl
+  std::array<common::LazyAllocArray<storage::StorageManager>,
+             kMaxNumberOfDevices> storage_managers_;
+  storage::DeviceStorageProfiler profiler_;
+};  // struct Storage::Impl
 #if MXNET_USE_CUDA
 int StorageImpl::num_gpu_device = 0;
 #endif // MXNET_USE_CUDA
 
 void StorageImpl::Alloc(Storage::Handle *handle) {
   // space already recycled, ignore request
-  auto &&device                                    = storage_managers_.at(handle->ctx.dev_type);
-  std::shared_ptr<storage::StorageManager> manager = device.Get(handle->ctx.real_dev_id(), [handle]() {
-    storage::StorageManager *ptr = nullptr;
-    switch (handle->ctx.dev_type) {
-      case Context::kCPU: {
-        ptr = new storage::NaiveStorageManager<storage::CPUDeviceStorage>();
-        break;
-      }
-      case Context::kCPUShared: {
-        ptr = new storage::CPUSharedStorageManager();
-        break;
-      }
-      case Context::kCPUPinned: {
+  auto&& device = storage_managers_.at(handle->ctx.dev_type);
+  std::shared_ptr<storage::StorageManager> manager = device.Get(
+      handle->ctx.real_dev_id(), [handle]() {
+        storage::StorageManager *ptr = nullptr;
+        switch (handle->ctx.dev_type) {
+          case Context::kCPU: {
+            ptr = new storage::NaiveStorageManager<storage::CPUDeviceStorage>();
+            break;
+          }
+          case Context::kCPUShared: {
+#if !defined(ANDROID) && !defined(__ANDROID__)
+            ptr = new storage::CPUSharedStorageManager();
+#endif  // !defined(ANDROID) && !defined(__ANDROID__)
+            break;
+          }
+          case Context::kCPUPinned: {
 #if MXNET_USE_CUDA
         num_gpu_device = 0;
         cudaError_t e  = cudaGetDeviceCount(&num_gpu_device);
@@ -130,6 +151,7 @@ void StorageImpl::Alloc(Storage::Handle *handle) {
 
   this->ActivateDevice(handle->ctx);
   manager->Alloc(handle);
+  profiler_.OnAlloc(*handle);
 }
 
 void StorageImpl::Free(Storage::Handle handle) {
@@ -141,6 +163,7 @@ void StorageImpl::Free(Storage::Handle handle) {
   });
   this->ActivateDevice(ctx);
   manager->Free(handle);
+  profiler_.OnFree(handle);
 }
 
 void StorageImpl::DirectFree(Storage::Handle handle) {
@@ -152,16 +175,21 @@ void StorageImpl::DirectFree(Storage::Handle handle) {
   });
   this->ActivateDevice(ctx);
   manager->DirectFree(handle);
+  profiler_.OnFree(handle);
 }
 
 void StorageImpl::SharedIncrementRefCount(Storage::Handle handle) {
   CHECK_EQ(handle.ctx.dev_type, Context::kCPUShared);
-  auto &&device = storage_managers_.at(Context::kCPUShared);
-  auto manager  = device.Get(0, []() {
-    LOG(FATAL) << "Cannot increment ref count before allocating any shared memory.";
-    return nullptr;
-  });
-  dynamic_cast<storage::CPUSharedStorageManager *>(manager.get())->IncrementRefCount(handle);
+  auto&& device = storage_managers_.at(Context::kCPUShared);
+  auto manager = device.Get(0, []() {
+      LOG(FATAL) << "Cannot increment ref count before allocating any shared memory.";
+      return nullptr;
+    });
+#if defined(ANDROID) || defined(__ANDROID__)
+  LOG(FATAL) << "Shared memory not implemented on Android";
+#else
+  dynamic_cast<storage::CPUSharedStorageManager*>(manager.get())->IncrementRefCount(handle);
+#endif  // defined(ANDROID) || defined(__ANDROID__)
 }
 
 std::shared_ptr<Storage> Storage::_GetSharedRef() {

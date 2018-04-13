@@ -89,6 +89,7 @@ public:
     DirectFreeNoLock(handle);
   }
 
+ private:
   void DirectFreeNoLock(Storage::Handle handle) {
 
 PUSH_RANGE("DirectFreeNoLock in pooled storage manager", 0);

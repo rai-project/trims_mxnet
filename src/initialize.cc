@@ -22,9 +22,10 @@
  * \file initialize.cc
  * \brief initialize mxnet library
  */
-#include "engine/profiler.h"
+#include "profiler/profiler.h"
 #include <dmlc/logging.h>
 #include <mxnet/engine.h>
+
 #include <signal.h>
 
 #if DETAILED_PROFILE
@@ -47,7 +48,6 @@ backward::SignalHandling sh;
 namespace upr {
     void initialize();
 }
-
 
 namespace mxnet {
 #if MXNET_USE_SIGNAL_HANDLER && DMLC_LOG_STACK_TRACE

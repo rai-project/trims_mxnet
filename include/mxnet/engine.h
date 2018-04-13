@@ -147,13 +147,15 @@ public:
    * \param mutable_vars The variables that current operation will mutate.
    * \param prop Property of the function.
    * \param opr_name The operator name.
+   * \param wait Whether this is a WaitForVar operation
    * \return The new operator allocated.
    */
   virtual OprHandle NewOperator(AsyncFn fn,
                                 std::vector<VarHandle> const& const_vars,
                                 std::vector<VarHandle> const& mutable_vars,
-                                FnProperty prop      = FnProperty::kNormal,
-                                const char* opr_name = nullptr) = 0;
+                                FnProperty prop = FnProperty::kNormal,
+                                const char* opr_name = nullptr,
+                                bool wait = false) = 0;
   /*!
    * \brief Delete the given operator.
    * \param op The operator to delete.
@@ -182,10 +184,15 @@ public:
    * \param prop Property of the function.
    * \param priority Priority of the action, as hint to the engine.
    * \param opr_name The operator name.
+   * \param wait Whether this is a WaitForVar operation
    */
-  virtual void PushAsync(AsyncFn exec_fun, Context exec_ctx, std::vector<VarHandle> const& const_vars,
-                         std::vector<VarHandle> const& mutable_vars, FnProperty prop = FnProperty::kNormal,
-                         int priority = 0, const char* opr_name = nullptr) = 0;
+ virtual void PushAsync(AsyncFn exec_fun, Context exec_ctx,
+                         std::vector<VarHandle> const& const_vars,
+                         std::vector<VarHandle> const& mutable_vars,
+                         FnProperty prop = FnProperty::kNormal,
+                         int priority = 0,
+                         const char* opr_name = nullptr,
+                         bool wait = false) = 0;
   /*!
    * \brief Schedule the deletion of a variable.
    *

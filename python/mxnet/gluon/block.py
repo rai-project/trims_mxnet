@@ -28,6 +28,7 @@ from .. import symbol, ndarray, initializer
 from ..symbol import Symbol
 from ..ndarray import NDArray
 from .. import name as _name
+from ..context import cpu
 from .parameter import Parameter, ParameterDict, DeferredInitializationError
 from .utils import _indent
 
@@ -68,7 +69,7 @@ class _BlockScope(object):
 
     def __enter__(self):
         if self._block._empty_prefix:
-            return
+            return self
         self._old_scope = _BlockScope._current
         _BlockScope._current = self
         self._name_scope = _name.Prefix(self._block.prefix)
@@ -225,7 +226,7 @@ class Block(object):
                                   'registered automatically. Make sure to register them using '
                                   'register_child() or switching to '
                                   'nn.Sequential/nn.HybridSequential instead. '
-                                  .format(name=self.__class__.__name__ + "." + k))
+                                  .format(name=self.__class__.__name__ + "." + k), stacklevel=3)
 
     def _alias(self):
         return self.__class__.__name__.lower()
@@ -299,13 +300,13 @@ class Block(object):
         """
         self.collect_params().save(filename, strip_prefix=self.prefix)
 
-    def load_params(self, filename, ctx, allow_missing=False,
+    def load_params(self, filename, ctx=cpu(), allow_missing=False,
                     ignore_extra=False):
         """Load parameters from file.
 
         filename : str
             Path to parameter file.
-        ctx : Context or list of Context
+        ctx : Context or list of Context, default cpu()
             Context(s) initialize loaded parameters on.
         allow_missing : bool, default False
             Whether to silently skip loading parameters not represents in the file.
@@ -446,18 +447,24 @@ class HybridBlock(Block):
         for name, i in input_idx.items():
             if name not in expected_inputs:
                 warnings.warn("The %d-th input to HybridBlock is not used by any "
-                              "computation. Is this intended?"%i)
+                              "computation. Is this intended?"%i, stacklevel=4)
         for name in params:
             if name not in expected_inputs:
                 warnings.warn("Parameter %s is not used by any computation. "
-                              "Is this intended?"%name)
+                              "Is this intended?"%name, stacklevel=4)
 
         self._cached_op_args = [(False, params[name]) if name in params
                                 else (True, input_idx[name])
                                 for name in out.list_inputs()]
 
     def _finish_deferred_init(self, hybrid, *args):
-        self.infer_shape(*args)
+        try:
+            self.infer_shape(*args)
+        except Exception as e:
+            error_msg = "Deferred initialization failed because shape"\
+                        " cannot be inferred \n {}".format(e)
+            raise ValueError(error_msg)
+
         if hybrid:
             for is_arg, i in self._cached_op_args:
                 if not is_arg:
@@ -508,11 +515,14 @@ class HybridBlock(Block):
         """Generic infer attributes."""
         inputs, out = self._get_graph(*args)
         args, _ = _flatten(args)
-        arg_attrs, _, aux_attrs = getattr(out, infer_fn)(
-            **{i.name: getattr(j, attr) for i, j in zip(inputs, args)})
+        with warnings.catch_warnings(record=True) as w:
+            arg_attrs, _, aux_attrs = getattr(out, infer_fn)(
+                **{i.name: getattr(j, attr) for i, j in zip(inputs, args)})
+            if arg_attrs is None:
+                raise ValueError(w[0].message)
         sdict = {i: j for i, j in zip(out.list_arguments(), arg_attrs)}
         sdict.update({name : attr for name, attr in \
-                      zip(out.list_auxiliary_states(), aux_attrs)})
+             zip(out.list_auxiliary_states(), aux_attrs)})
         for i in self.collect_params().values():
             setattr(i, attr, sdict[i.name])
 
@@ -597,7 +607,7 @@ class HybridBlock(Block):
 
 class SymbolBlock(HybridBlock):
     """Construct block from symbol. This is useful for using pre-trained models
-    as feature extractors. For example, you may want to extract get the output
+    as feature extractors. For example, you may want to extract the output
     from fc2 layer in AlexNet.
 
     Parameters

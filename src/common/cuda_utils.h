@@ -54,6 +54,21 @@ extern __cuda_fake_struct blockIdx;
 #include <curand.h>
 #include <cusolverDn.h>
 
+/*!
+ * \brief When compiling a __device__ function, check that the architecture is >= Kepler (3.0)
+ *        Note that __CUDA_ARCH__ is not defined outside of a __device__ function
+ */
+#ifdef __CUDACC__
+inline __device__ bool __is_supported_cuda_architecture() {
+#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ < 300
+#error "Fermi and earlier GPU architectures are not supported (architecture versions less than 3.0)"
+  return false;
+#else
+  return true;
+#endif  // __CUDA_ARCH__ < 300
+}
+#endif  // __CUDACC__
+
 namespace mxnet {
 namespace common {
 /*! \brief common utils for cuda */

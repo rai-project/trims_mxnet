@@ -85,27 +85,40 @@ namespace storage {
     void* ret = nullptr;
 #if MXNET_USE_CUDA
 #if MXNET_USE_NCCL
-    std::lock_guard<std::mutex> l(Storage::Get()->GetMutex(Context::kGPU));
-#endif // MXNET_USE_NCCL
-    cudaError_t e;
+/* <<<<<<< HEAD */
+/*     std::lock_guard<std::mutex> l(Storage::Get()->GetMutex(Context::kGPU)); */
+/* #endif // MXNET_USE_NCCL */
+/*     cudaError_t e; */
 
-    if (upr::UPR_ENABLE_MEMORY_PROFILE) {
-      auto span = upr::start_span("cudaMalloc", "memory", upr::span_props{{"size", std::to_string(size)}});
-      e         = cudaMalloc(&ret, size);
-      upr::stop_span(span);
-    } else {
-      e = cudaMalloc(&ret, size);
-    }
-    // LOG(INFO) << "allocating " << size << " bytes of memory using naive cuda storage. device_ptr = " << (size_t) ret;
-    if (e != cudaSuccess && e != cudaErrorCudartUnloading) {
-      LOG(ERROR) << "failed to perform cuda malloc " << cudaGetErrorString(e);
-      throw std::bad_alloc();
-    }
-#else  // MXNET_USE_CUDA
-    LOG(FATAL) << "Please compile with CUDA enabled";
-#endif // MXNET_USE_CUDA
-    return ret;
-  }
+/*     if (upr::UPR_ENABLE_MEMORY_PROFILE) { */
+/*       auto span = upr::start_span("cudaMalloc", "memory", upr::span_props{{"size", std::to_string(size)}}); */
+/*       e         = cudaMalloc(&ret, size); */
+/*       upr::stop_span(span); */
+/*     } else { */
+/*       e = cudaMalloc(&ret, size); */
+/*     } */
+/*     // LOG(INFO) << "allocating " << size << " bytes of memory using naive cuda storage. device_ptr = " << (size_t) ret; */
+/*     if (e != cudaSuccess && e != cudaErrorCudartUnloading) { */
+/*       LOG(ERROR) << "failed to perform cuda malloc " << cudaGetErrorString(e); */
+/*       throw std::bad_alloc(); */
+/*     } */
+/* #else  // MXNET_USE_CUDA */
+/*     LOG(FATAL) << "Please compile with CUDA enabled"; */
+/* #endif // MXNET_USE_CUDA */
+/*     return ret; */
+/*   } */
+/* ======= */
+  std::lock_guard<std::mutex> l(Storage::Get()->GetMutex(Context::kGPU));
+#endif  // MXNET_USE_NCCL
+  cudaError_t e = cudaMalloc(&ret, size);
+  if (e != cudaSuccess && e != cudaErrorCudartUnloading)
+    LOG(FATAL) << "CUDA: " << cudaGetErrorString(e);
+#else   // MXNET_USE_CUDA
+  LOG(FATAL) << "Please compile with CUDA enabled";
+#endif  // MXNET_USE_CUDA
+  return ret;
+}
+/* >>>>>>> master */
 
   inline void GPUDeviceStorage::Free(void* ptr) {
 #if MXNET_USE_CUDA
