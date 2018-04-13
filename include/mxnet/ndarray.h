@@ -1016,7 +1016,7 @@ private:
   void SetTBlob() const;
 
   /*! \brief internal data of NDArray */
-  Chunk *ptr_{nullptr};
+  std::shared_ptr<Chunk> ptr_{nullptr};
   /*! \brief shape of current NDArray */
   TShape shape_;
   /*! \brief byte offset in chunk */
